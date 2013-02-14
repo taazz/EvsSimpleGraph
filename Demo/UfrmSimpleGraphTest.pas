@@ -17,7 +17,6 @@ type
     actZoomIn: TAction;
     actZoomOut: TAction;
     actZoom1: TAction;
-    Action4: TAction;
     actDebugForm: TAction;
     actLoad : TAction;
     ActionList1: TActionList;
@@ -153,7 +152,7 @@ end;
 
 procedure TForm1.Print(const aMsg: string);
 begin
-  uFrmDebug.Print(aMsg);
+  uFrmDebug.EvsDbgPrint(aMsg);
 end;
 
 constructor TForm1.Create(aOwner : TComponent);

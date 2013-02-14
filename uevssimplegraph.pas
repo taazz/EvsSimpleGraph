@@ -1203,15 +1203,15 @@ type
 
 
     function GetBoundingRect(AIndex: Integer): TRect; {$MESSAGE HINT 'Remove it after ported'}
-    function GetBoundingRect(Kind: TGraphBoundsKind): TRect;                    //CLEAN.
-    function GetCursorPos: TPoint;                                              //CLEAN.
-    function GetVisibleBounds: TRect;                                           //CLEAN.
-    function ReadGraphObject(Stream: TStream): TEvsGraphObject;                    //CLEAN
+    function GetBoundingRect(Kind: TGraphBoundsKind): TRect;                         //CLEAN.
+    function GetCursorPos: TPoint;                                                   //CLEAN.
+    function GetVisibleBounds: TRect;                                                //CLEAN.
+    function ReadGraphObject(Stream: TStream): TEvsGraphObject;                      //CLEAN
     procedure ObjectChanged(GraphObject: TEvsGraphObject; Flags: TGraphChangeFlags); //CLEAN
-    procedure ObjectListChanged(Sender: TObject; GraphObject: TEvsGraphObject;     //CLEAN
-      AAction: TGraphObjectListAction);                                         //CLEAN
-    procedure SelectedListChanged(Sender: TObject; GraphObject: TEvsGraphObject;   //CLEAN
-      AAction: TGraphObjectListAction);                                         //CLEAN
+    procedure ObjectListChanged(Sender: TObject; GraphObject: TEvsGraphObject;       //CLEAN
+      AAction: TGraphObjectListAction);
+    procedure SelectedListChanged(Sender: TObject; GraphObject: TEvsGraphObject;     //CLEAN
+      AAction: TGraphObjectListAction);
     procedure SetCommandMode(AValue: TGraphCommandMode);                        //CLEAN.
     procedure SetCursorPos(const Pt: TPoint);                                   //CLEAN.
     procedure SetDrawOrder(Value: TGraphDrawOrder);                             //CLEAN.
@@ -1228,7 +1228,6 @@ type
     procedure SetMarkerSize(Value: TMarkerSize);                                //CLEAN
     procedure SetShowGrid(AValue: Boolean);                                     //CLEAN
     procedure SetShowHiddenObjects(Value: boolean);                             //CLEAN
-    //procedure SetTransparent(Value: boolean);                                   //CLEAN
     procedure SetVertScrollBar(AValue: TEvsGraphScrollBar);                     //CLEAN
     procedure SetZoom(AValue: TZoom);                                           //CLEAN
     procedure WriteGraphObject(Stream: TStream; GraphObject: TEvsGraphObject);     //CLEAN
@@ -1487,7 +1486,6 @@ type
     property ShowHint;
     property TabOrder;
     property TabStop;
-    //property Transparent: boolean read fTransparent write SetTransparent default False;
     property Visible;
     property Width;
     {$IFNDEF FPC}
@@ -3473,23 +3471,6 @@ begin
   end;
 end;
 
-//procedure TEvsSimpleGraph.SetTransparent(Value: boolean);
-//begin  {$MESSAGE HINT TRANSPARENT}
-//  if Transparent <> Value then
-//  begin
-//    fTransparent := Value;
-//    if Transparent then
-//      ControlStyle := ControlStyle - [csOpaque]
-//    else
-//      ControlStyle := ControlStyle + [csOpaque];
-//    if Transparent then
-//      ControlStyle := ControlStyle + [csParentBackground]
-//    else
-//      ControlStyle := ControlStyle - [csParentBackground];
-//    Invalidate;
-//  end;
-//end;
-
 procedure TEvsSimpleGraph.SetVertScrollBar(AValue: TEvsGraphScrollBar);
 begin
   FVertScrollBar.Assign(AValue);
@@ -3497,32 +3478,32 @@ end;
 
 function TEvsSimpleGraph.PasteFromClipboard: boolean;
 var
-  Stream: TMemoryStream;
-  I, Count: integer;
+  vStream: TMemoryStream;
+  I, vCount: integer;
 begin
   Result := False;
-  {$MESSAGE WARN 'IMPLEMET TEvsSimpleGraph.PasteFromClipboard'}
+  {$MESSAGE WARN 'IMPLEMENT TEvsSimpleGraph.PasteFromClipboard'}
   if Clipboard.HasFormat(CF_SIMPLEGRAPH) then
   begin
     Clipboard.Open;
     try
-      Stream := TMemoryStream.Create;
+      vStream := TMemoryStream.Create;
       try
-        Clipboard.GetFormat(CF_SIMPLEGRAPH, Stream);
+        Clipboard.GetFormat(CF_SIMPLEGRAPH, vStream);
         BeginUpdate;
         try
           SelectedObjects.Clear;
-          Count := Objects.Count;
-          ReadObjects(Stream);
-          SelectedObjects.Capacity := Objects.Count - Count;
-          for I := Objects.Count - 1 downto Count do
+          vCount := Objects.Count;
+          ReadObjects(vStream);
+          SelectedObjects.Capacity := Objects.Count - vCount;
+          for I := Objects.Count - 1 downto vCount do
             Objects[I].Selected := True;
           Result := True;
         finally
           EndUpdate;
         end;
       finally
-        Stream.Free;
+        vStream.Free;
       end;
     finally
       Clipboard.Close;

@@ -1,7 +1,7 @@
 object Form1: TForm1
-  Left = 422
+  Left = 387
   Height = 357
-  Top = 245
+  Top = 241
   Width = 487
   Caption = 'Form1'
   ClientHeight = 357
@@ -420,18 +420,21 @@ object Form1: TForm1
     top = 50
     object actZoomIn: TAction
       Caption = 'Zoom In'
+      Hint = 'Zoom In'
       ImageIndex = 7
       OnExecute = actZoomInExecute
       OnUpdate = actZoomInUpdate
     end
     object actZoomOut: TAction
       Caption = 'Zoom Out'
+      Hint = 'Zoom out'
       ImageIndex = 8
       OnExecute = actZoomOutExecute
       OnUpdate = actZoomOutUpdate
     end
     object actZoom1: TAction
       Caption = 'Zoom 1:1'
+      Hint = 'Actual Size'
       ImageIndex = 9
       OnExecute = actZoom1Execute
       OnUpdate = actZoom1Update
@@ -447,11 +450,6 @@ object Form1: TForm1
       Hint = 'Load file'
       ImageIndex = 6
       OnExecute = actLoadExecute
-    end
-    object Action4: TAction
-      Caption = 'Action4'
-      ImageIndex = 3
-      OnExecute = Action4Execute
     end
   end
   object pmnuGraphClasses: TPopupMenu
