@@ -86,7 +86,7 @@ interface
 //The following Define is for testing purposes to see what needs to be converted
 //from windows specific code
 
-{$DEFINE WIN}
+{.$DEFINE WIN}
 {$DEFINE SUBCLASS} // required for the scroll bars to work correctly.
 
 {$IFDEF SUBCLASS}
@@ -1762,8 +1762,12 @@ begin
   Result := Windows.SetTextAlign(DC, Flags);
 {$ELSE}
   //Result := LCLIntf.SetTextAlign(DC, Flags);
-  {$MESSAGE ERROR 'SETTEXTALIGN ALTERNATIVE NEEDED'} //JKOZ ERROR
+  {.$MESSAGE ERROR 'SETTEXTALIGN ALTERNATIVE NEEDED'} //JKOZ ERROR
 {$ENDIF}
+end;
+function CreateRectRgnIndirect(aRect:TRect):HRGN;
+begin
+  Result := CreateRectRgn(aRect.Left, aRect.Top, aRect.Right, aRect.Bottom);
 end;
 
 function RectInRegion(Rgn: HRGN; ARect: TRect): Boolean;
@@ -1851,6 +1855,7 @@ begin
 end;
 
 function TransformRgn(Rgn: HRGN; const XForm: TXForm): HRGN;                    {$MESSAGE WARN 'REGION ALTERNATIVE'}
+{$IFDEF WIN}
 var
   RgnData: PRgnData;
   RgnDataSize: DWORD;
@@ -1871,6 +1876,12 @@ begin
     end;
   end;
 end;
+{$ELSE WIN}
+begin
+  Result := Rgn;
+  {$MESSAGE WARNING 'TransformRgn Alternative'}
+end;
+{$ENDIF}
 
 function WrapText(Canvas: TCanvas; const Text: string; MaxWidth: integer): string;
 var
@@ -2237,7 +2248,7 @@ begin
     (Rect1.Bottom >= Rect2.Top) and (Rect2.Bottom >= Rect1.Top);
 end;
 
-{.$Message 'function TransformRgn Implementation missing'}
+
 
 function NormalizeAngle(const Angle: double): double;
 begin
@@ -9819,15 +9830,12 @@ begin
 end;
 
 function TEvsGraphNode.CreateClipRgn(ACanvas: TCanvas): HRGN;
-{.$IFDEF WIN}
 var
   XForm: TXForm;
   DevExt: TSize;
   LogExt: TSize;
   Org: TPoint;
-{.$ENDIF}
 begin
-  {.$IFDEF WIN}
   GetViewportExtEx(ACanvas.Handle, @DevExt);
   GetWindowExtEx(ACanvas.Handle, @LogExt);
   GetViewportOrgEx(ACanvas.Handle, @Org);
@@ -9841,11 +9849,8 @@ begin
     eDy  := Org.Y;
   end;
   Result := TransformRgn(Region, XForm);
+  {$MESSAGE WARN 'TransformRegion Alternative'}  //JKOZ ERROR
   OffsetRgn(Result, -OwnerOffsetX, -OwnerOffsetY);
-  {.$ELSE}
-  //Result := 0;
-  {.$Message WARN 'Implement TEvsGraphNode.CreateClipRgn'} //JKOZ ERROR
-  //{$ENDIF}
 end;
 
 procedure TEvsGraphNode.QueryMaxTextRect(out Rect: TRect);
