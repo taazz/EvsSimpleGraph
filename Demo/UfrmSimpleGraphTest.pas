@@ -5,11 +5,21 @@ unit UfrmSimpleGraphTest;
 interface
 {$DEFINE SIMPLEGRAPH_CREATION}
 uses
-  Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs,
-  UEvsSimpleGraph, sqldb, db, IBConnection, LMessages, LCLType, LCLIntf, StdCtrls,
-  CheckLst, Grids, ComCtrls, ActnList, Menus;//, USimpleGraph;//, SimpleGraph;
+  Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, LMessages, LCLType,
+  LCLIntf, StdCtrls, ComCtrls, ActnList, Menus,
+
+  UEvsSimpleGraph;
 
 type
+
+  { TTestForm }
+
+  TTestForm = class(TForm)
+  private
+    fTest : TComboBox;
+  public
+    constructor Create(TheOwner : TComponent); override;
+  end;
 
   { TForm1 }
 
@@ -28,9 +38,12 @@ type
     OpenDialog1 : TOpenDialog;
     pmnuGraphClasses: TPopupMenu;
     pmnuZoom : TPopupMenu;
+    dlgSave : TSaveDialog;
     ToolBar1: TToolBar;
     ToolButton1 : TToolButton;
     ToolButton2 : TToolButton;
+    ToolButton3 : TToolButton;
+    ToolButton4 : TToolButton;
     ToolButton5: TToolButton;
     ToolButton6: TToolButton;
     ToolButton7: TToolButton;
@@ -44,24 +57,31 @@ type
     procedure actDebugFormExecute(Sender: TObject);
     procedure actLoadExecute(Sender : TObject);
     procedure actZoomOutUpdate(Sender : TObject);
+    procedure FormMouseMove(Sender : TObject; Shift : TShiftState; X,
+      Y : Integer);
     procedure MenuItem1Click(Sender: TObject);
     procedure MenuItem2Click(Sender: TObject);
+    procedure ToolButton3Click(Sender : TObject);
+    procedure ToolButton4Click(Sender : TObject);
   private
     { private declarations }
     Test : TEvsSimpleGraph;
+    //FTemp : TScrollingWinControl
   protected
     //procedure WMPaint(var Message: TLMPaint); message LM_PAINT;
     procedure Print(const aMsg:string);
   public
     { public declarations }
     constructor Create(aOwner:TComponent);override;
-  end; 
+    procedure goDblClick(Graph: TEvsSimpleGraph; GraphObject: TEvsGraphObject);
+  end;
 
 var
   Form1 : TForm1; 
 
 implementation
-uses freetype, IniFiles, uFrmDebug;
+uses {windows, freetype, IniFiles,} uFrmDebug, UEvsMisc, uevsRegionTests,
+  uEvsBackupClasses;
 
 {$R *.lfm}
 const
@@ -93,6 +113,7 @@ end;
 procedure TForm1.actZoomInExecute(Sender: TObject);
 begin
   Test.ChangeZoomBy(10, zoCenter);
+  //windows.WNDPROC;
 end;
 
 procedure TForm1.actZoom1Update(Sender : TObject);
@@ -122,10 +143,20 @@ begin
 end;
 
 procedure TForm1.actDebugFormExecute(Sender: TObject);
+var
+  Tmp : TForm = nil;
+
 begin
-  uFrmDebug.Form2.PopupMode:=pmExplicit;
-  uFrmDebug.Form2.PopupParent:=Self;
-  uFrmDebug.Form2.Show;
+  Tmp:= dbgFrm;
+
+  if Tmp.Visible then
+    Tmp.Hide
+  else begin
+    Tmp.PopupMode   := pmExplicit;
+    Tmp.PopupParent := Self;
+    Tmp.Show;
+  end;
+
 end;
 
 procedure TForm1.actLoadExecute(Sender : TObject);
@@ -136,6 +167,13 @@ end;
 procedure TForm1.actZoomOutUpdate(Sender : TObject);
 begin
   actZoomOut.Enabled := (Test.Zoom > Low(TZoom));
+end;
+
+procedure TForm1.FormMouseMove(Sender : TObject; Shift : TShiftState; X,
+  Y : Integer);
+begin
+  //
+  Caption := EvsActiveWidgetSet + ' - ' + Format('Mouse.X %D Mouse.Y %D',[X,Y]);
 end;
 
 procedure TForm1.MenuItem1Click(Sender: TObject);
@@ -150,6 +188,22 @@ begin
   Test.CommandMode:=cmInsertLink;
 end;
 
+procedure TForm1.ToolButton3Click(Sender : TObject);
+begin
+  if dlgSave.Execute then
+    Test.SaveToFile(dlgSave.FileName);
+end;
+
+procedure TForm1.ToolButton4Click(Sender : TObject);
+var
+  vFrm : TForm;
+  vGruard : IGuardian = Nil;
+begin
+  vFrm := TForm3.Create(Nil);
+  Guard(vFrm, vGruard);
+  vFrm.ShowModal;
+end;
+
 procedure TForm1.Print(const aMsg: string);
 begin
   uFrmDebug.EvsDbgPrint(aMsg);
@@ -162,12 +216,8 @@ VAR
   Cnt: Integer;
 begin
   inherited Create(Owner);
-  //TestCtrl := TTestControl.Create(Self);
-  //TestCtrl.Align:=alClient;
-  //TestCtrl.Parent  := Self;
-  //TestCtrl.Visible := True;
-  Test := TEvsSimpleGraph.Create(Self);
   {$IFDEF SIMPLEGRAPH_CREATION}
+  Test := TEvsSimpleGraph.Create(Self);
   Test.Parent:= Self;
   Test.Width := 300;
   Test.Height := 300;
@@ -179,9 +229,10 @@ begin
   Test.DoubleBuffered:=True;
   //Test.HorzScrollBar.Smooth:=True;
   //Test.VertScrollBar.Smooth:=True;
-  //test.Transparent:=true;
-  //BiDiMode:=;
-  //Test.Visible := False;
+  Test.OnMouseMove := @FormMouseMove;
+  Test.HorzScrollBar.Tracking:=True;
+  Test.VertScrollBar.Tracking:=True;
+
   pmnuGraphClasses.Items.Clear;
   for Cnt := 0 to TEvsSimpleGraph.NodeClassCount -1 do begin
     Mnu := TMenuItem.Create(Self);
@@ -205,13 +256,58 @@ begin
     Mnu.Caption:= Copy(TEvsSimpleGraph.LinkClasses(Cnt).ClassName,5,255);
   end;
 
+  Test.OnObjectDblClick := @goDblClick;
   {$ENDIF}
 
-
-
+  //TestCtrl := TTestControl.Create(Self);
+  //TestCtrl.Align:=alClient;
+  //TestCtrl.Parent  := Self;
+  //TestCtrl.Visible := True;
+  Caption := caption +'-' +uevsmisc.EvsActiveWidgetSet;
   Form1.Cursor:=Screen.Cursors[2];
   screen.Cursor:=screen.Cursors[2];
 end;
+
+procedure TForm1.goDblClick(Graph : TEvsSimpleGraph;
+  GraphObject : TEvsGraphObject);
+begin
+  GraphObject.Text := InputBox(GraphObject.ClassName, 'Enter Caption', GraphObject.Text);
+  Self.Visible := True;
+  Self.WindowState := wsNormal;
+  BringToFront;
+end;
+
+{ TTestForm }
+
+constructor TTestForm.Create(TheOwner : TComponent);
+begin
+  inherited Create(TheOwner);
+  fTest := TComboBox.Create(Self);
+  fTest.Left := 100;
+  fTest.Top  := 10;
+  fTest.Parent := Self;
+end;
+
+//procedure TForm1.Button2Click(Sender: TObject);
+//var
+//    FileStr : TFileStream;   tr : string;  fs : tstringlist; i: integer;
+//begin
+//    Memo1.Lines.Clear;
+//    fs   := findallfiles('c:\mydir','*.*',true);
+//    for i:= 0 to fs.Count-1 do
+//    begin
+//        FileStr   := TFileStream.Create(utf8tosys(fs[i]), fmOpenRead or fmShareExclusive);
+//        try
+//            try
+//               SetLength(tr, FileStr.Size);
+//               FileStr.Read(tr[1], FileStr.Size);
+//            except on e: exception do showmessage(systoutf8(e.ToString)+' - '+fs[i]); end;
+//        finally
+//          FileStr.Free;
+//        end;
+//    end;
+//    fs.Free; // Free the stringlist
+//end;
 
 end.
 
