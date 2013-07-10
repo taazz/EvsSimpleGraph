@@ -116,14 +116,9 @@ interface
 //{$MESSAGE HINT|WARN|ERROR|FATAL 'text string' }. a small reminder.
 //The following Define is for testing purposes to see what needs to be converted
 //from windows specific code
-<<<<<<< HEAD
 {$IFDEF LCLWIN32}
 {$DEFINE WIN}
 {$ENDIF}
-=======
-
-{.$DEFINE WIN}
->>>>>>> e48d1f62900d3197e433c40ef04436cd57cdf630
 {$DEFINE SUBCLASS} // required for the scroll bars to work correctly.
 
 {$IFDEF SUBCLASS}
@@ -803,29 +798,29 @@ type
 
   TEvsGraphLink = class(TEvsGraphObject)                                        //WORKS REGIONS ALTERNATIVES ONLY
   private
-    fPoints: TPoints;
-    fPointCount: integer;
-    fSource: TEvsGraphObject;
-    fTarget: TEvsGraphObject;
-    fTextPosition: integer;
-    fTextSpacing: integer;
-    fBeginStyle: TLinkBeginEndStyle;
-    fBeginSize: byte;
-    fEndStyle: TLinkBeginEndStyle;
-    fEndSize: byte;
-    fLinkOptions: TGraphLinkOptions;
-    fTextRegion: HRGN;                                                          {$MESSAGE WARN 'REGION ALTERNATIVE'}
-    fTextAngle: double;
-    fTextCenter: TPoint;
-    fTextLine: integer;
-    fChangeMode: TLinkChangeMode;
-    fAcceptingHook: boolean;
-    fHookingObject: TEvsGraphObject;
-    fMovingPoint: integer;
-    SourceID: DWORD;
-    TargetID: DWORD;
-    UpdatingEndPoints: boolean;
-    CheckingLink: boolean;
+    fPoints           : TPoints;
+    fPointCount       : integer;
+    fSource           : TEvsGraphObject;
+    fTarget           : TEvsGraphObject;
+    fTextPosition     : integer;
+    fTextSpacing      : integer;
+    fBeginStyle       : TLinkBeginEndStyle;
+    fBeginSize        : byte;
+    fEndStyle         : TLinkBeginEndStyle;
+    fEndSize          : byte;
+    fLinkOptions      : TGraphLinkOptions;
+    fTextRegion       : HRGN;                                                          {$MESSAGE WARN 'REGION ALTERNATIVE'}
+    fTextAngle        : double;
+    fTextCenter       : TPoint;
+    fTextLine         : integer;
+    fChangeMode       : TLinkChangeMode;
+    fAcceptingHook    : boolean;
+    fHookingObject    : TEvsGraphObject;
+    fMovingPoint      : integer;
+    SourceID          : DWORD;
+    TargetID          : DWORD;
+    UpdatingEndPoints : boolean;
+    CheckingLink      : boolean;
 
     procedure ReadArrowSize(Reader : TReader);
     procedure ReadFromNode(Reader : TReader);
@@ -1219,7 +1214,7 @@ type
     UpdateCount           : Integer;
     UpdatingScrollBars    : Boolean;  //for internal use only.
 
-    function GetMidPoint:TPoint;
+    function GetMidPoint  : TPoint;
     function GetBoundingRect(AIndex: Integer): TRect; {$MESSAGE HINT 'Remove it after ported'}
     function GetBoundingRect(Kind: TGraphBoundsKind): TRect;                         //CLEAN.
     function GetCursorPos: TPoint;                                                   //CLEAN.
@@ -1261,7 +1256,6 @@ type
     function CreateUniqueID(aGraphObject: TEvsGraphObject): DWORD; virtual;         //CLEAN
 
 
-    {$IFDEF SUBCLASS}
     {$IFDEF SUBCLASS_PAINT}
     procedure WMPaint(var Msg: TLMPaint); message LM_PAINT;                     //WORKS-NOT
     {$ENDIF}
@@ -1282,7 +1276,7 @@ type
     procedure CMBiDiModeChanged(var Msg: TLMessage); message CM_BIDIMODECHANGED;//WORKS
     procedure CMMouseLeave(var Msg: TLMessage); message CM_MOUSELEAVE;          //WORKS
     procedure CMHintShow(var Msg: TCMHintShow); message CM_HINTSHOW;            //WORKS
-    {$ENDIF}
+
     function BeginDragObject(aGraphObject: TEvsGraphObject; const aPt: TPoint;       //CLEAN
       aHT: DWORD): boolean; virtual;                                             //CLEAN
     procedure BackupObjects(aStream: TStream; aObjectList: TEvsGraphObjectList);virtual; //CLEAN
@@ -1735,13 +1729,9 @@ begin
 {$IFDEF WIN}
   Result := Windows.SetTextAlign(DC, Flags);
 {$ELSE}
-  //Result := LCLIntf.SetTextAlign(DC, Flags);
+  Result := LCLIntf.SetTextAlign(DC, Flags);
   {.$MESSAGE ERROR 'SETTEXTALIGN ALTERNATIVE NEEDED'} //JKOZ ERROR
 {$ENDIF}
-end;
-function CreateRectRgnIndirect(aRect:TRect):HRGN;
-begin
-  Result := CreateRectRgn(aRect.Left, aRect.Top, aRect.Right, aRect.Bottom);
 end;
 
 function RectInRegion(Rgn: HRGN; ARect: TRect): Boolean;
@@ -1829,11 +1819,7 @@ begin
 end;
 
 function TransformRgn(Rgn: HRGN; const XForm: TXForm): HRGN;                    {$MESSAGE WARN 'REGION ALTERNATIVE'}
-<<<<<<< HEAD
 {$IFDEF WIN_TRANSFORM}
-=======
-{$IFDEF WIN}
->>>>>>> e48d1f62900d3197e433c40ef04436cd57cdf630
 var
   RgnData: PRgnData;
   RgnDataSize: DWORD;
@@ -1854,7 +1840,6 @@ begin
     end;
   end;
 end;
-<<<<<<< HEAD
 {$ELSE WIN_TRANSFORM}
 begin
   Result := Rgn;
@@ -1862,14 +1847,6 @@ begin
   {$MESSAGE WARNING 'TransformRgn Alternative'}
 end;
 {$ENDIF WIN_TRANSFORM}
-=======
-{$ELSE WIN}
-begin
-  Result := Rgn;
-  {$MESSAGE WARNING 'TransformRgn Alternative'}
-end;
-{$ENDIF}
->>>>>>> e48d1f62900d3197e433c40ef04436cd57cdf630
 
 function WrapText(Canvas: TCanvas; const Text: string; MaxWidth: integer): string;
 var
@@ -8115,6 +8092,7 @@ var
   TextAlign   : Integer;
   vPoint      : TPOINT;
 begin
+  aCanvas.Font.Handle := ;
   if TextRegion <> 0 then
   begin
     GetObject(aCanvas.Font.Handle, SizeOf(vLogFont), @vLogFont);
@@ -8134,6 +8112,7 @@ begin
       vTextFlags := 0;
     vPoint := TextCenter;
     OffsetPointByOwner(vPoint, True);
+    aCanvas.TextOut();
     ExtTextOut(vDC, vPoint.X, vPoint.Y, vTextFlags, nil,
       PChar(TextToShow), Length(TextToShow), nil);
     //OffsetPointByOwner(vPoint,false);
@@ -9915,7 +9894,6 @@ begin
   end;
 
   Result := TransformRgn(Region, XForm);
-<<<<<<< HEAD
   ACanvas.Brush.Color := clRed;
   FillRgn(ACanvas.Handle, Result, ACanvas.Brush.Handle);
   {$IFDEF DBGFRM_REGIONTRANSFORM}
@@ -9924,10 +9902,6 @@ begin
   {$ENDIF}
   {$MESSAGE WARN 'TransformRegion Alternative'}  //JKOZ ERROR
   //OffsetRgn(Result, -OwnerOffsetX, -OwnerOffsetY);
-=======
-  {$MESSAGE WARN 'TransformRegion Alternative'}  //JKOZ ERROR
-  OffsetRgn(Result, -OwnerOffsetX, -OwnerOffsetY);
->>>>>>> e48d1f62900d3197e433c40ef04436cd57cdf630
 end;
 
 procedure TEvsGraphNode.QueryMaxTextRect(out Rect: TRect);
@@ -10017,6 +9991,7 @@ begin
     vTextStyle.EndEllipsis := False;
 
     OffsetRectByOwner(Rect, True);
+    Owner.
     Canvas.TextRect(Rect, Rect.Left, Rect.Top, TextToShow, vTextStyle);
     //vOldColor := Canvas.Pen.Color;
     //Canvas.Rect(Rect);
@@ -10050,7 +10025,8 @@ begin
 
     LCLIntf.DrawText(DC, PChar(TextToShow), Length(TextToShow), Rect,
     Owner.DrawTextBiDiModeFlags(DrawTextFlags));
-
+    Canvas.TextOut();
+    Canvas.TextStyle;
     //SetTextAlign(DC, TextAlign);  // //Jkoz -STA
     {
      So far this works as expected with out the settextalign call.
@@ -10077,16 +10053,11 @@ begin
     ImageRect.Top := Top + MulDiv(Height, BackgroundMargins.Top, 100);
     ImageRect.Right := Left + Width - MulDiv(Width, BackgroundMargins.Right, 100);
     ImageRect.Bottom := Top + Height - MulDiv(Height, BackgroundMargins.Bottom, 100);
-    OffsetRectByOwner(ImageRect,True);
-    {$IFDEF DBGFRM_REGIONTRANSFORM}
-     EvsDbgPrint(ImageRect);
-    {$ENDIF}
     //OffsetRectByOwner(ImageRect,True);
+    Owner.GPToCP(ImageRect, 2);
+    //Owner.GPToCP(ImageRect, 2);
     ClipRgn := CreateClipRgn(Canvas);
     try
-      {.$IFNDEF LCLWIN32}
-      //ClipRgn := OffsetRgn(ClipRgn, -Owner.HorzScrollBar.Position, -Owner.VertScrollBar.Position);
-      {.$ENDIF}
       SelectClipRgn(Canvas.Handle, ClipRgn);
       try
         Graphic := Background.Graphic;
@@ -10133,8 +10104,8 @@ var
   Enabled: boolean;
   LP,TP:Integer;
 begin
-  LP := Left;// - Owner.fHorzScrollBar.Position;
-  TP := Top;//  - Owner.fVertScrollBar.Position;
+  LP := Left;
+  TP := Top;
   Enabled := not Owner.LockNodes and (gnoResizable in NodeOptions);
   DrawControlPoint(Canvas, Types.Point(LP, TP), Enabled);
   DrawControlPoint(Canvas, Types.Point(LP + Width, TP), Enabled);
@@ -10440,13 +10411,8 @@ end;
 
 function TEvsPolygonalNode.LinkIntersect(const LinkPt: TPoint;
   const LinkAngle: double): TPoints;
-//var
-//  Tmp : TPoints;
 begin
-  //tmp:=Copy(Vertices,0,length(vertices;
-  //BoundsChanged(-owner.fHorzScrollBar.Position,-owner.fVertScrollBar.Position,0,0);
   Result := IntersectLinePolygon(LinkPt, LinkAngle, Vertices);
-  //BoundsChanged(owner.fHorzScrollBar.Position,owner.fVertScrollBar.Position,0,0);
 end;
 
 function TEvsPolygonalNode.GetCenter: TPoint;
@@ -10455,18 +10421,8 @@ begin
 end;
 
 function TEvsPolygonalNode.CreateRegion: HRGN;
-//var
-//  Tmp:TPoints;
 begin
-  {.$IFDEF WIN}
-  //////Tmp := copy(vertices,0,Length(vertices));
-  //////OffsetPoints(tmp,-owner.fHorzScrollBar.Position,-owner.fVertScrollBar.Position);
   Result := CreatePolygonRgn({$IFNDEF WIN}@{$ENDIF}FVertices[0], Length(Vertices), WINDING);
-  //////Result := Windows.CreatePolygonRgn(Tmp[0], Length(Tmp), WINDING);
-  //////SetLength(Tmp,0);
-  {.$ELSE}
-  {.$MESSAGE WARN 'REGION ALTERNATIVE'} //JKOZ ERROR
-  {.$ENDIF}
 end;
 
 procedure TEvsPolygonalNode.DrawBorder(Canvas: TCanvas);
@@ -10475,10 +10431,7 @@ var
 begin
   Tmp := Copy(Vertices,0,Length(Vertices));
   OffsetPoints(tmp,-owner.fHorzScrollBar.Position, -Owner.fVertScrollBar.Position);
-  //BoundsChanged(-owner.fHorzScrollBar.Position,-owner.fVertScrollBar.Position,0,0);
-  //Canvas.Polygon(Vertices);
   Canvas.Polygon(Tmp);
-  //BoundsChanged(owner.fHorzScrollBar.Position,owner.fVertScrollBar.Position,0,0);
   SetLength(Tmp,0);
 end;
 
@@ -10507,11 +10460,7 @@ begin
     S := Width div 4
   else
     S := Height div 4;
-  //{$IFDEF WIN}
   Result := CreateRoundRectRgn(Left, Top, Left + Width + 1, Top + Height + 1, S, S);
-  //{$ELSE}
-  //{$MESSAGE ERROR 'REGION ALTERNATIVE'} //JKOZ ERROR
-  //{$ENDIF}
 end;
 
 procedure TEvsRoundRectangularNode.DrawBorder(Canvas: TCanvas);
@@ -10519,7 +10468,6 @@ var
   S: integer;
   LP,TP:integer;
 begin
-//  BoundsChanged(-owner.fHorzScrollBar.Position,-owner.fVertScrollBar.Position,0,0);
   if Width > Height then
     S := Width div 4
   else
@@ -10527,7 +10475,6 @@ begin
   LP := Left-Owner.fHorzScrollBar.Position;
   TP := Top-Owner.fVertScrollBar.Position;;
   Canvas.RoundRect(LP, TP, LP + Width, TP + Height, S, S);
-//  BoundsChanged(owner.fHorzScrollBar.Position,owner.fVertScrollBar.Position,0,0);
 end;
 
 {$ENDREGION}
@@ -10542,11 +10489,7 @@ end;
 
 function TEvsEllipticNode.CreateRegion: HRGN;
 begin
-  //{$IFDEF WIN}
   Result := CreateEllipticRgn(Left, Top, Left + Width + 1, Top + Height + 1);
-  //{$ELSE}
-  //{$MESSAGE ERROR 'REGION ALTERNATIVE'} //JKOZ ERROR
-  //{$ENDIF}
 end;
 
 procedure TEvsEllipticNode.DrawBorder(Canvas: TCanvas);

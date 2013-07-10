@@ -288,26 +288,5 @@ begin
   fTest.Parent := Self;
 end;
 
-//procedure TForm1.Button2Click(Sender: TObject);
-//var
-//    FileStr : TFileStream;   tr : string;  fs : tstringlist; i: integer;
-//begin
-//    Memo1.Lines.Clear;
-//    fs   := findallfiles('c:\mydir','*.*',true);
-//    for i:= 0 to fs.Count-1 do
-//    begin
-//        FileStr   := TFileStream.Create(utf8tosys(fs[i]), fmOpenRead or fmShareExclusive);
-//        try
-//            try
-//               SetLength(tr, FileStr.Size);
-//               FileStr.Read(tr[1], FileStr.Size);
-//            except on e: exception do showmessage(systoutf8(e.ToString)+' - '+fs[i]); end;
-//        finally
-//          FileStr.Free;
-//        end;
-//    end;
-//    fs.Free; // Free the stringlist
-//end;
-
 end.
 

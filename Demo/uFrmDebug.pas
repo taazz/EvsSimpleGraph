@@ -24,6 +24,7 @@ procedure EvsDbgPrint(const aMsg  : string);overload;
 procedure EvsDbgPrint(const aRect : TRect);overload;
 procedure EvsDbgPrint(const aPt   : TPoint);overload;
 
+
 function dbgFrm : TForm2;
 
 var
