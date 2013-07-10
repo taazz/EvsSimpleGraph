@@ -165,13 +165,13 @@ begin
   end;
 end;
 
-function RIColor(aRI:TRawImage; const R, G, B : Byte; A:Byte = {$IFDEF LCLGTK2}255{$ELSE}0{$ENDIF}) : DWord;inline;
+function RIColor(aRI:TRawImage; const R, G, B : Byte; A:Byte = {$IFNDEF LCLGTK2}255{$ELSE}0{$ENDIF}) : DWord;inline;
 begin
   Result := DWORD(R shl aRI.Description.Redshift)   or DWORD(B shl aRI.Description.BlueShift) or
             DWORD(G shl aRI.Description.GreenShift) or DWORD(A shl aRI.Description.AlphaShift);
 end;
 
-function RISetAlpha(aRI:TRawImage; const aColor:LongWord; const A:Byte) : DWord;//inline;
+function RISetAlpha(aRI:TRawImage; const aColor:LongWord; const A:Byte) : DWord;inline;
 var
   Clr : TBGRA absolute Result;
 begin
@@ -328,7 +328,7 @@ begin
             //Row[x].g := C.g;
             //Row[x].b := C.b;
             //Row[x].a := vOpaque;
-            Row[x].Color := RIColor(vRI, C.r, C.g, C.b);
+            Row[x].Color := RIColor(vRI, C.r, C.g, C.b, vOpaque);
           end;
         end;
         y1 := y1 + 1;
@@ -363,16 +363,17 @@ var
   bmp             : TBitmap;
 
 begin
+  vOpaque := {$IFDEF LCLGTK2} FPimage.alphaTransparent+35 {$ELSE}FPimage.alphaOpaque-35{$ENDIF};
   if ((ARect.Right - ARect.Left) - 1 <= 0) or
     ((ARect.Bottom - ARect.Top) - 1 <= 1) then
     Exit;
   bmp := TBitmap.Create;
   bmp.PixelFormat := pf32Bit; // pf24Bit;
   bmp.SetSize((ARect.Right - ARect.Left) - 1,(ARect.Bottom - ARect.Top) - 1);
-  bmp.Canvas.Brush.Color := clWhite;
-  bmp.canvas.Brush.Style := bsSolid;
-  bmp.canvas.Pen.Style := psClear;
-  bmp.Canvas.Rectangle(5,5,10,10);
+  //bmp.Canvas.Brush.Color := clWhite;
+  //bmp.canvas.Brush.Style := bsSolid;
+  //bmp.canvas.Pen.Style := psClear;
+  //bmp.Canvas.Rectangle(5,5,10,10);
   //bmp.Canvas.Brush.Color := clWhite;
   //bmp.Canvas.FillRect(0, 0, bmp.Width-1, bmp.Height-1);
   h := bmp.Height;
@@ -420,8 +421,7 @@ begin
 
   try
     vRI := bmp.RawImage;
-    if (vRI.Description.BitsPerPixel) <> 32 then raise exception.Create('Unsupported bitmap format');
-
+    Assert(vRI.Description.BitsPerPixel <> 32,'Unsupported bitmap format');
     //vRI.Description.Init_BPP32_B8G8R8A8_BIO_TTB((ARect.Right - ARect.Left) - 1,(ARect.Bottom - ARect.Top) - 1);
     slSize := vRI.Description.BytesPerLine; //integer(bmp.ScanLine[1]) - slMain;
     //slMain := Integer(vRI.Data);//integer(bmp.ScanLine[0]);
@@ -431,6 +431,7 @@ begin
       // Calc first gradient
       sp := Trunc(h / 2.25);
       y := sp;
+      C.a := vOpaque;
       for i := 0 to y - 1 do begin
         C.r := Byte(rc1 + (((rc2 - rc1) * (i)) div y));
         C.g := Byte(gc1 + (((gc2 - gc1) * (i)) div y));
@@ -466,6 +467,7 @@ begin
 
       // Paint gradient
       fo := 25;
+      C.a := vOpaque;
       for x := 0 to w - 1 do begin
         if x < fo then begin
           C.b := Byte(bc1 + (((bc2 - bc1) * x) div fo));
@@ -571,12 +573,12 @@ begin
             //Row[x].r := Byte((C.r - r) shr sm + r);
             //Row[x].g := Byte((C.g - g) shr sm + g);
             //Row[x].b := Byte((C.b - b) shr sm + b);
-            Row[x].Color := RIColor(vRI, Byte((C.r - r) shr sm + r), Byte((C.g - g) shr sm + g), Byte((C.b - b) shr sm + b));
+            Row[x].Color := RIColor(vRI, Byte((C.r - r) shr sm + r), Byte((C.g - g) shr sm + g), Byte((C.b - b) shr sm + b),vOpaque);
           end else begin
             //Row[x].r := Byte((C.r - r) div 2 + r);
             //Row[x].g := Byte((C.g - g) div 2 + g);
             //Row[x].b := Byte((C.b - b) div 2 + b);
-            Row[x].Color := RIColor(vRI, Byte((C.r - r) div 2 + r), Byte((C.g - g) div 2 + g), Byte((C.b - b) div 2 + b));
+            Row[x].Color := RIColor(vRI, Byte((C.r - r) div 2 + r), Byte((C.g - g) div 2 + g), Byte((C.b - b) div 2 + b),vOpaque);
           end;
           if (y < (h1 - y)) then
             AltRow[x] := Row[x];
