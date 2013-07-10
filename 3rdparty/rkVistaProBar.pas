@@ -167,13 +167,21 @@ end;
 
 function RIColor(aRI:TRawImage; const R, G, B : Byte; A:Byte = {$IFDEF LCLGTK2}255{$ELSE}0{$ENDIF}) : DWord;inline;
 begin
-  Result := (R shl aRI.Description.Redshift)   or (B shl aRI.Description.BlueShift) or
-            (G shl aRI.Description.GreenShift) or (A shl aRI.Description.AlphaShift);
+  Result := DWORD(R shl aRI.Description.Redshift)   or DWORD(B shl aRI.Description.BlueShift) or
+            DWORD(G shl aRI.Description.GreenShift) or DWORD(A shl aRI.Description.AlphaShift);
 end;
 
-function RISetAlpha(aRI:TRawImage; const aColor:LongWord; const A:Byte) : DWord;inline;
+function RISetAlpha(aRI:TRawImage; const aColor:LongWord; const A:Byte) : DWord;//inline;
+var
+  Clr : TBGRA absolute Result;
 begin
-  Result := aColor and (0 shl aRI.Description.AlphaShift);
+  //aRI.WriteChannels();
+  case aRI.Description.AlphaShift of
+    0 :;
+  end;
+  Result := RIColor(aRI, 0, 0, 0, A);
+
+  Result := aColor xor (Byte(aColor shr aRI.Description.AlphaShift) shl aRI.Description.AlphaShift);
   Result := Result or  (A shl aRI.Description.AlphaShift);
 end;
 
@@ -646,15 +654,19 @@ var
   w, h          : integer;
   Row           : PRGBArray;
   vStep         : Integer;
+  vRP           : TRawImagePosition;
 begin
   if (Width <= 0) or (Height <= 0) then Exit;
 
   vOpaque := {$IFNDEF LCLGTK2} alphaOpaque {$ELSE}alphaTransparent{$ENDIF};
-  if vOpaque > 0 then dec(vOpaque) else inc(vOpaque);
+  if vOpaque > 0 then dec(vOpaque,1) else inc(vOpaque,1);
 
   TempBmp := TBitmap.Create;
   TempBmp.PixelFormat := pf32Bit; // pf24Bit;
   TempBmp.SetSize(Width, Height);
+  //TempBmp.BeginUpdate();
+  //TempBmp.RawImage.Description.Init_BPP32_R8G8B8A8_BIO_TTB(Width, Height);
+  //TempBmp.EndUpdate();
   Assert(TempBmp.PixelFormat=pf32bit,'unsupported pixel format');
   //TempBmp.Canvas.Brush.Style := bsSolid;
   //TempBmp.Canvas.Pen.Color := clWhite;
@@ -741,9 +753,14 @@ begin
     begin
       Row := PRGBArray(slPtr);
       for w := 0 to TempBmp.Width - 1 do
-         Row[x].Color := RISetAlpha(vRI,Row[x].Color, vOpaque);
+        {$IFNDEF LCLQT}
+        Row[w].a := vOpaque;
+        //Row[x].Color := RISetAlpha(vRI, Row[x].Color, vOpaque);
+        {$ELSE}
+        Row[x].Color := RISetAlpha(vRI, Row[x].Color, vOpaque);
         //Row[w].a := vOpaque;
-      slPtr := PtrUInt(NextScanLine(vRI, pointer(slPtr), 1));
+        {$ENDIF}
+      slPtr := PtrUInt(NextScanLine(vRI, Pointer(slPtr), 1));
     end;
   finally
     //vRI:= Nil;
