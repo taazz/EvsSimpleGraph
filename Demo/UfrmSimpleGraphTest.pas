@@ -8,7 +8,7 @@ uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, LMessages, LCLType,
   LCLIntf, StdCtrls, ComCtrls, ActnList, Menus,
 
-  UEvsSimpleGraph;
+  UEvsSimpleGraph, SimpleGraph;
 
 type
 
@@ -49,6 +49,7 @@ type
     ToolButton5: TToolButton;
     ToolButton6: TToolButton;
     ToolButton7: TToolButton;
+    ToolButton8 : TToolButton;
     ToolButton9 : TToolButton;
     procedure actZoom1Update(Sender : TObject);
     procedure actZoomInExecute(Sender: TObject);
@@ -66,17 +67,21 @@ type
     procedure MenuItem6Click(Sender : TObject);
     procedure ToolButton3Click(Sender : TObject);
     procedure ToolButton4Click(Sender : TObject);
+    procedure ToolButton8Click(Sender : TObject);
   private
     { private declarations }
     Test : TEvsSimpleGraph;
     //FTemp : TScrollingWinControl
+    FOriginal : TSimpleGraph;
   protected
     //procedure WMPaint(var Message: TLMPaint); message LM_PAINT;
     procedure Print(const aMsg:string);
   public
     { public declarations }
     constructor Create(aOwner:TComponent);override;
+    constructor Original(aOWner:TComponent);
     procedure goDblClick(Graph: TEvsSimpleGraph; GraphObject: TEvsGraphObject);
+    procedure goDblClick2(Graph: TSimpleGraph; GraphObject: TGraphObject);
   end;
 
 var
@@ -115,34 +120,41 @@ end;
 
 procedure TForm1.actZoomInExecute(Sender: TObject);
 begin
-  Test.ChangeZoomBy(10, zoCenter);
+  if assigned(Test) then Test.ChangeZoomBy(10, UEvsSimpleGraph.zoCenter);
   //windows.WNDPROC;
 end;
 
 procedure TForm1.actZoom1Update(Sender : TObject);
 begin
-  actZoom1.Enabled := (Test.Zoom <> 100);
+  if assigned(Test) then actZoom1.Enabled := (Test.Zoom <> 100) else actZoom1.Enabled := False;
 end;
 
 procedure TForm1.actZoomInUpdate(Sender : TObject);
 begin
-  actZoomIn.Enabled := (Test.Zoom < High(TZoom));
+  actZoomIn.Enabled := assigned(test) and (Test.Zoom < High(TZoom));
 end;
 
 procedure TForm1.actZoomOutExecute(Sender: TObject);
 begin
-  Test.ChangeZoomBy(-10, zoCenter);
+  if assigned(test) then begin
+    Test.ChangeZoomBy(-10, UEvsSimpleGraph.zoCenter);
+  end else if Assigned(FOriginal) then
+    FOriginal.ChangeZoomBy(-10, zoCenter);
 end;
 
 procedure TForm1.actZoom1Execute(Sender: TObject);
 begin
-  Test.ChangeZoom(100, zoTopLeft);
+  if assigned(Test) then begin
+    Test.ChangeZoom(100, UEvsSimpleGraph.zoTopLeft);
+  end;
 end;
 
 procedure TForm1.Action4Execute(Sender: TObject);
 begin
-  test.DefaultNodeClass:=TEvsHexagonalNode;
-  test.CommandMode:=cmInsertNode;
+  if assigned(Test) then begin
+    test.DefaultNodeClass:=TEvsHexagonalNode;
+    test.CommandMode:=UEvsSimpleGraph.cmInsertNode;
+  end;
 end;
 
 procedure TForm1.actDebugFormExecute(Sender: TObject);
@@ -181,14 +193,24 @@ end;
 
 procedure TForm1.MenuItem1Click(Sender: TObject);
 begin
-  Test.DefaultNodeClass:=TEvsSimpleGraph.NodeClasses(TMenuItem(Sender).Tag-1);
-  test.CommandMode:=cmInsertNode;
+  if Assigned(Test) then begin
+    Test.DefaultNodeClass:=TEvsSimpleGraph.NodeClasses(TMenuItem(Sender).Tag-1);
+    test.CommandMode:=UEvsSimpleGraph.cmInsertNode;
+  end else if Assigned(FOriginal) then begin
+    FOriginal.DefaultNodeClass:=TSimpleGraph.NodeClasses(TMenuItem(Sender).Tag-1);
+    FOriginal.CommandMode:=cmInsertNode;
+  end;
 end;
 
 procedure TForm1.MenuItem2Click(Sender : TObject);
 begin
-  Test.DefaultLinkClass:=TEvsSimpleGraph.LinkClasses(TMenuItem(Sender).Tag-1-cLinkStart);
-  Test.CommandMode:=cmInsertLink;
+  if Assigned(Test) then begin
+    Test.DefaultLinkClass:=TEvsSimpleGraph.LinkClasses(TMenuItem(Sender).Tag-1-cLinkStart);
+    Test.CommandMode:=UEvsSimpleGraph.cmInsertLink;
+  end else if Assigned(FOriginal) then begin
+    FOriginal.DefaultLinkClass:=TSimpleGraph.LinkClasses(TMenuItem(Sender).Tag-1-cLinkStart);
+    FOriginal.CommandMode:=cmInsertLink;
+  end;
 end;
 
 procedure TForm1.MenuItem6Click(Sender : TObject);
@@ -217,6 +239,12 @@ begin
   vFrm := TForm3.Create(Nil);
   Guard(vFrm, vGruard);
   vFrm.ShowModal;
+end;
+
+procedure TForm1.ToolButton8Click(Sender : TObject);
+begin
+  with TForm1.Original(Application) do
+    Show;
 end;
 
 procedure TForm1.Print(const aMsg: string);
@@ -283,8 +311,53 @@ begin
   screen.Cursor:=screen.Cursors[2];
 end;
 
+constructor TForm1.Original(aOwner : TComponent);
+var
+  Cnt : Integer;
+  Mnu : TMenuItem;
+begin
+  Create(aOwner);
+  FreeAndNil(Test);
+  pmnuGraphClasses.Items.Clear;
+  for Cnt := 0 to TSimpleGraph.NodeClassCount -1 do begin
+    Mnu := TMenuItem.Create(Self);
+    pmnuGraphClasses.Items.Add(Mnu);
+    Mnu.Tag := Cnt+1;
+    Mnu.OnClick:=@MenuItem1Click;
+    Mnu.Caption:= Copy(TSimpleGraph.NodeClasses(Cnt).ClassName,5,255);
+  end;
+
+  Mnu := TMenuItem.Create(Self);
+  pmnuGraphClasses.Items.Add(Mnu);
+  //Mnu.Tag := Cnt+1;
+  //Mnu.OnClick:=@MenuItem1Click;
+  Mnu.Caption:= '-';//Copy(TEvsSimpleGraph.NodeClasses(Cnt).ClassName,5,255);
+
+  for Cnt := 0 to TSimpleGraph.LinkClassCount -1 do begin
+    Mnu := TMenuItem.Create(Self);
+    pmnuGraphClasses.Items.Add(Mnu);
+    Mnu.Tag := cLinkStart+Cnt+1;
+    Mnu.OnClick:=@MenuItem2Click;
+    Mnu.Caption:= Copy(TSimpleGraph.LinkClasses(Cnt).ClassName,5,255);
+  end;
+
+  FOriginal := TSimpleGraph.Create(Self);
+  FOriginal.Align := alClient;
+  FOriginal.Parent:=Self;
+  FOriginal.OnObjectDblClick := @goDblClick2;
+  FOriginal.Color := clWhite;
+end;
+
 procedure TForm1.goDblClick(Graph : TEvsSimpleGraph;
   GraphObject : TEvsGraphObject);
+begin
+  GraphObject.Text := InputBox(GraphObject.ClassName, 'Enter Caption', GraphObject.Text);
+  Self.Visible := True;
+  Self.WindowState := wsNormal;
+  BringToFront;
+end;
+
+procedure TForm1.goDblClick2(Graph : TSimpleGraph; GraphObject : TGraphObject);
 begin
   GraphObject.Text := InputBox(GraphObject.ClassName, 'Enter Caption', GraphObject.Text);
   Self.Visible := True;

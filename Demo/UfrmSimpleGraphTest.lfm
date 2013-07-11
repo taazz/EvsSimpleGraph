@@ -1,7 +1,7 @@
 object Form1: TForm1
-  Left = 333
+  Left = 204
   Height = 357
-  Top = 240
+  Top = 242
   Width = 487
   Caption = 'Form1'
   ClientHeight = 357
@@ -23,7 +23,7 @@ object Form1: TForm1
       Style = tbsSeparator
     end
     object ToolButton6: TToolButton
-      Left = 113
+      Left = 136
       Top = 2
       Caption = 'Item'
       DropdownMenu = pmnuGraphClasses
@@ -41,14 +41,14 @@ object Form1: TForm1
       Action = actLoad
     end
     object ToolButton1: TToolButton
-      Left = 103
+      Left = 126
       Top = 2
       Width = 10
       Caption = 'ToolButton1'
       Style = tbsSeparator
     end
     object ToolButton2: TToolButton
-      Left = 148
+      Left = 171
       Top = 2
       Caption = 'ToolButton2'
       DropdownMenu = pmnuZoom
@@ -68,6 +68,13 @@ object Form1: TForm1
       Caption = 'ToolButton4'
       ImageIndex = 0
       OnClick = ToolButton4Click
+    end
+    object ToolButton8: TToolButton
+      Left = 103
+      Top = 2
+      Caption = 'ToolButton8'
+      ImageIndex = 1
+      OnClick = ToolButton8Click
     end
   end
   object ImageList1: TImageList

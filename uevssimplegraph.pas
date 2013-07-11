@@ -119,8 +119,12 @@ interface
 {$IFDEF LCLWIN32}
 {$DEFINE WIN}
 {$ENDIF}
-{$DEFINE SUBCLASS} // required for the scroll bars to work correctly.
 
+{$IFDEF LCLQT}
+  {$DEFINE CUSTOM_LINEMIN}
+{$ENDIF}
+
+{$DEFINE SUBCLASS} // required for the scroll bars to work correctly.
 {$IFDEF SUBCLASS}
   {$MESSAGE 'Replace Scrollbar Message handlers with methods'}
   {.$DEFINE SUBCLASS_WMPRINT}      // should I support this ?? is there anything similar on other OSes?
@@ -1886,9 +1890,7 @@ begin
   begin
     GetMem(RgnData, RgnDataSize);
     try
-      //{$IFNDEF WIN} {$MESSAGE ERROR 'GetRegionData Alternative'} {$ENDIF}
       GetRegionData(Rgn, RgnDataSize, RgnData);
-      //{$IFNDEF WIN} {$MESSAGE ERROR 'ExtCreateRegion Alternative'} {$ENDIF}
       Result := ExtCreateRegion(@Xform, RgnDataSize, RgnData^);
     finally
       FreeMem(RgnData);
@@ -1902,21 +1904,48 @@ var
 begin
   Result := Rgn;
 
-  RgnDataSize := GetRegionData(Rgn, 0, nil);
-  if RgnDataSize > 0 then
-  begin
-    GetMem(RgnData, RgnDataSize);
-    try
-      //{$IFNDEF WIN} {$MESSAGE ERROR 'GetRegionData Alternative'} {$ENDIF}
-      GetRegionData(Rgn, RgnDataSize, RgnData);
-      //{$IFNDEF WIN} {$MESSAGE ERROR 'ExtCreateRegion Alternative'} {$ENDIF}
-      Result := ExtCreateRegion(@Xform, RgnDataSize, RgnData^);
-    finally
-      FreeMem(RgnData);
-    end;
-  end;
+  //RgnDataSize := GetRegionData(Rgn, 0, nil);
+  //if RgnDataSize > 0 then
+  //begin
+  //  GetMem(RgnData, RgnDataSize);
+  //  try
+  //    //{$IFNDEF WIN} {$MESSAGE ERROR 'GetRegionData Alternative'} {$ENDIF}
+  //    GetRegionData(Rgn, RgnDataSize, RgnData);
+  //    //{$IFNDEF WIN} {$MESSAGE ERROR 'ExtCreateRegion Alternative'} {$ENDIF}
+  //    Result := ExtCreateRegion(@Xform, RgnDataSize, RgnData^);
+  //  finally
+  //    FreeMem(RgnData);
+  //  end;
+  //end;
 end;
 {$ENDIF WIN_TRANSFORM}
+function LineMinizeText(aCanvas:TCanvas; const aText:String; MaxWidth:Integer):String;
+var
+  vEndStr    : String ='...';
+  DC         : HDC;
+  TextExtent : TSize;
+  S, P       : PChar;
+  TxtExt     : TSize;
+begin
+  Result := '';
+  DC := aCanvas.Handle;
+  P := PChar(aText);
+  while P^ = ' ' do
+    Inc(P);
+  S := P;
+  while (P^<>#13) and (P^ <> #10) and (P^ <> #0) do
+    Inc(P);
+  //P := @aText[Length(aText)];
+  LCLIntf.GetTextExtentPoint(DC, PChar(vEndStr), length(vEndStr), TxtExt);
+  LCLIntf.GetTextExtentPoint(DC, S, P - S + 1, TextExtent);
+  while (TextExtent.CX + TxtExt.cx) > MaxWidth do begin
+    Dec(P);
+    LCLIntf.GetTextExtentPoint(DC, S, P - S + 1, TextExtent);
+  end;
+  SetString(Result, S, P - S + 1);
+  Result := Result + vEndStr;
+end;
+
 
 function WrapText(Canvas: TCanvas; const Text: string; MaxWidth: integer): string;
 var
@@ -2049,13 +2078,13 @@ begin
         SetString(vLastLine, S + 1, E - S - 1);
         SetLength(Result, S - PChar(Result) + 1);
         {$IFDEF WIN}
-        vGlyphIndexPointer := @vGlyphIndex;
-        GetGlyphIndices(vDC, PChar(vEllipsisSingle), 1, vGlyphIndexPointer, //@vGlyphIndex,
-          GGI_MARK_NONEXISTING_GLYPHS);
-        if vGlyphIndex = $FFFF then
-          vEllipsis := @vEllipsisTriple
-        else
-          vEllipsis := @vEllipsisSingle;
+        //vGlyphIndexPointer := @vGlyphIndex;
+        //GetGlyphIndices(vDC, PChar(vEllipsisSingle), 1, vGlyphIndexPointer, //@vGlyphIndex,
+        //  GGI_MARK_NONEXISTING_GLYPHS);
+        //if vGlyphIndex = $FFFF then
+          vEllipsis := @vEllipsisTriple;
+        //else
+          //vEllipsis := @vEllipsisSingle;
         {$ELSE}
           vEllipsis := @vEllipsisTriple;
         {$ENDIF}
@@ -8157,9 +8186,14 @@ var
   TextAlign   : Integer;
   vPoint      : TPOINT;
   vTextStyle  : TTextStyle;
+  vRect : TRECT;
+  //vTSize  : TSIZE;
+  //vRgn,vOldRgn :HRGN;
+  //vTxt : String;
 begin
   if TextRegion <> 0 then
   begin
+
     GetObject(aCanvas.Font.Handle, SizeOf(vLogFont), @vLogFont);
     if Abs(TextAngle) > Pi / 2 then
       vLogFont.lfEscapement := Round(-1800 * (TextAngle - Pi) / Pi)
@@ -8177,10 +8211,8 @@ begin
       vTextFlags := 0;
     vPoint := TextCenter;
     Owner.GPToCP(vPoint, 1);
-
-    ExtTextOut(vDC, vPoint.X, vPoint.Y, vTextFlags, nil,
-      PChar(TextToShow), Length(TextToShow), nil);
-
+    ExtTextOut(vDC, vPoint.X, vPoint.Y, vTextFlags, @vRect,
+      PChar(fTextToShow), Length(fTextToShow), nil);
     SetTextAlign(vDC, TextAlign);
     SetBkMode(vDC, vBkMode);
     DeleteObject(SelectObject(vDC, vFontHandle));
@@ -8228,8 +8260,9 @@ begin
       end;
       Owner.GPToCP(vPt, 1);
       aCanvas.TextStyle := vTextStyle;
+      //vRect := Classes.Rect(0,0,round(LineLength(FPoints[FTextLine],FPoints[FTextLine+1]))-4,vSize.cy);
       ExtTextOut(aCanvas.Handle, vPt.X, vPt.Y, vTextFlags, nil,
-        PChar(TextToShow), Length(TextToShow), nil);
+        PChar(FTextToShow), Length(FTextToShow), nil);
     finally
       vCnvBck.Free;
     end;
@@ -8290,7 +8323,7 @@ begin
           Angle := LineSlopeAngle(fPoints[PointCount - 2], fPoints[PointCount - 1]);
           ModifiedPolyline[PointCount - 1] :=
             DrawPointStyle(Canvas, fPoints[PointCount - 1], Angle, EndStyle, EndSize);
-          ;
+
         end;
       finally
         Canvas.Pen.Style := OldPenStyle;
@@ -8300,13 +8333,16 @@ begin
     try
       Canvas.Brush.Style := bsClear;
       //if ModifiedPolyline <> nil then
+        //Owner.GPToCP(ModifiedPolyline, Length(ModifiedPolyline));
         OffsetPointsByOwner(ModifiedPolyline, True);
         Canvas.Polyline(ModifiedPolyline);
+        //Owner.CPToGP(ModifiedPolyline, Length(ModifiedPolyline));
         OffsetPointsByOwner(ModifiedPolyline, False);
       //else
       //  Canvas.Polyline(Polyline);
     finally
       Canvas.Brush.Style := OldBrushStyle;
+      Canvas.Pen.Style := OldPenStyle;
     end;
   end;
   ModifiedPolyline := nil;
@@ -9112,6 +9148,7 @@ var
   vTextOfs    : integer;
   vTmpText    : string;
   vCanvas     : TCanvas;
+  vSize       : TSize;
 begin
   Result := 0;
   TextToShow := '';
@@ -9134,6 +9171,9 @@ begin
     fTextAngle := LineSlopeAngle(fPoints[fTextLine], fPoints[fTextLine + 1]);
     vLineWidth := Trunc(LineLength(fPoints[fTextLine], fPoints[fTextLine + 1]));
     Dec(vLineWidth, Pen.Width + vLineMargin);
+    {$IFDEF CUSTOM_LINEMIN} //ugly hack change it.
+    if EndStyle <> lsNone then Dec(vLineWidth, 12);
+    {$ENDIF}
     if vLineWidth > 0 then
     begin
       SetRect(vTextRect, 0, 0, vLineWidth, 0);
@@ -9142,12 +9182,24 @@ begin
       vCanvas := TCompatibleCanvas.Create;
       try
         vCanvas.Font := Font;
-        LCLIntf.DrawText(vCanvas.Handle, PChar(vTmpText), -1, vTextRect,
+        {$IFNDEF WIN}
+        vSize := vCanvas.TextExtent(vTmpText);
+        vTextRect.Bottom := vSize.cy;
+        {$IFDEF CUSTOM_LINEMIN}
+        vTmpText := LineMinizeText(vCanvas, vTmpText, vLineWidth);
+        {$ELSE}
+        vTmpText := MinimizeText(vCanvas, vTmpText, vTextRect);
+        {$ENDIF}
+        {$ELSE}
+        windows.DrawText(vCanvas.Handle, PChar(vTmpText), -1, vTextRect,
           Owner.DrawTextBiDiModeFlags(cDrawTextFlags));
+        {$ENDIF}
       finally
         vCanvas.Free;
       end;
+      {$IFDEF WIN}
       SetLength(vTmpText, StrLen(PChar(vTmpText)));
+      {$ENDIF}
       TextToShow := vTmpText;
       if (TextAngle > Pi / 2) or (TextAngle < -Pi / 2) then
         vTextOfs := vTextRect.Top + (TextSpacing + (Pen.Width + 1) div 2)
@@ -10002,10 +10054,9 @@ begin
     eM12 := 0;
     eM21 := 0;
     eM22 := DevExt.CY / LogExt.CY;
+    Owner.GPToCP(Org,1);
     eDx  := Org.X;
     eDy  := Org.Y;
-    //eDx  := -Owner.HorzScrollBar.Position;// Org.X;
-    //eDy  := -Owner.VertScrollBar.Position;//Org.Y;
   end;
 
   Result := TransformRgn(Region, XForm);
@@ -10165,6 +10216,7 @@ begin
     try
       SelectClipRgn(Canvas.Handle, ClipRgn);
       try
+        //TransformRgn(ClipRgn,);
         Graphic := Background.Graphic;
         Background.OnChange := nil;
         try
