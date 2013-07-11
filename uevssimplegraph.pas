@@ -1648,10 +1648,7 @@ var
 implementation
 
 uses Math, InterfaceBase, Clipbrd;//, Windows;
-//function EqualRect(const r1,r2 : TRect) : Boolean;
-//begin
-//  EqualRect:=(r1.left=r2.left) and (r1.right=r2.right) and (r1.top=r2.top) and (r1.bottom=r2.bottom);
-//end;
+
 {$R Cursors.res}
 
 resourcestring

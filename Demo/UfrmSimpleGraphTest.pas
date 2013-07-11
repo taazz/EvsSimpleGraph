@@ -8,7 +8,7 @@ uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, LMessages, LCLType,
   LCLIntf, StdCtrls, ComCtrls, ActnList, Menus,
 
-  UEvsSimpleGraph, SimpleGraph;
+  UEvsSimpleGraph;
 const
   {$IFDEF LCLWIN32}
   EvsActiveWidgetSet = 'Win32';
@@ -83,7 +83,7 @@ type
     { public declarations }
     constructor Create(aOwner:TComponent);override;
     procedure goDblClick(Graph: TEvsSimpleGraph; GraphObject: TEvsGraphObject);
-    procedure goDblClick2(Graph: TSimpleGraph; GraphObject: TGraphObject);
+    //procedure goDblClick2(Graph: TSimpleGraph; GraphObject: TGraphObject);
   end;
 
 var
@@ -273,13 +273,13 @@ begin
   BringToFront;
 end;
 
-procedure TForm1.goDblClick2(Graph : TSimpleGraph; GraphObject : TGraphObject);
-begin
-  GraphObject.Text := InputBox(GraphObject.ClassName, 'Enter Caption', GraphObject.Text);
-  Self.Visible := True;
-  Self.WindowState := wsNormal;
-  BringToFront;
-end;
+//procedure TForm1.goDblClick2(Graph : TSimpleGraph; GraphObject : TGraphObject);
+//begin
+//  //GraphObject.Text := InputBox(GraphObject.ClassName, 'Enter Caption', GraphObject.Text);
+//  //Self.Visible := True;
+//  //Self.WindowState := wsNormal;
+//  //BringToFront;
+//end;
 
 { TTestForm }
 

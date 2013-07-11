@@ -22,7 +22,7 @@
     <MacroValues Count="1">
       <Macro1 Name="LCLWidgetType" Value="win32"/>
     </MacroValues>
-    <BuildModes Count="3" Active="QT_Debug">
+    <BuildModes Count="3" Active="Win32_Debug">
       <Item1 Name="Win32_Debug" Default="True"/>
       <Item2 Name="QT_Debug">
         <MacroValues Count="1">
@@ -114,7 +114,7 @@
         <PackageName Value="LCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="74">
+    <Units Count="75">
       <Unit0>
         <Filename Value="SimpleGraphBuilder.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -134,8 +134,9 @@
         <IsVisibleTab Value="True"/>
         <EditorIndex Value="0"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="199"/>
-        <CursorPos X="28" Y="219"/>
+        <TopLine Value="262"/>
+        <CursorPos X="1" Y="281"/>
+        <FoldState Value=" T3jC0Jd"/>
         <UsageCount Value="208"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -144,23 +145,23 @@
         <Filename Value="..\uevssimplegraph.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="UEvsSimpleGraph"/>
-        <EditorIndex Value="2"/>
+        <EditorIndex Value="1"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="1633"/>
-        <CursorPos X="34" Y="1650"/>
-        <FoldState Value=" TL10{P TIjf262 TJk;P2s2 piXk92}~1 p0jmI2o T7pUIF6134]JwZT68 T3}P035317[d4l,c0WW"/>
+        <TopLine Value="1660"/>
+        <CursorPos X="26" Y="1694"/>
+        <FoldState Value=" TL10{P TIjf262 TJk;M2s2 piXk92}~1 p0jmI2o T7pUIF6134]JwZT68 T3}M035317[d4l,c0WQ"/>
         <ExtraEditorCount Value="1"/>
         <ExtraEditor1>
           <IsVisibleTab Value="True"/>
           <EditorIndex Value="0"/>
           <WindowIndex Value="1"/>
-          <TopLine Value="10160"/>
-          <CursorPos X="22" Y="10177"/>
+          <TopLine Value="10157"/>
+          <CursorPos X="22" Y="10174"/>
           <IsLocked Value="True"/>
         </ExtraEditor1>
         <UsageCount Value="216"/>
         <Bookmarks Count="1">
-          <Item0 X="1" Y="4992" ID="0"/>
+          <Item0 X="1" Y="4989" ID="0"/>
         </Bookmarks>
         <Loaded Value="True"/>
       </Unit2>
@@ -510,12 +511,10 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="uevsRegionTests"/>
-        <EditorIndex Value="1"/>
         <WindowIndex Value="0"/>
         <TopLine Value="83"/>
         <CursorPos X="35" Y="92"/>
         <UsageCount Value="122"/>
-        <Loaded Value="True"/>
       </Unit45>
       <Unit46>
         <Filename Value="..\simplegraph_ORIGINAL\SimpleGraph.pas"/>
@@ -730,127 +729,137 @@
         <CursorPos X="10" Y="581"/>
         <UsageCount Value="25"/>
       </Unit73>
+      <Unit74>
+        <Filename Value="C:\lazarus.1.0\lcl\interfacebase.pp"/>
+        <UnitName Value="InterfaceBase"/>
+        <EditorIndex Value="2"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="1" Y="1"/>
+        <UsageCount Value="11"/>
+        <Loaded Value="True"/>
+      </Unit74>
     </Units>
-    <JumpHistory Count="30" HistoryIndex="28">
+    <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
         <Filename Value="..\uevssimplegraph.pas"/>
-        <Caret Line="8115" Column="25" TopLine="8095"/>
+        <Caret Line="8184" Column="33" TopLine="8159"/>
       </Position1>
       <Position2>
         <Filename Value="..\uevssimplegraph.pas"/>
-        <Caret Line="8120" Column="1" TopLine="8104"/>
+        <Caret Line="8349" Column="52" TopLine="8333"/>
       </Position2>
       <Position3>
         <Filename Value="..\uevssimplegraph.pas"/>
-        <Caret Line="8121" Column="22" TopLine="8099"/>
+        <Caret Line="8352" Column="21" TopLine="8333"/>
       </Position3>
       <Position4>
         <Filename Value="..\uevssimplegraph.pas"/>
-        <Caret Line="8086" Column="64" TopLine="8069"/>
+        <Caret Line="10193" Column="14" TopLine="10173"/>
       </Position4>
       <Position5>
         <Filename Value="..\uevssimplegraph.pas"/>
-        <Caret Line="8178" Column="26" TopLine="8161"/>
+        <Caret Line="893" Column="25" TopLine="878"/>
       </Position5>
       <Position6>
         <Filename Value="..\uevssimplegraph.pas"/>
-        <Caret Line="8184" Column="33" TopLine="8159"/>
+        <Caret Line="8331" Column="31" TopLine="8321"/>
       </Position6>
       <Position7>
         <Filename Value="..\uevssimplegraph.pas"/>
-        <Caret Line="8349" Column="52" TopLine="8333"/>
+        <Caret Line="8349" Column="52" TopLine="8332"/>
       </Position7>
       <Position8>
         <Filename Value="..\uevssimplegraph.pas"/>
-        <Caret Line="8352" Column="21" TopLine="8333"/>
+        <Caret Line="8353" Column="1" TopLine="8333"/>
       </Position8>
       <Position9>
         <Filename Value="..\uevssimplegraph.pas"/>
-        <Caret Line="10193" Column="14" TopLine="10173"/>
+        <Caret Line="1004" Column="18" TopLine="989"/>
       </Position9>
       <Position10>
-        <Filename Value="..\uevssimplegraph.pas"/>
-        <Caret Line="893" Column="25" TopLine="878"/>
+        <Filename Value="UfrmSimpleGraphTest.pas"/>
+        <Caret Line="358" Column="15" TopLine="340"/>
       </Position10>
       <Position11>
         <Filename Value="..\uevssimplegraph.pas"/>
-        <Caret Line="8331" Column="31" TopLine="8321"/>
+        <Caret Line="6476" Column="43" TopLine="6467"/>
       </Position11>
       <Position12>
         <Filename Value="..\uevssimplegraph.pas"/>
-        <Caret Line="8349" Column="52" TopLine="8332"/>
+        <Caret Line="9191" Column="33" TopLine="9163"/>
       </Position12>
       <Position13>
         <Filename Value="..\uevssimplegraph.pas"/>
-        <Caret Line="8353" Column="1" TopLine="8333"/>
+        <Caret Line="10107" Column="32" TopLine="10090"/>
       </Position13>
       <Position14>
-        <Filename Value="..\uevssimplegraph.pas"/>
-        <Caret Line="1004" Column="18" TopLine="989"/>
+        <Filename Value="UfrmSimpleGraphTest.pas"/>
+        <Caret Line="358" Column="5" TopLine="259"/>
       </Position14>
       <Position15>
         <Filename Value="UfrmSimpleGraphTest.pas"/>
-        <Caret Line="358" Column="15" TopLine="340"/>
+        <Caret Line="91" Column="46" TopLine="74"/>
       </Position15>
       <Position16>
-        <Filename Value="..\uevssimplegraph.pas"/>
-        <Caret Line="6476" Column="43" TopLine="6467"/>
+        <Filename Value="UfrmSimpleGraphTest.pas"/>
+        <Caret Line="57" Column="31" TopLine="23"/>
       </Position16>
       <Position17>
-        <Filename Value="..\uevssimplegraph.pas"/>
-        <Caret Line="9191" Column="33" TopLine="9163"/>
+        <Filename Value="UfrmSimpleGraphTest.pas"/>
+        <Caret Line="227" Column="1" TopLine="209"/>
       </Position17>
       <Position18>
-        <Filename Value="..\uevssimplegraph.pas"/>
-        <Caret Line="10107" Column="32" TopLine="10090"/>
+        <Filename Value="UfrmSimpleGraphTest.pas"/>
+        <Caret Line="228" Column="1" TopLine="215"/>
       </Position18>
       <Position19>
         <Filename Value="UfrmSimpleGraphTest.pas"/>
-        <Caret Line="358" Column="5" TopLine="259"/>
+        <Caret Line="85" Column="1" TopLine="75"/>
       </Position19>
       <Position20>
         <Filename Value="UfrmSimpleGraphTest.pas"/>
-        <Caret Line="91" Column="46" TopLine="74"/>
+        <Caret Line="150" Column="7" TopLine="126"/>
       </Position20>
       <Position21>
         <Filename Value="UfrmSimpleGraphTest.pas"/>
-        <Caret Line="57" Column="31" TopLine="23"/>
+        <Caret Line="200" Column="6" TopLine="183"/>
       </Position21>
       <Position22>
         <Filename Value="UfrmSimpleGraphTest.pas"/>
-        <Caret Line="227" Column="1" TopLine="209"/>
+        <Caret Line="23" Column="18" TopLine="1"/>
       </Position22>
       <Position23>
         <Filename Value="UfrmSimpleGraphTest.pas"/>
-        <Caret Line="228" Column="1" TopLine="215"/>
+        <Caret Line="215" Column="1" TopLine="201"/>
       </Position23>
       <Position24>
         <Filename Value="UfrmSimpleGraphTest.pas"/>
-        <Caret Line="85" Column="1" TopLine="75"/>
+        <Caret Line="217" Column="23" TopLine="199"/>
       </Position24>
       <Position25>
-        <Filename Value="UfrmSimpleGraphTest.pas"/>
-        <Caret Line="150" Column="7" TopLine="126"/>
+        <Filename Value="..\uevssimplegraph.pas"/>
+        <Caret Line="1650" Column="34" TopLine="1642"/>
       </Position25>
       <Position26>
         <Filename Value="UfrmSimpleGraphTest.pas"/>
-        <Caret Line="200" Column="6" TopLine="183"/>
+        <Caret Line="264" Column="20" TopLine="245"/>
       </Position26>
       <Position27>
         <Filename Value="UfrmSimpleGraphTest.pas"/>
-        <Caret Line="23" Column="18" TopLine="1"/>
+        <Caret Line="1" Column="21" TopLine="1"/>
       </Position27>
       <Position28>
         <Filename Value="UfrmSimpleGraphTest.pas"/>
-        <Caret Line="215" Column="1" TopLine="201"/>
+        <Caret Line="6" Column="21" TopLine="1"/>
       </Position28>
       <Position29>
         <Filename Value="UfrmSimpleGraphTest.pas"/>
-        <Caret Line="217" Column="23" TopLine="199"/>
+        <Caret Line="24" Column="24" TopLine="1"/>
       </Position29>
       <Position30>
         <Filename Value="UfrmSimpleGraphTest.pas"/>
-        <Caret Line="36" Column="12" TopLine="19"/>
+        <Caret Line="86" Column="15" TopLine="70"/>
       </Position30>
     </JumpHistory>
   </ProjectOptions>
