@@ -9,6 +9,16 @@ uses
   LCLIntf, StdCtrls, ComCtrls, ActnList, Menus,
 
   UEvsSimpleGraph, SimpleGraph;
+const
+  {$IFDEF LCLWIN32}
+  EvsActiveWidgetSet = 'Win32';
+  {$ENDIF}
+  {$IFDEF LCLQT}
+  EvsActiveWidgetSet = 'QT';
+  {$ENDIF}
+  {$IFDEF LCLGTK2}
+  EvsActiveWidgetSet = 'GTK2';
+  {$ENDIF}
 
 type
 
@@ -64,22 +74,14 @@ type
       Y : Integer);
     procedure MenuItem1Click(Sender: TObject);
     procedure MenuItem2Click(Sender: TObject);
-    procedure MenuItem6Click(Sender : TObject);
     procedure ToolButton3Click(Sender : TObject);
-    procedure ToolButton4Click(Sender : TObject);
-    procedure ToolButton8Click(Sender : TObject);
   private
     { private declarations }
     Test : TEvsSimpleGraph;
-    //FTemp : TScrollingWinControl
-    FOriginal : TSimpleGraph;
   protected
-    //procedure WMPaint(var Message: TLMPaint); message LM_PAINT;
-    procedure Print(const aMsg:string);
   public
     { public declarations }
     constructor Create(aOwner:TComponent);override;
-    constructor Original(aOWner:TComponent);
     procedure goDblClick(Graph: TEvsSimpleGraph; GraphObject: TEvsGraphObject);
     procedure goDblClick2(Graph: TSimpleGraph; GraphObject: TGraphObject);
   end;
@@ -88,8 +90,7 @@ var
   Form1 : TForm1; 
 
 implementation
-uses {windows, freetype, IniFiles,} uFrmDebug, UEvsMisc, uevsRegionTests,
-  uEvsBackupClasses;
+uses {windows, freetype, IniFiles,} uFrmDebug;
 
 {$R *.lfm}
 const
@@ -138,8 +139,7 @@ procedure TForm1.actZoomOutExecute(Sender: TObject);
 begin
   if assigned(test) then begin
     Test.ChangeZoomBy(-10, UEvsSimpleGraph.zoCenter);
-  end else if Assigned(FOriginal) then
-    FOriginal.ChangeZoomBy(-10, zoCenter);
+  end;
 end;
 
 procedure TForm1.actZoom1Execute(Sender: TObject);
@@ -196,9 +196,6 @@ begin
   if Assigned(Test) then begin
     Test.DefaultNodeClass:=TEvsSimpleGraph.NodeClasses(TMenuItem(Sender).Tag-1);
     test.CommandMode:=UEvsSimpleGraph.cmInsertNode;
-  end else if Assigned(FOriginal) then begin
-    FOriginal.DefaultNodeClass:=TSimpleGraph.NodeClasses(TMenuItem(Sender).Tag-1);
-    FOriginal.CommandMode:=cmInsertNode;
   end;
 end;
 
@@ -207,21 +204,6 @@ begin
   if Assigned(Test) then begin
     Test.DefaultLinkClass:=TEvsSimpleGraph.LinkClasses(TMenuItem(Sender).Tag-1-cLinkStart);
     Test.CommandMode:=UEvsSimpleGraph.cmInsertLink;
-  end else if Assigned(FOriginal) then begin
-    FOriginal.DefaultLinkClass:=TSimpleGraph.LinkClasses(TMenuItem(Sender).Tag-1-cLinkStart);
-    FOriginal.CommandMode:=cmInsertLink;
-  end;
-end;
-
-procedure TForm1.MenuItem6Click(Sender : TObject);
-var
-  vFrm :TForm3;
-begin
-  vFrm := TForm3.Create(nil);
-  try
-    vFrm.ShowModal;
-  finally
-    vFrm.Free;
   end;
 end;
 
@@ -229,27 +211,6 @@ procedure TForm1.ToolButton3Click(Sender : TObject);
 begin
   if dlgSave.Execute then
     Test.SaveToFile(dlgSave.FileName);
-end;
-
-procedure TForm1.ToolButton4Click(Sender : TObject);
-var
-  vFrm : TForm;
-  vGruard : IGuardian = Nil;
-begin
-  vFrm := TForm3.Create(Nil);
-  Guard(vFrm, vGruard);
-  vFrm.ShowModal;
-end;
-
-procedure TForm1.ToolButton8Click(Sender : TObject);
-begin
-  with TForm1.Original(Application) do
-    Show;
-end;
-
-procedure TForm1.Print(const aMsg: string);
-begin
-  uFrmDebug.EvsDbgPrint(aMsg);
 end;
 
 constructor TForm1.Create(aOwner : TComponent);
@@ -287,9 +248,7 @@ begin
 
   Mnu := TMenuItem.Create(Self);
   pmnuGraphClasses.Items.Add(Mnu);
-  //Mnu.Tag := Cnt+1;
-  //Mnu.OnClick:=@MenuItem1Click;
-  Mnu.Caption:= '-';//Copy(TEvsSimpleGraph.NodeClasses(Cnt).ClassName,5,255);
+  Mnu.Caption:= '-';
 
   for Cnt := 0 to TEvsSimpleGraph.LinkClassCount -1 do begin
     Mnu := TMenuItem.Create(Self);
@@ -302,50 +261,7 @@ begin
   Test.OnObjectDblClick := @goDblClick;
   {$ENDIF}
 
-  //TestCtrl := TTestControl.Create(Self);
-  //TestCtrl.Align:=alClient;
-  //TestCtrl.Parent  := Self;
-  //TestCtrl.Visible := True;
-  Caption := caption +'-' +uevsmisc.EvsActiveWidgetSet;
-  Form1.Cursor:=Screen.Cursors[2];
-  screen.Cursor:=screen.Cursors[2];
-end;
-
-constructor TForm1.Original(aOwner : TComponent);
-var
-  Cnt : Integer;
-  Mnu : TMenuItem;
-begin
-  Create(aOwner);
-  FreeAndNil(Test);
-  pmnuGraphClasses.Items.Clear;
-  for Cnt := 0 to TSimpleGraph.NodeClassCount -1 do begin
-    Mnu := TMenuItem.Create(Self);
-    pmnuGraphClasses.Items.Add(Mnu);
-    Mnu.Tag := Cnt+1;
-    Mnu.OnClick:=@MenuItem1Click;
-    Mnu.Caption:= Copy(TSimpleGraph.NodeClasses(Cnt).ClassName,5,255);
-  end;
-
-  Mnu := TMenuItem.Create(Self);
-  pmnuGraphClasses.Items.Add(Mnu);
-  //Mnu.Tag := Cnt+1;
-  //Mnu.OnClick:=@MenuItem1Click;
-  Mnu.Caption:= '-';//Copy(TEvsSimpleGraph.NodeClasses(Cnt).ClassName,5,255);
-
-  for Cnt := 0 to TSimpleGraph.LinkClassCount -1 do begin
-    Mnu := TMenuItem.Create(Self);
-    pmnuGraphClasses.Items.Add(Mnu);
-    Mnu.Tag := cLinkStart+Cnt+1;
-    Mnu.OnClick:=@MenuItem2Click;
-    Mnu.Caption:= Copy(TSimpleGraph.LinkClasses(Cnt).ClassName,5,255);
-  end;
-
-  FOriginal := TSimpleGraph.Create(Self);
-  FOriginal.Align := alClient;
-  FOriginal.Parent:=Self;
-  FOriginal.OnObjectDblClick := @goDblClick2;
-  FOriginal.Color := clWhite;
+  Caption := caption + '-' + EvsActiveWidgetSet;
 end;
 
 procedure TForm1.goDblClick(Graph : TEvsSimpleGraph;
