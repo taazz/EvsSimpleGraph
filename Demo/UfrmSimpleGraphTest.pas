@@ -35,6 +35,8 @@ type
     MenuItem2 : TMenuItem;
     MenuItem3 : TMenuItem;
     MenuItem4 : TMenuItem;
+    MenuItem5 : TMenuItem;
+    MenuItem6 : TMenuItem;
     OpenDialog1 : TOpenDialog;
     pmnuGraphClasses: TPopupMenu;
     pmnuZoom : TPopupMenu;
@@ -61,6 +63,7 @@ type
       Y : Integer);
     procedure MenuItem1Click(Sender: TObject);
     procedure MenuItem2Click(Sender: TObject);
+    procedure MenuItem6Click(Sender : TObject);
     procedure ToolButton3Click(Sender : TObject);
     procedure ToolButton4Click(Sender : TObject);
   private
@@ -186,6 +189,18 @@ procedure TForm1.MenuItem2Click(Sender : TObject);
 begin
   Test.DefaultLinkClass:=TEvsSimpleGraph.LinkClasses(TMenuItem(Sender).Tag-1-cLinkStart);
   Test.CommandMode:=cmInsertLink;
+end;
+
+procedure TForm1.MenuItem6Click(Sender : TObject);
+var
+  vFrm :TForm3;
+begin
+  vFrm := TForm3.Create(nil);
+  try
+    vFrm.ShowModal;
+  finally
+    vFrm.Free;
+  end;
 end;
 
 procedure TForm1.ToolButton3Click(Sender : TObject);

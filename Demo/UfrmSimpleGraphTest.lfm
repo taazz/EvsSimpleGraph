@@ -628,6 +628,13 @@ object Form1: TForm1
         C518000000000000000000000000000000000000000000000000
       }
     end
+    object MenuItem5: TMenuItem
+      Caption = '-'
+    end
+    object MenuItem6: TMenuItem
+      Caption = 'Form3'
+      OnClick = MenuItem6Click
+    end
   end
   object dlgSave: TSaveDialog
     left = 296

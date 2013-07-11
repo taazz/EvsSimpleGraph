@@ -1696,6 +1696,61 @@ function GetGlyphIndicesA(DC:HDC; Text:PChar; Count:Integer; GlyphIndices:PWord;
 
 {$REGION ' HELPER FUNCTIONS '}
 {Windows replacement functions}
+function Evs_DecToRad(aAngle:Double):Double;
+begin
+  Result := 3.141592654 * 2 / 360 * aAngle;
+end;
+
+function RotateCCW(aPoint:Tpoint; aAngle:Double):TPoint; overload;
+var
+  vSinA, vCosA : Extended;
+  vRads      : Double;
+begin
+  vRads := {3.141592654 * 2 / 360 *} aAngle;
+  vSinA := Sin(vRads);vCosA := Cos(vRads);
+  Result.x := round((aPoint.x * vCosA) + (aPoint.y * vSinA));
+  Result.y := round(-(aPoint.x * vSinA) + (aPoint.y * vCosA));
+end;
+function RotateCCW(aPoint:Tpoint; aAngle:Double; aCenter:TPoint):TPoint; overload;
+var
+  vSinA, vCosA : Extended;
+  vRads      : Double;
+begin
+  vRads := aAngle;
+  vSinA := Sin(vRads);vCosA := Cos(vRads);
+  Result.X := aPoint.x - aCenter.x;
+  Result.Y := aPoint.y - aCenter.y;
+  Result.x := round((Result.x * vCosA) + (Result.y * vSinA));
+  Result.y := round(-(Result.x * vSinA) + (Result.y * vCosA));
+  Result.x := Result.x + aCenter.x;
+  Result.y := Result.y + aCenter.y;
+end;
+
+function RotateCW(aPoint:Tpoint; aAngle:Double):TPoint;overload;
+var
+  vSinA, vCosA : Extended;
+  vRads      : Double;
+begin
+  vRads := {3.141592654 * 2 / 360 *} aAngle;
+  vSinA := Sin(vRads);vCosA := Cos(vRads);
+
+  Result.x := round((aPoint.x*vCosA) - (aPoint.y * vSinA));
+  Result.y := round((aPoint.x*vSinA) + (aPoint.y* vCosA));
+end;
+function RotateCW(aPoint:Tpoint; aAngle:Double; aCenter:TPoint):TPoint; overload;
+var
+  vSinA, vCosA : Extended;
+  vRads      : Double;
+begin
+  vRads := aAngle;
+  vSinA := Sin(vRads);vCosA := Cos(vRads);
+  Result.X := aPoint.x - aCenter.x;
+  Result.Y := aPoint.y - aCenter.y;
+  Result.x := round((Result.x * vCosA) - (Result.y * vSinA));
+  Result.y := round((Result.x * vSinA) + (Result.y * vCosA));
+  Result.x := Result.x + aCenter.x;
+  Result.y := Result.y + aCenter.y;
+end;
 
 function PtInPoly
    (const Points: Array of TPoint; X,Y: Integer):
@@ -1729,7 +1784,7 @@ begin
 {$IFDEF WIN}
   Result := Windows.SetTextAlign(DC, Flags);
 {$ELSE}
-  Result := LCLIntf.SetTextAlign(DC, Flags);
+  //Result := LCLIntf.SetTextAlign(DC, Flags);
   {.$MESSAGE ERROR 'SETTEXTALIGN ALTERNATIVE NEEDED'} //JKOZ ERROR
 {$ENDIF}
 end;
@@ -1841,10 +1896,25 @@ begin
   end;
 end;
 {$ELSE WIN_TRANSFORM}
+var
+  RgnData     : PRGNDATA;
+  RgnDataSize : DWORD;
 begin
   Result := Rgn;
 
-  {$MESSAGE WARNING 'TransformRgn Alternative'}
+  RgnDataSize := GetRegionData(Rgn, 0, nil);
+  if RgnDataSize > 0 then
+  begin
+    GetMem(RgnData, RgnDataSize);
+    try
+      //{$IFNDEF WIN} {$MESSAGE ERROR 'GetRegionData Alternative'} {$ENDIF}
+      GetRegionData(Rgn, RgnDataSize, RgnData);
+      //{$IFNDEF WIN} {$MESSAGE ERROR 'ExtCreateRegion Alternative'} {$ENDIF}
+      Result := ExtCreateRegion(@Xform, RgnDataSize, RgnData^);
+    finally
+      FreeMem(RgnData);
+    end;
+  end;
 end;
 {$ENDIF WIN_TRANSFORM}
 
@@ -4812,7 +4882,7 @@ begin
   {$IFDEF LCLWIN32}
   vMemDC := CreateCompatibleDC(0);
   try
-    AdjustDC(vMemDC);        //jkoz Remove AdjustDC
+    AdjustDC(vMemDC);
     LPtoDP(vMemDC, aPoints, aCount);
   finally
     DeleteDC(vMemDC);
@@ -7583,12 +7653,6 @@ begin
   end;
 end;
 
-//procedure TEvsGraphObject.DoObjectInitInstance(GraphObject: TEvsGraphObject);
-//begin
-//  if Assigned(fOnObjectInitInstance) then
-//    fOnObjectInitInstance(Self, GraphObject);
-//end;
-
 procedure TEvsGraphObject.Draw(aCanvas : TCanvas);
 begin
   if IsVisibleOn(aCanvas) then
@@ -8082,6 +8146,7 @@ begin
   end;
 end;
 
+{$IFDEF LCLWIN32}
 procedure TEvsGraphLink.DrawText(aCanvas: TCanvas);
 var
   vDC         : HDC;
@@ -8091,8 +8156,8 @@ var
   vBkMode,
   TextAlign   : Integer;
   vPoint      : TPOINT;
+  vTextStyle  : TTextStyle;
 begin
-  aCanvas.Font.Handle := ;
   if TextRegion <> 0 then
   begin
     GetObject(aCanvas.Font.Handle, SizeOf(vLogFont), @vLogFont);
@@ -8105,22 +8170,72 @@ begin
     vDC := aCanvas.Handle;
     vFontHandle := SelectObject(vDC, CreateFontIndirect(vLogFont));
     vBkMode := SetBkMode(vDC, TRANSPARENT);
-    TextAlign := SetTextAlign(vDC, TA_BOTTOM or TA_CENTER); //jkoz -STA
+    TextAlign := SetTextAlign(vDC, TA_BOTTOM or TA_CENTER);
     if Owner.UseRightToLeftReading then
       vTextFlags := ETO_RTLREADING
     else
       vTextFlags := 0;
     vPoint := TextCenter;
-    OffsetPointByOwner(vPoint, True);
-    aCanvas.TextOut();
+    Owner.GPToCP(vPoint, 1);
+
     ExtTextOut(vDC, vPoint.X, vPoint.Y, vTextFlags, nil,
       PChar(TextToShow), Length(TextToShow), nil);
-    //OffsetPointByOwner(vPoint,false);
-    SetTextAlign(vDC, TextAlign);  //jkoz -STA
+
+    SetTextAlign(vDC, TextAlign);
     SetBkMode(vDC, vBkMode);
     DeleteObject(SelectObject(vDC, vFontHandle));
   end;
 end;
+{$ELSE}
+procedure TEvsGraphLink.DrawText(aCanvas: TCanvas);
+var
+  vPoint, vPt : TPOINT;
+  vTextStyle  : TTextStyle;
+  vCnvBck     : TCanvasRecall;
+  vTextFlags  : Integer;
+  vSize       : TSize;
+begin
+  if TextRegion <> 0 then
+  begin
+    vCnvBck := TCanvasRecall.Create(aCanvas);
+    try
+      aCanvas.AntialiasingMode := amOn;
+      aCanvas.Font.Quality := fqCleartypeNatural;
+      aCanvas.Brush.Style := bsClear;
+      vTextStyle := aCanvas.TextStyle;
+      vTextStyle.Alignment := taCenter;
+      vTextStyle.Layout := tlBottom;
+      vTextStyle.Opaque := False;
+      vTextStyle.Clipping := True;
+      if Owner.UseRightToLeftReading then begin
+        vTextFlags := ETO_RTLREADING;
+        vTextStyle.RightToLeft := True;
+      end else begin
+        vTextStyle.RightToLeft := False;
+        vTextFlags := 0;
+      end;
+      vSize := aCanvas.TextExtent(TextToShow);
+      vPoint := TextCenter;
+      vPt.x := vPoint.x - (vSize.cx div 2);
+      vPt.y := vPoint.y - vSize.cy;
+      if Abs(TextAngle) > Pi / 2 then begin
+        aCanvas.Font.Orientation := Round(-1800 * (TextAngle - Pi) / Pi);
+        RotatePoints(vPt, TextAngle - Pi, TextCenter);//needs convertion to radians????
+      end
+      else begin
+        aCanvas.Font.Orientation := Round(-1800 * TextAngle / Pi);
+        RotatePoints(vPt, TextAngle, TextCenter);
+      end;
+      Owner.GPToCP(vPt, 1);
+      aCanvas.TextStyle := vTextStyle;
+      ExtTextOut(aCanvas.Handle, vPt.X, vPt.Y, vTextFlags, nil,
+        PChar(TextToShow), Length(TextToShow), nil);
+    finally
+      vCnvBck.Free;
+    end;
+  end;
+end;
+{$ENDIF}
 
 procedure TEvsGraphLink.DrawBody(Canvas: TCanvas);
   procedure CopyPoints(Var Source,Dest:TPoints);
@@ -9887,21 +10002,13 @@ begin
     eM12 := 0;
     eM21 := 0;
     eM22 := DevExt.CY / LogExt.CY;
-    //eDx  := Org.X;
-    //eDy  := Org.Y;
-    eDx  := -Owner.HorzScrollBar.Position;// Org.X;
-    eDy  := -Owner.VertScrollBar.Position;//Org.Y;
+    eDx  := Org.X;
+    eDy  := Org.Y;
+    //eDx  := -Owner.HorzScrollBar.Position;// Org.X;
+    //eDy  := -Owner.VertScrollBar.Position;//Org.Y;
   end;
 
   Result := TransformRgn(Region, XForm);
-  ACanvas.Brush.Color := clRed;
-  FillRgn(ACanvas.Handle, Result, ACanvas.Brush.Handle);
-  {$IFDEF DBGFRM_REGIONTRANSFORM}
-  EvsDbgPrint(Format('EM11 = %.3F, EM12 = %.3F, EM21 = %.3F, EM22 = %.3F, eDx = %.3F, eDy = %.3F',
-                     [XForm.eM11, XForm.eM12, XForm.eM21, XForm.eM22, XForm.eDx, XForm.eDy]));
-  {$ENDIF}
-  {$MESSAGE WARN 'TransformRegion Alternative'}  //JKOZ ERROR
-  //OffsetRgn(Result, -OwnerOffsetX, -OwnerOffsetY);
 end;
 
 procedure TEvsGraphNode.QueryMaxTextRect(out Rect: TRect);
@@ -10025,8 +10132,6 @@ begin
 
     LCLIntf.DrawText(DC, PChar(TextToShow), Length(TextToShow), Rect,
     Owner.DrawTextBiDiModeFlags(DrawTextFlags));
-    Canvas.TextOut();
-    Canvas.TextStyle;
     //SetTextAlign(DC, TextAlign);  // //Jkoz -STA
     {
      So far this works as expected with out the settextalign call.
