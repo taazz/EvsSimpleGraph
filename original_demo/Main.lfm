@@ -13,6 +13,7 @@ object MainForm: TMainForm
   Menu = MainMenu
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
+  OnMouseWheel = FormMouseWheel
   LCLVersion = '1.0.10.0'
   WindowState = wsMaximized
   object ToolBar: TToolBar
@@ -139,21 +140,25 @@ object MainForm: TMainForm
       Left = 376
       Top = 2
       Action = ObjectsTriangle
+      Grouped = True
     end
     object ToolButton34: TToolButton
       Left = 399
       Top = 2
       Action = ObjectsRhomboid
+      Grouped = True
     end
     object ToolButton35: TToolButton
       Left = 422
       Top = 2
       Action = ObjectsPentagon
+      Grouped = True
     end
     object ToolButton23: TToolButton
       Left = 445
       Top = 2
       Action = ObjectsHexagon
+      Grouped = True
     end
     object ToolButton16: TToolButton
       Left = 468
@@ -427,11 +432,13 @@ object MainForm: TMainForm
       Left = 562
       Top = 2
       Action = ViewZoomIn
+      Visible = False
     end
     object ToolButton49: TToolButton
       Left = 585
       Top = 2
       Action = ViewZoomOut
+      Visible = False
     end
   end
   object ImageList: TImageList
@@ -3490,6 +3497,7 @@ object MainForm: TMainForm
           0000000000007F7F7FFF000000FF000000FF000000FF7F7F7FFF000000000000
           0000000000000000000000000000000000000000000000000000
         }
+        Visible = False
       end
       object ZoomOut1: TMenuItem
         Action = ViewZoomOut
@@ -3529,15 +3537,19 @@ object MainForm: TMainForm
           0000000000007F7F7FFF000000FF000000FF000000FF7F7F7FFF000000000000
           0000000000000000000000000000000000000000000000000000
         }
+        Visible = False
       end
       object ActualSize1: TMenuItem
         Action = ViewActualSize
+        Visible = False
       end
       object FullGraph1: TMenuItem
         Action = ViewWholeGraph
+        Visible = False
       end
       object N20: TMenuItem
         Caption = '-'
+        Visible = False
       end
       object PanMode1: TMenuItem
         Action = ViewPan

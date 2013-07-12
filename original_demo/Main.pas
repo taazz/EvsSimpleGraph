@@ -19,10 +19,24 @@ interface
 uses
   LCLIntf, LCLType, LMessages, Messages, SysUtils, Classes, Graphics, Controls, Forms,
   Dialogs, ExtDlgs, Menus, ActnList, ImgList, StdCtrls, ComCtrls, ToolWin,
-  Buttons, FileUtil, UevsSimplegraph, PrintersDlgs;
+  Buttons, FileUtil, UevsSimplegraph, PrintersDlgs, types;
+const
+
+{$IFDEF LCLWIN32}
+   ActiveWindgetSet = 'Win32';
+{$ELSE}
+  {$IFDEF LCLQT}
+    ActiveWindgetSet = 'QT';
+  {$ELSE}
+    {$IFDEF LCLGTK2}
+      ActiveWindgetSet = 'GTK2';
+    {$ELSE}
+      ActiveWindgetSet = 'Unknown';
+    {$ENDIF}
+  {$ENDIF}
+{$ENDIF}
 
 type
-
   { TMainForm }
 
   TMainForm = class(TForm)
@@ -277,6 +291,8 @@ type
     procedure FormatAlignLeftExecute(Sender: TObject);
     procedure FormatCenterExecute(Sender: TObject);
     procedure FormatAlignRightExecute(Sender: TObject);
+    procedure FormMouseWheel(Sender : TObject; Shift : TShiftState;
+      WheelDelta : Integer; MousePos : TPoint; var Handled : Boolean);
     procedure HelpAboutExecute(Sender: TObject);
     procedure ObjectsNoneExecute(Sender: TObject);
     procedure ObjectsRectangleExecute(Sender: TObject);
@@ -596,7 +612,7 @@ begin
     SimpleGraph.OnGraphChange          := SimpleGraphGraphChange;
     SimpleGraph.OnCommandModeChange    := SimpleGraphCommandModeChange;
     SimpleGraph.OnInfoTip              := SimpleGraphInfoTip;
-    SimpleGraph.OnZoomChange           := SimpleGraphZoomChange;
+    //SimpleGraph.OnZoomChange           := SimpleGraphZoomChange;
     SimpleGraph.Parent                 := Self;
 end;
 
@@ -996,6 +1012,13 @@ procedure TMainForm.FormatAlignRightExecute(Sender: TObject);
 begin
   FormatAlignRight.Checked := True;
   SimpleGraph.ForEachObject(ForEachCallback, FEO_SETALIGNMENTRIGHT, True);
+end;
+
+procedure TMainForm.FormMouseWheel(Sender : TObject; Shift : TShiftState;
+  WheelDelta : Integer; MousePos : TPoint; var Handled : Boolean);
+begin
+  //SimpleGraph.ScrollBy();
+  Handled := False;
 end;
 
 procedure TMainForm.FormatAlignTopExecute(Sender: TObject);
@@ -1567,36 +1590,35 @@ end;
 
 procedure TMainForm.SimpleGraphMouseWheelDown(Sender: TObject;
   Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
-var
-  I: Integer;
 begin
-  MousePos := SimpleGraph.ScreenToClient(MousePos);
-  if PtInRect(SimpleGraph.ClientRect, MousePos) then
-  begin
-    for I := 1 to 5 do
-    begin
-      SimpleGraph.ChangeZoomBy(-1, zoCursor);
-      SimpleGraph.Update;
-    end;
-    Handled := True;
-  end;
+  //MousePos := SimpleGraph.ScreenToClient(MousePos);
+
+  //if PtInRect(SimpleGraph.ClientRect, MousePos) then
+  //begin
+  //  for I := 1 to 5 do
+  //  begin
+  //    SimpleGraph.ChangeZoomBy(-1, zoCursor);
+  //    SimpleGraph.Update;
+  //  end;
+    Handled := False;
+  //end;
 end;
 
 procedure TMainForm.SimpleGraphMouseWheelUp(Sender: TObject;
   Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
-var
-  I: Integer;
+//var
+//  I: Integer;
 begin
-  MousePos := SimpleGraph.ScreenToClient(MousePos);
-  if PtInRect(SimpleGraph.ClientRect, MousePos) then
-  begin
-    for I := 1 to 5 do
-    begin
-      SimpleGraph.ChangeZoomBy(+1, zoCursor);
-      SimpleGraph.Update;
-    end;
-    Handled := True;
-  end;
+  //MousePos := SimpleGraph.ScreenToClient(MousePos);
+  //if PtInRect(SimpleGraph.ClientRect, MousePos) then
+  //begin
+  //  for I := 1 to 5 do
+  //  begin
+  //    SimpleGraph.ChangeZoomBy(+1, zoCursor);
+  //    SimpleGraph.Update;
+  //  end;
+    Handled := False;
+  //end;
 end;
 
 procedure TMainForm.SimpleGraphObjectAfterDraw(Graph: TEvsSimpleGraph;

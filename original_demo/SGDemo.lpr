@@ -15,6 +15,8 @@ uses
   AlignDlg in 'AlignDlg.pas' {AlignDialog},
   SizeDlg in 'SizeDlg.pas', Interfaces {SizeDialog};
 
+{$R *.res}
+
 begin
   Application.Initialize;
   Application.Title := 'Simple Graph Demo';

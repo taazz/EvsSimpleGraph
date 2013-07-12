@@ -1,72 +1,73 @@
 object About: TAbout
   Left = 555
+  Height = 249
   Top = 116
+  Width = 398
   BorderStyle = bsDialog
   Caption = 'About'
   ClientHeight = 249
   ClientWidth = 398
   Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
   Font.Name = 'MS Shell Dlg 2'
-  Font.Style = []
   OnCreate = FormCreate
-  PixelsPerInch = 96
+  LCLVersion = '1.0.10.0'
   object Bevel1: TBevel
     Left = 6
+    Height = 193
     Top = 12
     Width = 385
-    Height = 193
     Style = bsRaised
   end
   object Shape1: TShape
     Left = 7
+    Height = 192
     Top = 13
     Width = 384
-    Height = 192
     Brush.Color = 16514043
     Pen.Style = psClear
   end
   object Label1: TLabel
     Left = 18
+    Height = 24
     Top = 60
-    Width = 134
-    Height = 23
+    Width = 135
     Caption = 'TSimpleGraph'
-    Font.Charset = ANSI_CHARSET
+    Font.CharSet = ANSI_CHARSET
     Font.Color = clWindowText
     Font.Height = -19
     Font.Name = 'Tahoma'
     Font.Style = [fsBold]
+    ParentColor = False
     ParentFont = False
     ShowAccelChar = False
-    Transparent = True
   end
   object Label2: TLabel
     Left = 18
+    Height = 14
     Top = 84
-    Width = 264
-    Height = 13
+    Width = 265
     Caption = 'Copyright (C) Kambiz R. Khojasteh. All rights reserved.'
+    ParentColor = False
     ShowAccelChar = False
-    Transparent = True
   end
   object Label3: TLabel
     Left = 18
-    Top = 102
-    Width = 361
-    Height = 91
+    Height = 101
+    Top = 104
+    Width = 349
+    AutoSize = False
     Caption = 'TSimpleGraph component is freeware. You may copy component''s files AS LONG AS YOU COPY ALL OF THEM. If you want to change the source code in order to improve the component''s features, performance, etc. please send me the new source code so that I can have a look at it. The changed source code should contain descriptions what you have changed, and of course your name. The only thing you MAY NOT CHANGE is the ORIGINAL COPYRIGHT INFORMATION.'
+    ParentColor = False
     ShowAccelChar = False
-    Transparent = True
     WordWrap = True
   end
   object Image1: TImage
     Left = 18
+    Height = 28
     Top = 24
     Width = 130
-    Height = 28
     AutoSize = True
     Picture.Data = {
       07544269746D6170A6120000424DA61200000000000036040000280000008200
@@ -223,24 +224,22 @@ object About: TAbout
   end
   object Label4: TLabel
     Left = 154
+    Height = 12
     Top = 62
-    Width = 24
-    Height = 11
+    Width = 25
     Caption = 'v2.80'
-    Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -9
     Font.Name = 'Tahoma'
-    Font.Style = []
+    ParentColor = False
     ParentFont = False
     ShowAccelChar = False
-    Transparent = True
   end
   object btnOk: TButton
     Left = 7
+    Height = 25
     Top = 216
     Width = 75
-    Height = 25
     Cancel = True
     Caption = 'OK'
     Default = True

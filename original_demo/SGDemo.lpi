@@ -14,6 +14,7 @@
       <Title Value="SGDemo"/>
       <UseAppBundle Value="False"/>
       <ResourceType Value="res"/>
+      <Icon Value="0"/>
     </General>
     <i18n>
       <EnableI18N LFM="False"/>
@@ -26,8 +27,10 @@
     </BuildModes>
     <PublishOptions>
       <Version Value="2"/>
-      <IncludeFileFilter Value="*.(pas|pp|inc|lfm|lpr|lrs|lpi|lpk|sh|xml)"/>
+      <DestinationDirectory Value="$(ProjPath)\published\"/>
+      <IncludeFileFilter Value="*.(pas|pp|inc|lfm|lpr|lrs|lpi|lpk|sh|xml|res)"/>
       <ExcludeFileFilter Value="*.(bak|ppu|o|so);*~;backup"/>
+      <SaveClosedEditorFilesInfo Value="True"/>
     </PublishOptions>
     <RunParams>
       <local>
@@ -82,7 +85,9 @@
       <Unit6>
         <Filename Value="AboutDelphiArea.pas"/>
         <IsPartOfProject Value="True"/>
+        <ComponentName Value="About"/>
         <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
         <UnitName Value="AboutDelphiArea"/>
       </Unit6>
       <Unit7>

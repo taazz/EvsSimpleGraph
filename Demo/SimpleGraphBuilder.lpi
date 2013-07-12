@@ -135,7 +135,7 @@
         <EditorIndex Value="0"/>
         <WindowIndex Value="0"/>
         <TopLine Value="193"/>
-        <CursorPos X="25" Y="14"/>
+        <CursorPos X="20" Y="198"/>
         <FoldState Value=" T3jC0Jd"/>
         <UsageCount Value="208"/>
         <Loaded Value="True"/>
@@ -151,8 +151,6 @@
         <CursorPos X="40" Y="182"/>
         <ExtraEditorCount Value="1"/>
         <ExtraEditor1>
-          <IsVisibleTab Value="True"/>
-          <WindowIndex Value="1"/>
           <TopLine Value="10036"/>
           <CursorPos X="22" Y="10053"/>
         </ExtraEditor1>
