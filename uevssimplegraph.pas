@@ -130,7 +130,7 @@ interface
   {.$DEFINE SUBCLASS_WMPRINT}      // should I support this ?? is there anything similar on other OSes?
 {$ENDIF}
 
-{$DEFINE DBGFRM} // replace with fpc debug units and remove dependency.
+{.$DEFINE DBGFRM} // replace with fpc debug units and remove dependency.
  {$IFDEF DBGFRM}
     {.$DEFINE DBGFRM_SCROLLMESSAGE}
     {.$DEFINE DBGFRM_HITTEST}
@@ -8398,10 +8398,6 @@ begin
     {$MESSAGE WARN 'PtInRegion does no work on GTK2'}
     {$ENDIF}
     PtInRegion(TextRegion, Pt.X, Pt.Y)
-    //{$ELSE}
-    //  {$MESSAGE WARN 'REGION IMPLEMENTATION'}
-    //  PtInRegion(TextRegion, Pt.X, Pt.Y)
-    //{$ENDIF}
       then
     Result := GHT_CAPTION or GHT_CLIENT
   else
@@ -9721,8 +9717,8 @@ var
 begin
   {$IFDEF DBGFRM_HITTEST}
   EvsDbgPrint('TEvsGraphNode.QueryHitTest');
-  {$ENDIF DBGFRM_HITTEST}
   EvsDbgPrint(Pt);
+  {$ENDIF DBGFRM_HITTEST}
   if Selected then
   begin
     Result := GHT_NOWHERE;
@@ -11023,7 +11019,7 @@ initialization
   Screen.Cursors[crXHair3]    := LoadCursor(HInstance, 'SG_XHAIR3');
   Screen.Cursors[crXHairLink] := LoadCursor(HInstance, 'SG_XHAIRLINK');
   // Registers Clipboard Format
-  CF_SIMPLEGRAPH := RegisterClipboardFormat('Simple Graph Format');
+  //CF_SIMPLEGRAPH := RegisterClipboardFormat('Simple Graph Format');
   // Registers Link and Node classes
   TEvsSimpleGraph.Register(TEvsGraphLink);
   TEvsSimpleGraph.Register(TEVSBezierLink);

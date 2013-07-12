@@ -1,0 +1,80 @@
+object HelpOnActions: THelpOnActions
+  Left = 192
+  Top = 160
+  BorderStyle = bsDialog
+  Caption = 'Using Keyboard and Mouse'
+  ClientHeight = 413
+  ClientWidth = 663
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  Position = poMainFormCenter
+  PixelsPerInch = 96
+  object PageControl: TPageControl
+    Left = 8
+    Top = 8
+    Width = 645
+    Height = 361
+    ActivePage = TabSheet1
+    TabOrder = 0
+    object TabSheet1: TTabSheet
+      BorderWidth = 10
+      Caption = 'Keyboard'
+      object RichEdit1: TMemo
+        Left = 0
+        Top = 0
+        Width = 617
+        Height = 313
+        Align = alClient
+        Font.Charset = ARABIC_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+        ReadOnly = True
+        ScrollBars = ssBoth
+        TabOrder = 0
+        WantReturns = False
+        WordWrap = False
+      end
+    end
+    object TabSheet2: TTabSheet
+      BorderWidth = 10
+      Caption = 'Mouse'
+      ImageIndex = 1
+      object RichEdit2: TMemo
+        Left = 0
+        Top = 0
+        Width = 617
+        Height = 313
+        Align = alClient
+        Font.Charset = ARABIC_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+        ReadOnly = True
+        ScrollBars = ssBoth
+        TabOrder = 0
+        WantReturns = False
+        WordWrap = False
+      end
+    end
+  end
+  object btnClose: TButton
+    Left = 564
+    Top = 378
+    Width = 89
+    Height = 25
+    Cancel = True
+    Caption = 'Close'
+    Default = True
+    ModalResult = 1
+    TabOrder = 1
+  end
+end

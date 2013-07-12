@@ -1,0 +1,64 @@
+object SizeDialog: TSizeDialog
+  Left = 192
+  Top = 160
+  BorderStyle = bsDialog
+  Caption = 'Size'
+  ClientHeight = 160
+  ClientWidth = 312
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  Position = poMainFormCenter
+  PixelsPerInch = 96
+  object Horz: TRadioGroup
+    Left = 8
+    Top = 8
+    Width = 145
+    Height = 110
+    Caption = ' Horizontal '
+    ItemIndex = 0
+    Items.Strings = (
+      'No Change'
+      'Shrink to smallest'
+      'Grow to largest'
+    )
+    TabOrder = 2
+  end
+  object Vert: TRadioGroup
+    Left = 160
+    Top = 8
+    Width = 145
+    Height = 110
+    Caption = ' Vertical '
+    ItemIndex = 0
+    Items.Strings = (
+      'No Change'
+      'Shrink to smallest'
+      'Grow to largest'
+    )
+    TabOrder = 3
+  end
+  object btnOK: TButton
+    Left = 152
+    Top = 126
+    Width = 75
+    Height = 25
+    Caption = 'OK'
+    Default = True
+    ModalResult = 1
+    TabOrder = 0
+  end
+  object btnCancel: TButton
+    Left = 230
+    Top = 126
+    Width = 75
+    Height = 25
+    Cancel = True
+    Caption = 'Cancel'
+    ModalResult = 2
+    TabOrder = 1
+  end
+end

@@ -1,0 +1,295 @@
+<?xml version="1.0"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="9"/>
+    <BuildModes Active="Default"/>
+    <Units Count="15">
+      <Unit0>
+        <Filename Value="SGDemo.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="1" Y="1"/>
+        <UsageCount Value="21"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="Main.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="MainForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="Main"/>
+        <EditorIndex Value="0"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1464"/>
+        <CursorPos X="1" Y="1498"/>
+        <UsageCount Value="21"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="DesignProp.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+        <UnitName Value="DesignProp"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="23" Y="75"/>
+        <UsageCount Value="21"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="ObjectProp.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+        <UnitName Value="ObjectProp"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="61" Y="145"/>
+        <UsageCount Value="21"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="LinkProp.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+        <UnitName Value="LinkProp"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="191"/>
+        <CursorPos X="29" Y="150"/>
+        <UsageCount Value="21"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="NodeProp.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+        <UnitName Value="NodeProp"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="56" Y="276"/>
+        <UsageCount Value="21"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="AboutDelphiArea.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+        <UnitName Value="AboutDelphiArea"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="1" Y="1"/>
+        <UsageCount Value="21"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="UsageHelp.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="HelpOnActions"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="UsageHelp"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="1" Y="1"/>
+        <UsageCount Value="21"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="MarginsProp.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+        <UnitName Value="MarginsProp"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="1" Y="1"/>
+        <UsageCount Value="21"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="AlignDlg.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+        <UnitName Value="AlignDlg"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="8" Y="35"/>
+        <UsageCount Value="21"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="SizeDlg.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+        <UnitName Value="SizeDlg"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="9"/>
+        <CursorPos X="25" Y="35"/>
+        <UsageCount Value="21"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit10>
+      <Unit11>
+        <Filename Value="Main.lfm"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="1" Y="38"/>
+        <UsageCount Value="10"/>
+        <DefaultSyntaxHighlighter Value="LFM"/>
+      </Unit11>
+      <Unit12>
+        <Filename Value="..\uevssimplegraph.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="UEvsSimpleGraph"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="1"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="11004"/>
+        <CursorPos X="1" Y="11023"/>
+        <FoldState Value=" TMm_c0fo"/>
+        <UsageCount Value="21"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit12>
+      <Unit13>
+        <Filename Value="C:\lazarus.1.0\components\printers\printersdlgs.pp"/>
+        <UnitName Value="PrintersDlgs"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="32"/>
+        <CursorPos X="3" Y="49"/>
+        <UsageCount Value="10"/>
+      </Unit13>
+      <Unit14>
+        <Filename Value="C:\lazarus.1.0\lcl\clipbrd.pp"/>
+        <UnitName Value="Clipbrd"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="231"/>
+        <CursorPos X="29" Y="247"/>
+        <UsageCount Value="10"/>
+      </Unit14>
+    </Units>
+    <General>
+      <ActiveWindowIndexAtStart Value="0"/>
+    </General>
+    <JumpHistory Count="29" HistoryIndex="28">
+      <Position1>
+        <Filename Value="Main.pas"/>
+        <Caret Line="590" Column="43" TopLine="574"/>
+      </Position1>
+      <Position2>
+        <Filename Value="Main.pas"/>
+        <Caret Line="438" Column="1" TopLine="19"/>
+      </Position2>
+      <Position3>
+        <Filename Value="Main.pas"/>
+        <Caret Line="606" Column="43" TopLine="574"/>
+      </Position3>
+      <Position4>
+        <Filename Value="Main.pas"/>
+        <Caret Line="732" Column="1" TopLine="712"/>
+      </Position4>
+      <Position5>
+        <Filename Value="Main.pas"/>
+        <Caret Line="881" Column="10" TopLine="860"/>
+      </Position5>
+      <Position6>
+        <Filename Value="Main.pas"/>
+        <Caret Line="891" Column="19" TopLine="874"/>
+      </Position6>
+      <Position7>
+        <Filename Value="Main.pas"/>
+        <Caret Line="1055" Column="41" TopLine="1038"/>
+      </Position7>
+      <Position8>
+        <Filename Value="Main.pas"/>
+        <Caret Line="1061" Column="39" TopLine="1044"/>
+      </Position8>
+      <Position9>
+        <Filename Value="Main.pas"/>
+        <Caret Line="1068" Column="41" TopLine="1051"/>
+      </Position9>
+      <Position10>
+        <Filename Value="Main.pas"/>
+        <Caret Line="1074" Column="39" TopLine="1057"/>
+      </Position10>
+      <Position11>
+        <Filename Value="Main.pas"/>
+        <Caret Line="1081" Column="41" TopLine="1064"/>
+      </Position11>
+      <Position12>
+        <Filename Value="Main.pas"/>
+        <Caret Line="1087" Column="39" TopLine="1070"/>
+      </Position12>
+      <Position13>
+        <Filename Value="Main.pas"/>
+        <Caret Line="1094" Column="41" TopLine="1077"/>
+      </Position13>
+      <Position14>
+        <Filename Value="Main.pas"/>
+        <Caret Line="1100" Column="39" TopLine="1083"/>
+      </Position14>
+      <Position15>
+        <Filename Value="Main.pas"/>
+        <Caret Line="1107" Column="41" TopLine="1090"/>
+      </Position15>
+      <Position16>
+        <Filename Value="Main.pas"/>
+        <Caret Line="1113" Column="39" TopLine="1096"/>
+      </Position16>
+      <Position17>
+        <Filename Value="Main.pas"/>
+        <Caret Line="1120" Column="41" TopLine="1103"/>
+      </Position17>
+      <Position18>
+        <Filename Value="Main.pas"/>
+        <Caret Line="1126" Column="39" TopLine="1109"/>
+      </Position18>
+      <Position19>
+        <Filename Value="Main.pas"/>
+        <Caret Line="1133" Column="41" TopLine="1116"/>
+      </Position19>
+      <Position20>
+        <Filename Value="Main.pas"/>
+        <Caret Line="1139" Column="39" TopLine="1122"/>
+      </Position20>
+      <Position21>
+        <Filename Value="Main.pas"/>
+        <Caret Line="1216" Column="1" TopLine="1199"/>
+      </Position21>
+      <Position22>
+        <Filename Value="Main.pas"/>
+        <Caret Line="1222" Column="1" TopLine="1204"/>
+      </Position22>
+      <Position23>
+        <Filename Value="Main.pas"/>
+        <Caret Line="1221" Column="1" TopLine="1202"/>
+      </Position23>
+      <Position24>
+        <Filename Value="Main.pas"/>
+        <Caret Line="1220" Column="1" TopLine="1200"/>
+      </Position24>
+      <Position25>
+        <Filename Value="Main.pas"/>
+        <Caret Line="719" Column="1" TopLine="715"/>
+      </Position25>
+      <Position26>
+        <Filename Value="Main.pas"/>
+        <Caret Line="718" Column="1" TopLine="714"/>
+      </Position26>
+      <Position27>
+        <Filename Value="..\uevssimplegraph.pas"/>
+        <Caret Line="9721" Column="1" TopLine="9704"/>
+      </Position27>
+      <Position28>
+        <Filename Value="..\uevssimplegraph.pas"/>
+        <Caret Line="11022" Column="1" TopLine="11004"/>
+      </Position28>
+      <Position29>
+        <Filename Value="Main.pas"/>
+        <Caret Line="729" Column="15" TopLine="1110"/>
+      </Position29>
+    </JumpHistory>
+  </ProjectSession>
+</CONFIG>
