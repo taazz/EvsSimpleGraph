@@ -1,5 +1,0 @@
-<?xml version="1.0"?>
-<CONFIG>
-  <Compiler Value="C:\lazarus.1.0\fpc\2.6.2\bin\i386-win32\fpc.exe" Date="1120491560"/>
-  <Params Value=" -MDelphi -Scghi -O1 -g -gl -WG -vewnhi &quot;-FiD:\jkoz\Lazarus\Projects\To Convert\SimpleGraph\Original_Demo\lib\2.6.2\i386-win32&quot; &quot;-FuD:\jkoz\Lazarus\Projects\To Convert\SimpleGraph&quot; -FuC:\lazarus.1.0\components\printers\lib\i386-win32\win32 -FuC:\lazarus.1.0\lcl\units\i386-win32\win32 -FuC:\lazarus.1.0\lcl\units\i386-win32 -FuC:\lazarus.1.0\components\lazutils\lib\i386-win32 -FuC:\lazarus.1.0\packager\units\i386-win32 &quot;-FuD:\jkoz\Lazarus\Projects\To Convert\SimpleGraph\Original_Demo\&quot; &quot;-FUD:\jkoz\Lazarus\Projects\To Convert\SimpleGraph\Original_Demo\lib\2.6.2\i386-win32\&quot; -l &quot;-FED:\jkoz\Lazarus\Projects\To Convert\SimpleGraph\Original_Demo\bin\2.6.2\&quot; -oi386-win32.exe -dLCL -dLCLwin32 SGDemo.lpr"/>
-</CONFIG>
