@@ -40,6 +40,7 @@ type
   { TMainForm }
 
   TMainForm = class(TForm)
+    ObjectsBezier : TAction;
     SimpleGraph: TEvsSimpleGraph;
     ToolBar: TToolBar;
     StatusBar: TStatusBar;
@@ -77,6 +78,7 @@ type
     ToolButton2: TToolButton;
     ToolButton3: TToolButton;
     ToolButton4: TToolButton;
+    tbtnBezierLink : TToolButton;
     ToolButton5: TToolButton;
     ToolButton6: TToolButton;
     ToolButton7: TToolButton;
@@ -294,6 +296,8 @@ type
     procedure FormMouseWheel(Sender : TObject; Shift : TShiftState;
       WheelDelta : Integer; MousePos : TPoint; var Handled : Boolean);
     procedure HelpAboutExecute(Sender: TObject);
+    procedure ObjectsBezierExecute(Sender : TObject);
+    procedure ObjectsBezierUpdate(Sender : TObject);
     procedure ObjectsNoneExecute(Sender: TObject);
     procedure ObjectsRectangleExecute(Sender: TObject);
     procedure ObjectsRoundRectExecute(Sender: TObject);
@@ -1145,13 +1149,14 @@ end;
 
 procedure TMainForm.ObjectsLinkUpdate(Sender: TObject);
 begin
-  ObjectsLink.Checked :=(SimpleGraph.CommandMode = cmInsertLink);
+  ObjectsLink.Checked :=(SimpleGraph.CommandMode = cmInsertLink) and (SimpleGraph.DefaultLinkClass = TEvsGraphLink);
   ObjectsLink.Enabled := not IsReadonly;
 end;
 
 procedure TMainForm.ObjectsLinkExecute(Sender: TObject);
 begin
   SimpleGraph.CommandMode := cmInsertLink;
+  SimpleGraph.DefaultLinkClass := TEvsGraphLink;
 end;
 
 procedure TMainForm.ViewZoomInUpdate(Sender: TObject);
@@ -1234,6 +1239,19 @@ begin
     finally
       Free;
     end;
+end;
+
+procedure TMainForm.ObjectsBezierExecute(Sender : TObject);
+begin
+  SimpleGraph.CommandMode := cmInsertLink;
+  SimpleGraph.DefaultLinkClass := TEVSBezierLink;
+end;
+
+procedure TMainForm.ObjectsBezierUpdate(Sender : TObject);
+begin
+  ObjectsBezier.Checked :=(SimpleGraph.CommandMode = cmInsertLink) and
+    (SimpleGraph.DefaultLinkClass = TEVSBezierLink);
+  ObjectsBezier.Enabled := not IsReadonly;
 end;
 
 procedure TMainForm.HelpUsageExecute(Sender: TObject);
