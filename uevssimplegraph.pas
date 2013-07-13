@@ -1347,6 +1347,10 @@ type
     procedure DblClick; override;                                                          //CLEAN
     procedure DoEnter; override;                                                           //CLEAN
     procedure DoExit; override;                                                            //CLEAN
+    function ZoomRect(const aRect: TRect): boolean;                                         //CLEAN
+    function ZoomObject(aGraphObject: TEvsGraphObject): boolean;                               //CLEAN
+    function ZoomSelection: boolean;                                                       //CLEAN
+    function ZoomGraph: boolean;                                                           //CLEAN
   protected
     property CanvasRecall: TEvsCanvasRecall read fCanvasRecall;
     property DragHitTest: DWORD read fDragHitTest write fDragHitTest;
@@ -1355,6 +1359,7 @@ type
     property DragTargetPt: TPoint read fDragTargetPt write fDragTargetPt;
     property MarkedArea: TRect read fMarkedArea write SetMarkedArea;
     property ValidMarkedArea: boolean read fValidMarkedArea;
+    property Zoom: TZoom read fZoom write SetZoom default 100;
   public
     class procedure Register(aNodeClass: TEvsGraphNodeClass); overload;                       //CLEAN
     class procedure Unregister(aNodeClass: TEvsGraphNodeClass); overload;                     //CLEAN
@@ -1395,10 +1400,7 @@ type
       aLinkClass: TEvsGraphLinkClass = nil): TEvsGraphLink; overload;
     function InsertLink(const aPts: array of TPoint;                                        //CLEAN
       aLinkClass: TEvsGraphLinkClass = nil): TEvsGraphLink; overload;
-    function ZoomRect(const aRect: TRect): boolean;                                         //CLEAN
-    function ZoomObject(aGraphObject: TEvsGraphObject): boolean;                               //CLEAN
-    function ZoomSelection: boolean;                                                       //CLEAN
-    function ZoomGraph: boolean;                                                           //CLEAN
+    // zoom moved to protected
     function ChangeZoom(aNewZoom: integer; aOrigin: TEvsGraphZoomOrigin): boolean;              //CLEAN
     function ChangeZoomBy(aDelta: integer; aOrigin: TEvsGraphZoomOrigin): boolean;              //CLEAN
     function AlignSelection(aHorz: TEvsHAlignOption; aVert: TEvsVAlignOption): boolean;  virtual;  //CLEAN
@@ -1426,11 +1428,11 @@ type
     function GraphToScreen(aX, aY: integer): TPoint;                                         //CLEAN
     procedure SnapOffset(const aPt: TPoint; var adX, adY: integer);                           //CLEAN
     function SnapPoint(const aPt: TPoint): TPoint;                                          //CLEAN
-    function PasteFromClipboard: boolean;                                                  //CONVERTED TO CLIPBRD STREAMS TEST IT.
     {$IFDEF METAFILE_SUPPORT}
     procedure SaveAsMetafile(const Filename: string);                                      //NO METAFILE SUPPORT
     {$ENDIF}
     procedure SaveAsBitmap(const aFilename: string);                                        //CLEAN
+    function PasteFromClipboard: boolean;                                                  //CONVERTED TO CLIPBRD STREAMS TEST IT.
     procedure CopyToClipboard(aSelection: Boolean = True);                                  //USING CLIPBRD METHODS TEST IT
   public  //properties
     property CommandMode: TEvsGraphCommandMode read fCommandMode write SetCommandMode;
@@ -1453,7 +1455,7 @@ type
     property HorzScrollBar: TEvsGraphScrollBar read fHorzScrollBar write SetHorzScrollBar;
     property VertScrollBar: TEvsGraphScrollBar read fVertScrollBar write SetVertScrollBar;
     property FixedScrollBars: Boolean read fFixedScrollBars write SetFixedScrollBars default False;
-    property Zoom: TZoom read fZoom write SetZoom default 100;
+    //zoom moved to protected
     property ShowGrid: Boolean read fShowGrid write SetShowGrid default True;
     property GridColor: TColor read fGridColor write SetGridColor default clGray;
     property GridSize: TGridSize read fGridSize write SetGridSize default 8;
@@ -3558,6 +3560,14 @@ procedure TEvsSimpleGraph.SetVertScrollBar(AValue: TEvsGraphScrollBar);
 begin
   FVertScrollBar.Assign(AValue);
 end;
+procedure SaveRawData(InStream:TStream; outFile:String);
+var
+  vFS : TFileStream;
+begin
+  vFS := TFileStream.Create(outFile,fmCreate);
+  vFS.CopyFrom(InStream, InStream.Size);
+  vFS.Free;
+end;
 
 function TEvsSimpleGraph.PasteFromClipboard: boolean;
 var
@@ -3577,6 +3587,7 @@ begin
         try
           SelectedObjects.Clear;
           vCount := Objects.Count;
+          vStream.Position:=0;
           ReadObjects(vStream);
           SelectedObjects.Capacity := Objects.Count - vCount;
           for I := Objects.Count - 1 downto vCount do
@@ -3615,6 +3626,8 @@ var
   {$ENDIF}
   vBitmap: Graphics.TBitmap;
 begin
+  if CF_SIMPLEGRAPH =0 then
+    CF_SIMPLEGRAPH := RegisterClipboardFormat('Simple Graph Format');
   if aSelection then
     vObjectList := SelectedObjects
   else
@@ -3624,16 +3637,6 @@ begin
     Clipboard.Open;
     try
       Clipboard.Clear;
-      if cfNative in ClipboardFormats then
-      begin
-        vStream := TMemoryStream.Create;
-        try
-          WriteObjects(vStream, vObjectList);
-          Clipboard.AddFormat(CF_SIMPLEGRAPH, vStream);
-        finally
-          vStream.Free;
-        end;
-      end;
       {$IFDEF METAFILE_SUPPORT}
       if cfMetafile in ClipboardFormats then
       begin
@@ -3653,6 +3656,17 @@ begin
           Clipboard.Assign(vBitmap);
         finally
           vBitmap.Free;
+        end;
+      end;
+      if cfNative in ClipboardFormats then
+      begin
+        vStream := TMemoryStream.Create;
+        try
+          WriteObjects(vStream, vObjectList);
+          vStream.Position := 0;
+          Clipboard.AddFormat(CF_SIMPLEGRAPH, vStream);
+        finally
+          vStream.Free;
         end;
       end;
     finally
@@ -3781,15 +3795,15 @@ end;
 
 function EvsFindClass(const AClassName: string): TPersistentClass;
 begin
-  if CompareText(AClassName, 'TGraphLink') = 0 then Result := FindClass('TEvsGraphLink')
-  else if CompareText(AClassName, 'TRectangularNode')      = 0 then Result := FindClass('TEvsRectangularNode')
-  else if CompareText(AClassName, 'TRhomboidalNode')       = 0 then Result := FindClass('TEvsRhomboidalNode')
-  else if CompareText(AClassName, 'TPentagonalNode')       = 0 then Result := FindClass('TEvsPentagonalNode')
-  else if CompareText(AClassName, 'THexagonalNode')        = 0 then Result := FindClass('TEvsHexagonalNode')
-  else if CompareText(AClassName, 'TPolygonalNode')        = 0 then Result := FindClass('TEvsPolygonalNode')
-  else if CompareText(AClassName, 'TRoundRectangularNode') = 0 then Result := FindClass('TEvsRoundRectangularNode')
-  else if CompareText(AClassName, 'TEllipticNode')         = 0 then Result := FindClass('TEvsEllipticNode')
-  else if CompareText(AClassName, 'TTriangularNode')       = 0 then Result := FindClass('TEvsTriangularNode')
+  if CompareText(AClassName, 'TGraphLink') = 0 then Result := GetClass('TEvsGraphLink')
+  else if CompareText(AClassName, 'TRectangularNode')      = 0 then Result := GetClass('TEvsRectangularNode')
+  else if CompareText(AClassName, 'TRhomboidalNode')       = 0 then Result := GetClass('TEvsRhomboidalNode')
+  else if CompareText(AClassName, 'TPentagonalNode')       = 0 then Result := GetClass('TEvsPentagonalNode')
+  else if CompareText(AClassName, 'THexagonalNode')        = 0 then Result := GetClass('TEvsHexagonalNode')
+  else if CompareText(AClassName, 'TPolygonalNode')        = 0 then Result := GetClass('TEvsPolygonalNode')
+  else if CompareText(AClassName, 'TRoundRectangularNode') = 0 then Result := GetClass('TEvsRoundRectangularNode')
+  else if CompareText(AClassName, 'TEllipticNode')         = 0 then Result := GetClass('TEvsEllipticNode')
+  else if CompareText(AClassName, 'TTriangularNode')       = 0 then Result := GetClass('TEvsTriangularNode')
   //else if CompareText(AClassName, 'TRoundRectangularNode') = 0 then Result := FindClass('TEvsRoundRectangularNode')
   //else if CompareText(AClassName, 'TRoundRectangularNode') = 0 then Result := FindClass('TEvsRoundRectangularNode')
   //else if CompareText(AClassName, 'TRoundRectangularNode') = 0 then Result := FindClass('TEvsRoundRectangularNode')
@@ -3853,7 +3867,7 @@ end;
 
 procedure TEvsSimpleGraph.AdjustDC(aDC: HDC; aOrg: PPoint);
 begin
-  {$IFDEF LCLWIN32}
+  {.$IFDEF LCLWIN32}
   if Assigned(aOrg) then
     LCLIntf.SetViewPortOrgEx(aDC, -(aOrg^.X + HorzScrollBar.Position), -(aOrg^.Y + VertScrollBar.Position), nil)
   else
@@ -3861,16 +3875,16 @@ begin
   LCLIntf.SetMapMode(aDC, MM_ANISOTROPIC);
   LCLIntf.SetWindowExtEx(aDC, 100, 100, nil);
   LCLIntf.SetViewPortExtEx(aDC, Zoom, Zoom, nil);
-  {$ELSE}
-  if Assigned(aOrg) then
-    LCLIntf.SetViewPortOrgEx(aDC, -(aOrg^.X + HorzScrollBar.Position), -(aOrg^.Y + VertScrollBar.Position), nil)
-  else
-    LCLIntf.SetViewPortOrgEx(aDC, -HorzScrollBar.Position, -VertScrollBar.Position, nil);
-  LCLIntf.SetMapMode(aDC, MM_ANISOTROPIC);
-  LCLIntf.SetWindowExtEx(aDC, 100, 100, nil);
-  LCLIntf.SetViewPortExtEx(aDC, Zoom, Zoom, nil);
-  Invalidate;
-  {$ENDIF}
+  {.$ELSE}
+  //if Assigned(aOrg) then
+  //  LCLIntf.SetViewPortOrgEx(aDC, -(aOrg^.X + HorzScrollBar.Position), -(aOrg^.Y + VertScrollBar.Position), nil)
+  //else
+  //  LCLIntf.SetViewPortOrgEx(aDC, -HorzScrollBar.Position, -VertScrollBar.Position, nil);
+  //LCLIntf.SetMapMode(aDC, MM_ANISOTROPIC);
+  //LCLIntf.SetWindowExtEx(aDC, 100, 100, nil);
+  //LCLIntf.SetViewPortExtEx(aDC, Zoom, Zoom, nil);
+  //Invalidate;
+  {.$ENDIF}
 end;
 
 function TEvsSimpleGraph.CreateUniqueID(aGraphObject: TEvsGraphObject): DWORD;
@@ -4898,9 +4912,13 @@ var
   vRect: TRect;
 begin
   vRect := GetObjectsBounds(aObjectList);
+  GPToCP(vRect,2);
   Result := Graphics.TBitmap.Create;
   Result.PixelFormat := pf24bit;
+  Result.Canvas.Brush.Color := clWhite;
+  Result.Canvas.Brush.Style := bsSolid;
   Result.SetSize((vRect.Right - vRect.Left) + 1,(vRect.Bottom - vRect.Top) + 1);
+  Result.Canvas.FillRect(0, 0, Result.Width, Result.Height);
   SetViewportOrgEx(Result.Canvas.Handle, -vRect.Left, -vRect.Top, nil);
   DrawObjects(Result.Canvas, aObjectList);
   SetViewportOrgEx(Result.Canvas.Handle, 0, 0, nil);
@@ -11019,7 +11037,7 @@ initialization
   Screen.Cursors[crXHair3]    := LoadCursor(HInstance, 'SG_XHAIR3');
   Screen.Cursors[crXHairLink] := LoadCursor(HInstance, 'SG_XHAIRLINK');
   // Registers Clipboard Format
-  //CF_SIMPLEGRAPH := RegisterClipboardFormat('Simple Graph Format');
+  CF_SIMPLEGRAPH := RegisterClipboardFormat('Simple Graph Format');
   // Registers Link and Node classes
   TEvsSimpleGraph.Register(TEvsGraphLink);
   TEvsSimpleGraph.Register(TEVSBezierLink);

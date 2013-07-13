@@ -6,7 +6,7 @@ interface
 {$DEFINE SIMPLEGRAPH_CREATION}
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, LMessages, LCLType,
-  LCLIntf, StdCtrls, ComCtrls, ActnList, Menus,
+  LCLIntf, StdCtrls, ComCtrls, ActnList, Menus, Clipbrd,
 
   UEvsSimpleGraph;
 const
@@ -34,6 +34,10 @@ type
   { TForm1 }
 
   TForm1 = class(TForm)
+    actCopy : TAction;
+    actCopyBmp : TAction;
+    actDeleteSelected : TAction;
+    actPaste : TAction;
     actZoomIn: TAction;
     actZoomOut: TAction;
     actZoom1: TAction;
@@ -53,6 +57,10 @@ type
     dlgSave : TSaveDialog;
     ToolBar1: TToolBar;
     ToolButton1 : TToolButton;
+    ToolButton10 : TToolButton;
+    ToolButton11 : TToolButton;
+    ToolButton12 : TToolButton;
+    ToolButton13 : TToolButton;
     ToolButton2 : TToolButton;
     ToolButton3 : TToolButton;
     ToolButton4 : TToolButton;
@@ -61,6 +69,13 @@ type
     ToolButton7: TToolButton;
     ToolButton8 : TToolButton;
     ToolButton9 : TToolButton;
+    procedure actCopyBmpExecute(Sender : TObject);
+    procedure actCopyBmpUpdate(Sender : TObject);
+    procedure actCopyExecute(Sender : TObject);
+    procedure actCopyUpdate(Sender : TObject);
+    procedure actDeleteSelectedExecute(Sender : TObject);
+    procedure actPasteExecute(Sender : TObject);
+    procedure actPasteUpdate(Sender : TObject);
     procedure actZoom1Update(Sender : TObject);
     procedure actZoomInExecute(Sender: TObject);
     procedure actZoomInUpdate(Sender : TObject);
@@ -127,12 +142,60 @@ end;
 
 procedure TForm1.actZoom1Update(Sender : TObject);
 begin
-  if assigned(Test) then actZoom1.Enabled := (Test.Zoom <> 100) else actZoom1.Enabled := False;
+  //if assigned(Test) then actZoom1.Enabled := (Test.Zoom <> 100) else actZoom1.Enabled := False;
+end;
+
+procedure TForm1.actCopyUpdate(Sender : TObject);
+begin
+  actCopy.Enabled := Test.SelectedObjects.Count > 0;
+end;
+
+procedure TForm1.actDeleteSelectedExecute(Sender : TObject);
+var
+  vCntr : Integer;
+begin
+  for vCntr := Test.SelectedObjects.Count -1 downto 0 do
+    Test.SelectedObjects[vCntr].Delete;
+end;
+
+procedure TForm1.actPasteExecute(Sender : TObject);
+begin
+  Test.PasteFromClipboard;
+end;
+
+procedure TForm1.actPasteUpdate(Sender : TObject);
+begin
+  actPaste.Enabled := Clipboard.HasFormat(CF_SIMPLEGRAPH);
+end;
+
+procedure TForm1.actCopyExecute(Sender : TObject);
+var
+  vTmp : TEvsGraphClipboardFormats;
+begin
+  vTmp := Test.ClipboardFormats;
+  Test.ClipboardFormats := [cfNative];
+  Test.CopyToClipboard();
+  Test.ClipboardFormats := vTmp;
+end;
+
+procedure TForm1.actCopyBmpUpdate(Sender : TObject);
+begin
+  actCopyBmp.Enabled := test.SelectedObjects.Count>0;
+end;
+
+procedure TForm1.actCopyBmpExecute(Sender : TObject);
+var
+  vTmp : TEvsGraphClipboardFormats;
+begin
+  vTmp := Test.ClipboardFormats;
+  Test.ClipboardFormats := [cfBitmap];
+  Test.CopyToClipboard();
+  Test.ClipboardFormats := vTmp;
 end;
 
 procedure TForm1.actZoomInUpdate(Sender : TObject);
 begin
-  actZoomIn.Enabled := assigned(test) and (Test.Zoom < High(TZoom));
+  //actZoomIn.Enabled := assigned(test) and (Test.Zoom < High(TZoom));
 end;
 
 procedure TForm1.actZoomOutExecute(Sender: TObject);
@@ -181,7 +244,7 @@ end;
 
 procedure TForm1.actZoomOutUpdate(Sender : TObject);
 begin
-  actZoomOut.Enabled := (Test.Zoom > Low(TZoom));
+  //actZoomOut.Enabled := (Test.Zoom > Low(TZoom));
 end;
 
 procedure TForm1.FormMouseMove(Sender : TObject; Shift : TShiftState; X,

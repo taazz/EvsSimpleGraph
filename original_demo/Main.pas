@@ -579,7 +579,7 @@ begin
     SimpleGraph.Width                  := 709;
     SimpleGraph.Height                 := 350;
     SimpleGraph.Align                  := alClient;
-    SimpleGraph.ClipboardFormats       := [cfNative, cfMetafile, cfBitmap];
+    SimpleGraph.ClipboardFormats       := [cfNative, cfBitmap, cfMetafile];
     SimpleGraph.Color                  := clWhite;
     SimpleGraph.FixedScrollBars        := True;
     SimpleGraph.Font.Charset           := DEFAULT_CHARSET;
@@ -659,7 +659,7 @@ begin
   if IsGraphSaved then
   begin
     SimpleGraph.Clear;
-    SimpleGraph.Zoom := 100;
+    //SimpleGraph.Zoom := 100;
     SimpleGraph.CommandMode := cmEdit;
     IsReadonly := False;
     SaveDialog.FileName := SUntitled;
@@ -673,7 +673,7 @@ begin
   if IsGraphSaved and OpenDialog.Execute then
   begin
     SimpleGraph.LoadFromFile(OpenDialog.FileName);
-    SimpleGraph.Zoom := 100;
+    //SimpleGraph.Zoom := 100;
     IsReadonly := ofReadonly in OpenDialog.Options;
     if IsReadonly then
       SimpleGraph.CommandMode := cmViewOnly
@@ -1161,7 +1161,7 @@ end;
 
 procedure TMainForm.ViewZoomInUpdate(Sender: TObject);
 begin
-  ViewZoomIn.Enabled := (SimpleGraph.Zoom < High(TZoom));
+  ViewZoomIn.Enabled := False;//(SimpleGraph.Zoom < High(TZoom));
 end;
 
 procedure TMainForm.ViewZoomInExecute(Sender: TObject);
@@ -1171,7 +1171,7 @@ end;
 
 procedure TMainForm.ViewZoomOutUpdate(Sender: TObject);
 begin
-  ViewZoomOut.Enabled := (SimpleGraph.Zoom > Low(TZoom));
+  ViewZoomOut.Enabled := False;//(SimpleGraph.Zoom > Low(TZoom));
 end;
 
 procedure TMainForm.ViewZoomOutExecute(Sender: TObject);
@@ -1181,7 +1181,7 @@ end;
 
 procedure TMainForm.ViewActualSizeUpdate(Sender: TObject);
 begin
-  ViewActualSize.Enabled := (SimpleGraph.Zoom <> 100);
+  ViewActualSize.Enabled := False;//(SimpleGraph.Zoom <> 100);
 end;
 
 procedure TMainForm.ViewActualSizeExecute(Sender: TObject);
@@ -1196,7 +1196,7 @@ end;
 
 procedure TMainForm.ViewWholeGraphExecute(Sender: TObject);
 begin
-  SimpleGraph.ZoomGraph;
+  //SimpleGraph.ZoomGraph;
 end;
 
 procedure TMainForm.ViewGridUpdate(Sender: TObject);
@@ -1402,7 +1402,7 @@ end;
 
 procedure TMainForm.SimpleGraphZoomChange(Sender: TObject);
 begin
-  StatusBar.Panels[5].Text := Format('%d%%', [SimpleGraph.Zoom]);
+  //StatusBar.Panels[5].Text := Format('%d%%', [SimpleGraph.Zoom]);
 end;
 
 procedure TMainForm.SimpleGraphCommandModeChange(Sender: TObject);
