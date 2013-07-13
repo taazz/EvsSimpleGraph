@@ -1351,6 +1351,8 @@ type
     function ZoomObject(aGraphObject: TEvsGraphObject): boolean;                               //CLEAN
     function ZoomSelection: boolean;                                                       //CLEAN
     function ZoomGraph: boolean;                                                           //CLEAN
+    function ChangeZoom(aNewZoom: integer; aOrigin: TEvsGraphZoomOrigin): boolean;              //CLEAN
+    function ChangeZoomBy(aDelta: integer; aOrigin: TEvsGraphZoomOrigin): boolean;              //CLEAN
   protected
     property CanvasRecall: TEvsCanvasRecall read fCanvasRecall;
     property DragHitTest: DWORD read fDragHitTest write fDragHitTest;
@@ -1401,8 +1403,6 @@ type
     function InsertLink(const aPts: array of TPoint;                                        //CLEAN
       aLinkClass: TEvsGraphLinkClass = nil): TEvsGraphLink; overload;
     // zoom moved to protected
-    function ChangeZoom(aNewZoom: integer; aOrigin: TEvsGraphZoomOrigin): boolean;              //CLEAN
-    function ChangeZoomBy(aDelta: integer; aOrigin: TEvsGraphZoomOrigin): boolean;              //CLEAN
     function AlignSelection(aHorz: TEvsHAlignOption; aVert: TEvsVAlignOption): boolean;  virtual;  //CLEAN
     function ResizeSelection(aHorz: TEvsResizeOption; aVert: TEvsResizeOption): boolean; virtual;  //CLEAN
     function ForEachObject(aCallback: TEvsGraphForEachMethod; aUserData: integer;               //CLEAN
@@ -4948,7 +4948,8 @@ begin
     Inc(fDragTargetPt.X, adX);
     Inc(fDragTargetPt.Y, adY);
     vTest := fDragTargetPt;
-    DraggingObjects[0].OffsetPointByOwner(vTest, False);
+    CPToGP(vTest,1);
+    //DraggingObjects[0].OffsetPointByOwner(vTest, InGraph);
     ScrollInView(vTest);
   end;
 end;
@@ -5232,7 +5233,6 @@ begin
   //Canvas := TEvsGraphCanvas.Create;
   //Canvas.AntialiasingMode:=amOn;
   //TControlCanvas(Canvas).Control := Self;
-
   ControlStyle              := [csCaptureMouse, csClickEvents, csDoubleClicks, csOpaque, csAcceptsControls];
   //ControlStyle              := [csAcceptsControls, csClickEvents, csDoubleClicks, csOpaque,
   //                              csAutoSizeKeepChildLeft, csAutoSizeKeepChildTop];
@@ -7454,7 +7454,7 @@ begin
     {$MESSAGE HINT 'METAFILE SUPPORT OMMITED'}
     //if not (aCanvas is TMetafileCanvas) then  // Windows.RectVisible bug!!!
        vDCRect := SelectedVisualRect;
-       OffsetRectByOwner(vDCRect, True);
+       OffsetRectByOwner(vDCRect, InViewPort);
        Result := RectVisible(aCanvas.Handle, vDCRect)
        //Result := RectVisible(aCanvas.Handle, SelectedVisualRect)
     //else
@@ -7572,7 +7572,7 @@ var
   R: TRect;
 begin
   R := MakeSquare(aPoint, Owner.MarkerSize);
-  OffsetRectByOwner(R, True);
+  OffsetRectByOwner(R, InViewPort);
   aCanvas.Rectangle(R.Left, R.Top, R.Right, R.Bottom);
   if not Enabled then
   begin
@@ -7992,9 +7992,9 @@ begin
       Pts[2] := NextPointOfLine(Angle + Pi / 9, Pt, Size);
       Pts[3] := NextPointOfLine(Angle, Pt, MulDiv(Size, 6, 10));
       Pts[4] := NextPointOfLine(Angle - Pi / 9, Pt, Size);
-      OffsetPointsByOwner(Pts,True);
+      OffsetPointsByOwner(Pts,InViewPort);
       aCanvas.Polygon(Pts);
-      OffsetPointsByOwner(Pts,False);
+      OffsetPointsByOwner(Pts,InGraph);
       Result := Pts[3];
     end;
     lsArrowSimple:
@@ -8002,9 +8002,9 @@ begin
       Pts[1] := NextPointOfLine(Angle + Pi / 6, Pt, Size);
       Pts[2] := Pt;
       Pts[3] := NextPointOfLine(Angle - Pi / 6, Pt, Size);
-      OffsetPointsByOwner(Pts,True);
+      OffsetPointsByOwner(Pts,InViewPort);
       aCanvas.Polyline(Slice(Pts, 3));
-      OffsetPointsByOwner(Pts,False);
+      OffsetPointsByOwner(Pts,InGraph);
       Result := Pt;
     end;
     lsCircle:
@@ -8019,9 +8019,9 @@ begin
       Pts[2] := NextPointOfLine(Angle + Pi / 2, Pt, Size);
       Pts[3] := NextPointOfLine(Angle, Pt, -Size);
       Pts[4] := NextPointOfLine(Angle - Pi / 2, Pt, Size);
-      OffsetPointsByOwner(Pts,True);
+      OffsetPointsByOwner(Pts,InViewPort);
       aCanvas.Polygon(Pts);
-      OffsetPointsByOwner(Pts,False);
+      OffsetPointsByOwner(Pts,InGraph);
       Result := Pts[1];
     end;
     else
@@ -8063,13 +8063,13 @@ begin
       //aCanvas.Polyline(vTmp);
     end else vTmp := Copy(Polyline);
 
-    OffsetPointsByOwner(vTmp,True);
+    OffsetPointsByOwner(vTmp,InViewPort);
     aCanvas.Polyline(vTmp);
   end
   else if PointCount = 1 then
   begin
     vPtRect := MakeSquare(Points[0], aCanvas.Pen.Width);
-    OffsetRectByOwner(vPtRect, True);
+    OffsetRectByOwner(vPtRect, InViewPort);
     aCanvas.Ellipse(vPtRect.Left, vPtRect.Top, vPtRect.Right, vPtRect.Bottom);
   end;
 end;
@@ -8233,10 +8233,10 @@ begin
       Canvas.Brush.Style := bsClear;
       //if ModifiedPolyline <> nil then
         //Owner.GPToCP(ModifiedPolyline, Length(ModifiedPolyline));
-        OffsetPointsByOwner(ModifiedPolyline, True);
+        OffsetPointsByOwner(ModifiedPolyline, InViewPort);
         Canvas.Polyline(ModifiedPolyline);
         //Owner.CPToGP(ModifiedPolyline, Length(ModifiedPolyline));
-        OffsetPointsByOwner(ModifiedPolyline, False);
+        OffsetPointsByOwner(ModifiedPolyline, InGraph);
       //else
       //  Canvas.Polyline(Polyline);
     finally
@@ -10042,7 +10042,7 @@ begin
     vTextStyle.SystemFont := False;
     vTextStyle.EndEllipsis := False;
 
-    OffsetRectByOwner(Rect, True);
+    OffsetRectByOwner(Rect, InViewPort);
     Owner.
     Canvas.TextRect(Rect, Rect.Left, Rect.Top, TextToShow, vTextStyle);
     //vOldColor := Canvas.Pen.Color;
@@ -10068,7 +10068,7 @@ begin
 
     //TextAlign := SetTextAlign(DC, TA_LEFT or TA_TOP); //jkoz -STA
 
-    OffsetRectByOwner(Rect, True);
+    OffsetRectByOwner(Rect, InViewPort);
 
     //vOldColor := Canvas.Pen.Color;
     //Canvas.Pen.Color := Canvas.Font.Color;
@@ -10782,7 +10782,7 @@ end;
 
 function TEVSBezierLink.AddPoint(const aPt: TPoint): Integer;
 begin
-  Result := inherited AddPoint(aPt);
+  //Result := inherited AddPoint(aPt);
 end;
 
 procedure TEVSBezierLink.Changed(aFlags : TEvsGraphChangeFlags);
@@ -10932,7 +10932,7 @@ end;
 procedure TEVSBezierLink.InsertPoint(aIndex: Integer; const aPt: TPoint);
 begin
   // do nothing
-  inherited;
+  //inherited InsertPoint();
 end;
 
 procedure TEVSBezierLink.MouseDown(aButton: TMouseButton; aShift: TShiftState;
@@ -11013,7 +11013,7 @@ end;
 procedure TEVSBezierLink.RemovePoint(aIndex: Integer);
 begin
   // do Nothing
-  inherited;
+  //inherited;
 end;
 
 procedure TEVSBezierLink.UpdateChangeMode(aHT: DWORD; aShift: TShiftState);
@@ -11050,16 +11050,8 @@ initialization
   TEvsSimpleGraph.Register(TEvsHexagonalNode);
 
 finalization
-  // Unregisters Link and Node classes
-  TEvsSimpleGraph.Unregister(TEvsHexagonalNode);
-  TEvsSimpleGraph.Unregister(TEvsPentagonalNode);
-  TEvsSimpleGraph.Unregister(TEvsRhomboidalNode);
-  TEvsSimpleGraph.Unregister(TEvsTriangularNode);
-  TEvsSimpleGraph.Unregister(TEvsEllipticNode);
-  TEvsSimpleGraph.Unregister(TEvsRoundRectangularNode);
-  TEvsSimpleGraph.Unregister(TEvsRectangularNode);
-  TEvsSimpleGraph.Unregister(TEvsGraphLink);
-
+  if Assigned(RegisteredLinkClasses) then RegisteredLinkClasses.Free;
+  if Assigned(RegisteredNodeClasses) then RegisteredNodeClasses.Free;
 end.
 
 //function PtInPoly

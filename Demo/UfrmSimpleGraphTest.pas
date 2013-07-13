@@ -10,15 +10,20 @@ uses
 
   UEvsSimpleGraph;
 const
-  {$IFDEF LCLWIN32}
-  EvsActiveWidgetSet = 'Win32';
+  {$IFDEF  LCLWIN32}
+    EvsActiveWidgetSet = 'Win32';
+  {$ELSE}
+    {$IFDEF LCLQT}
+      EvsActiveWidgetSet = 'QT';
+    {$ELSE}
+      {$IFDEF LCLGTK2}
+         EvsActiveWidgetSet = 'GTK2';
+      {$ELSE}
+         EvsActiveWidgetSet = 'UnSupported';
+      {$ENDIF}
+    {$ENDIF}
   {$ENDIF}
-  {$IFDEF LCLQT}
-  EvsActiveWidgetSet = 'QT';
-  {$ENDIF}
-  {$IFDEF LCLGTK2}
-  EvsActiveWidgetSet = 'GTK2';
-  {$ENDIF}
+
 
 type
 
@@ -37,6 +42,7 @@ type
     actCopy : TAction;
     actCopyBmp : TAction;
     actDeleteSelected : TAction;
+    actSelectAll : TAction;
     actPaste : TAction;
     actZoomIn: TAction;
     actZoomOut: TAction;
@@ -76,6 +82,8 @@ type
     procedure actDeleteSelectedExecute(Sender : TObject);
     procedure actPasteExecute(Sender : TObject);
     procedure actPasteUpdate(Sender : TObject);
+    procedure actSelectAllExecute(Sender : TObject);
+    procedure actSelectAllUpdate(Sender : TObject);
     procedure actZoom1Update(Sender : TObject);
     procedure actZoomInExecute(Sender: TObject);
     procedure actZoomInUpdate(Sender : TObject);
@@ -136,8 +144,7 @@ end;
 
 procedure TForm1.actZoomInExecute(Sender: TObject);
 begin
-  if assigned(Test) then Test.ChangeZoomBy(10, UEvsSimpleGraph.zoCenter);
-  //windows.WNDPROC;
+  //if assigned(Test) then Test.ChangeZoomBy(10, UEvsSimpleGraph.zoCenter);
 end;
 
 procedure TForm1.actZoom1Update(Sender : TObject);
@@ -166,6 +173,19 @@ end;
 procedure TForm1.actPasteUpdate(Sender : TObject);
 begin
   actPaste.Enabled := Clipboard.HasFormat(CF_SIMPLEGRAPH);
+end;
+
+procedure TForm1.actSelectAllExecute(Sender : TObject);
+var
+  vCntr : Integer;
+begin
+  for vCntr := Test.Objects.Count -1 downto 0 do
+    Test.Objects[vCntr].Selected := True;
+end;
+
+procedure TForm1.actSelectAllUpdate(Sender : TObject);
+begin
+  actSelectAll.Enabled := Test.Objects.Count > 0;
 end;
 
 procedure TForm1.actCopyExecute(Sender : TObject);
@@ -200,16 +220,16 @@ end;
 
 procedure TForm1.actZoomOutExecute(Sender: TObject);
 begin
-  if assigned(test) then begin
-    Test.ChangeZoomBy(-10, UEvsSimpleGraph.zoCenter);
-  end;
+  //if assigned(test) then begin
+  //  Test.ChangeZoomBy(-10, UEvsSimpleGraph.zoCenter);
+  //end;
 end;
 
 procedure TForm1.actZoom1Execute(Sender: TObject);
 begin
-  if assigned(Test) then begin
-    Test.ChangeZoom(100, UEvsSimpleGraph.zoTopLeft);
-  end;
+  //if assigned(Test) then begin
+  //  Test.ChangeZoom(100, UEvsSimpleGraph.zoTopLeft);
+  //end;
 end;
 
 procedure TForm1.Action4Execute(Sender: TObject);

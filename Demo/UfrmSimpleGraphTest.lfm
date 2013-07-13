@@ -778,6 +778,11 @@ object Form1: TForm1
       )
       ShortCut = 8
     end
+    object actSelectAll: TAction
+      Caption = 'Select All'
+      OnExecute = actSelectAllExecute
+      OnUpdate = actSelectAllUpdate
+    end
   end
   object pmnuGraphClasses: TPopupMenu
     left = 96
