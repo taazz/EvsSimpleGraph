@@ -121,29 +121,30 @@ interface
 {$DEFINE WIN}
 {$ENDIF}
 
-{$IFDEF LCLQT}
-  {$DEFINE CUSTOM_LINEMIN}
-{$ENDIF}
+{.$IFDEF LCLQT}
+  {.$DEFINE CUSTOM_LINEMIN} // enable the code to minimize the link text using a custom version do not use
+{.$ENDIF}
 
 {$DEFINE SUBCLASS} // required for the scroll bars to work correctly.
 {$IFDEF SUBCLASS}
   {.$DEFINE SUBCLASS_WMPRINT}      // should I support this ?? is there anything similar on other OSes?
 {$ENDIF}
 
-{.$DEFINE DBGFRM} // replace with fpc debug units and remove dependency.
+{$DEFINE DBGFRM} // replace with fpc debug units and remove dependency.
  {$IFDEF DBGFRM}
     {.$DEFINE DBGFRM_SCROLLMESSAGE}
     {.$DEFINE DBGFRM_HITTEST}
     {.$DEFINE DBGFRM_SROLLTEST}
     {.$DEFINE DBGFRM_OTHEROPTIONS}
-    {$DEFINE DBGFRM_REGIONTRANSFORM}
- {$ENDIF}
+    {.$DEFINE DBGFRM_REGIONTRANSFORM}
+    {$DEFINE DBG_SCROLLINVIEW}
+{$ENDIF}
 
 
 {$IFDEF WIN}
   {.$DEFINE METAFILE_SUPPORT}
   {$DEFINE WIN_TRANSFORM}  //required for windows it speeds things up considerably.
-  {$DEFINE WIN_BACKGROUND} // make sure it works on other widget sets before removing it.
+  {$DEFINE WIN_BACKGROUND} // removes the gnoShowBackground option to disable picture painting.
 {$ENDIF}
 
 uses
@@ -380,6 +381,34 @@ type
     property Reference: TCanvas read fReference write SetReference;
   end;
 
+  { TEvsPenRecall }
+  TEvsPenRecall = class
+  private
+    FBackup    : TPen;
+    FReference : TPen;
+    procedure SetReference(aValue:TPen);
+  public
+    constructor Create(AReference: TPen);
+    destructor Destroy; override;
+    procedure Store;
+    procedure Retrieve;
+    property Reference: TPen read fReference write SetReference;
+  end;
+
+  { TEvsBrushRecall }
+  TEvsBrushRecall = class
+  private
+    FBackup    : TBrush;
+    FReference : TBrush;
+    procedure SetReference(aValue : TBrush);
+  public
+    constructor Create(AReference: TBrush);
+    destructor Destroy; override;
+    procedure Store;
+    procedure Retrieve;
+    property Reference: TBrush read fReference write SetReference;
+  end;
+
   { TEvsCompatibleCanvas }
   TEvsCompatibleCanvas = class(TCanvas)               //WORKS
    public
@@ -441,7 +470,6 @@ type
     Property Visible   : Boolean read FVisible write SetVisible;
   end;
 
-  { TEvsGraphLayerList }
   TEvsGraphLayerList = class
   strict private
     fList : TFPList;
@@ -457,7 +485,6 @@ type
     property Layers[Index:Integer]:TEvsGraphLayer read GetLayer;
   end;
 
-  { TEvsGraphScrollBar }
   TEvsGraphScrollBar = class(TPersistent)                    //NEEDS WORK ON 3 METHODS
   private
     fOwner: TEvsSimpleGraph;
@@ -524,8 +551,6 @@ type
     property Visible: boolean read fVisible write SetVisible default True;
   end;
 
-  { TEvsGraphObjectListEnumerator }
-
   TEvsGraphObjectListEnumerator = class
   private
     FGraphList : TEvsGraphObjectList;
@@ -536,8 +561,6 @@ type
     function MoveNext: Boolean;
     property Current: TEvsGraphObject read GetCurrent;
   end;
-
-  { TEvsGraphObjectListReverseEnumerator }
 
   TEvsGraphObjectListReverseEnumerator = class
   private
@@ -550,7 +573,6 @@ type
     property Current: TEvsGraphObject read GetCurrent;
   end;
 
-  { TEvsGraphObjectList }
   TEvsGraphObjectList = class(TPersistent)         //CLEAN
   private
     fItems: array of TEvsGraphObject;
@@ -591,8 +613,6 @@ type
     property OnChange: TEvsGraphObjectListEvent read fOnChange write fOnChange;
   end;
 
-
-  { TEvsGraphObject }
   TEvsGraphObject = class(TPersistent)   //TESTING
   private
     fID: DWORD;
@@ -773,8 +793,6 @@ type
       read fHasCustomData write SetHasCustomData default False;
   end;
 
-  { TEvsGraphLink }
-
   TEvsGraphLink = class(TEvsGraphObject)                                        //WORKS REGIONS ALTERNATIVES ONLY
   private
     fPoints           : TPoints;
@@ -925,8 +943,6 @@ type
     property TextSpacing: integer read fTextSpacing write SetTextSpacing default 0;
   end;
 
-  { TEVSBezierLink }
-
   TEVSBezierLink = class(TEVSGraphLink)
   protected
     FPolyline : TPoints;
@@ -938,12 +954,7 @@ type
     function QueryHitTest(const aPt: TPoint): DWORD; override;
     procedure DrawHighlight(aCanvas: TCanvas); override;
     procedure UpdateChangeMode(aHT: DWORD; aShift: TShiftState); override;
-  public
-    function AddPoint(const aPt: TPoint): Integer; override;
-    procedure InsertPoint(aIndex: Integer; const aPt: TPoint); override;
-    procedure RemovePoint(aIndex: Integer); override;
   end;
-
 
   TEvsGraphNode = class(TEvsGraphObject)                                              //DrawText replacement required.  Region alternative
   private
@@ -1055,7 +1066,6 @@ type
       override;
   end;
 
-  { TEvsEllipticNode }
   TEvsEllipticNode = class(TEvsGraphNode)
   protected
     function CreateRegion: HRGN; override;                                      {$MESSAGE WARN 'REGION ALTERNATIVE'}
@@ -1064,14 +1074,11 @@ type
       override;
   end;
 
-  { TEvsTriangularNode }
   TEvsTriangularNode = class(TEvsPolygonalNode)
   protected
     procedure QueryMaxTextRect(out Rect: TRect); override;
     procedure DefineVertices(const ARect: TRect; var Points: TPoints); override;
   end;
-
-  { TEvsRectangularNode }
 
   TEvsRectangularNode = class(TEvsPolygonalNode)
   protected
@@ -1080,28 +1087,24 @@ type
     procedure DefineVertices(const ARect: TRect; var Points: TPoints); override;
   end;
 
-  { TEvsRhomboidalNode }
   TEvsRhomboidalNode = class(TEvsPolygonalNode)
   protected
     procedure QueryMaxTextRect(out Rect: TRect); override;
     procedure DefineVertices(const ARect: TRect; var Points: TPoints); override;
   end;
 
-  { TEvsPentagonalNode }
   TEvsPentagonalNode = class(TEvsPolygonalNode)
   protected
     procedure QueryMaxTextRect(out Rect: TRect); override;
     procedure DefineVertices(const ARect: TRect; var Points: TPoints); override;
   end;
 
-  { TEvsHexagonalNode }
   TEvsHexagonalNode = class(TEvsPolygonalNode)
   protected
     procedure QueryMaxTextRect(out Rect: TRect); override;
     procedure DefineVertices(const ARect: TRect; var Points: TPoints); override;
   end;
 
-  {TEvsGraphConstraints --Complete}
   TEvsGraphConstraints = class(TPersistent)              //DONE
   private
     fOwner: TEvsSimpleGraph;
@@ -1133,7 +1136,6 @@ type
     property MaxBottom: Integer index 3 read GetField write SetField default $0000FFFF;
   end;
 
-  { TEvsSimpleGraph --Ongoing}
   TEvsSimpleGraph = class(TCustomControl)
   private
     fHorzScrollBar        : TEvsGraphScrollBar;
@@ -1435,6 +1437,7 @@ type
     function PasteFromClipboard: boolean;                                                  //CONVERTED TO CLIPBRD STREAMS TEST IT.
     procedure CopyToClipboard(aSelection: Boolean = True);                                  //USING CLIPBRD METHODS TEST IT
   public  //properties
+    //property CustomCanvas : TControlCanvas;
     property CommandMode: TEvsGraphCommandMode read fCommandMode write SetCommandMode;
     property DraggingObjects: TEvsGraphObjectList read fDraggingObjects;
     property DragSource: TEvsGraphObject read fDragSource;
@@ -1501,12 +1504,7 @@ type
     {$ENDIF}
     property OnClick;
     property OnConstrainedResize;
-    {.$IFNDEF COMPILER5_UP}
-    //property OnContextPopup: TContextPopupEvent
-    //  read fOnContextPopup write fOnContextPopup;
-    {.$ELSE}
     property OnContextPopup;
-    {.$ENDIF}
     property OnDblClick;
     property OnDragDrop;
     property OnDragOver;
@@ -1991,16 +1989,13 @@ begin
   while P^ = ' ' do
     Inc(P);
   S := P;
-  while (P^<>#13) and (P^ <> #10) and (P^ <> #0) do
-    Inc(P);
-  //P := @aText[Length(aText)];
   LCLIntf.GetTextExtentPoint(DC, PChar(vEndStr), length(vEndStr), TxtExt);
   LCLIntf.GetTextExtentPoint(DC, S, P - S + 1, TextExtent);
-  while (TextExtent.CX + TxtExt.cx) > MaxWidth do begin
-    Dec(P);
+  while (TextExtent.CX + TxtExt.cx) < (MaxWidth -TxtExt.cx) do begin
+    Inc(P);
     LCLIntf.GetTextExtentPoint(DC, S, P - S + 1, TextExtent);
   end;
-  SetString(Result, S, P - S + 1);
+  SetString(Result, S, P - S);
   Result := Result + vEndStr;
 end;
 
@@ -2779,7 +2774,6 @@ begin
 end;
 {$ENDREGION}
 
-
 {$REGION ' TGraphLayer '}
 
 function TEvsGraphLayer.GetCount: Integer;
@@ -3262,12 +3256,19 @@ function TEvsGraphScrollBar.IsScrollBarVisible: boolean;
 var
   vStyle: longint;
 begin
-  {$MESSAGE HINT 'Eliminate GetWindowLong'}
+  {$IFDEF WIN}
   if Kind = sbVertical then
     vStyle := WS_VSCROLL
   else
     vStyle := WS_HSCROLL;
   Result := Visible and ((GetWindowLong(Owner.Handle, GWL_STYLE) and vStyle) <> 0);
+  {$ELSE}
+  if Kind = sbVertical then vStyle := SB_VERT
+  else vStyle := SB_HORZ;
+  Result := Visible;
+  if Owner.HandleAllocated then
+    Result := Result and GetScrollbarVisible(Owner.Handle, vStyle);
+  {$ENDIF}
 end;
 
 function TEvsGraphScrollBar.ControlSize(ControlSB, AssumeSB: Boolean): Integer;
@@ -3586,12 +3587,8 @@ begin
         BeginUpdate;
         try
           SelectedObjects.Clear;
-          vCount := Objects.Count;
           vStream.Position:=0;
-          ReadObjects(vStream);
-          SelectedObjects.Capacity := Objects.Count - vCount;
-          for I := Objects.Count - 1 downto vCount do
-            Objects[I].Selected := True;
+          MergeFromStream(vStream, 10, 10);
           Result := True;
         finally
           EndUpdate;
@@ -4948,8 +4945,6 @@ begin
     Inc(fDragTargetPt.X, adX);
     Inc(fDragTargetPt.Y, adY);
     vTest := fDragTargetPt;
-    CPToGP(vTest,1);
-    //DraggingObjects[0].OffsetPointByOwner(vTest, InGraph);
     ScrollInView(vTest);
   end;
 end;
@@ -4960,23 +4955,10 @@ var
 begin
   if WindowHandle <> 0 then
   begin
-    {$IFDEF WIN}
     if ControlCount = 0 then
       WidgetSet.InvalidateRect(WindowHandle, aRect, False)
     else
       RedrawWindow(WindowHandle, aRect, 0, RDW_INVALIDATE or RDW_ALLCHILDREN);
-    {$ELSE}
-    //if ControlCount = 0 then
-      //if Assigned(aRect) then begin
-      //vR := aRect^;
-      //InflateRect(vR,50,50);
-      //end else vR := GetObjectsBounds(fSelectedObjects);
-      WidgetSet.InvalidateRect(WindowHandle, aRect, False)
-    //else
-      //RedrawWindow(WindowHandle, aRect, 0, RDW_INVALIDATE or RDW_ALLCHILDREN);
-    // Repaint;
-     //Invalidate;
-    {$ENDIF}
   end;
 end;
 
@@ -5231,7 +5213,7 @@ begin
 
   //Canvas.Free;
   //Canvas := TEvsGraphCanvas.Create;
-  //Canvas.AntialiasingMode:=amOn;
+  Canvas.AntialiasingMode:=amOn;
   //TControlCanvas(Canvas).Control := Self;
   ControlStyle              := [csCaptureMouse, csClickEvents, csDoubleClicks, csOpaque, csAcceptsControls];
   //ControlStyle              := [csAcceptsControls, csClickEvents, csDoubleClicks, csOpaque,
@@ -5416,23 +5398,42 @@ procedure TEvsSimpleGraph.ScrollInView(const aPt: TPoint);
 var
   vX, vY: integer;
 begin
+  {$IFDEF DBG_SCROLLINVIEW}
+  Monitor('InPoint',aPt);
+  {$ENDIF}
   vX := MulDiv(aPt.X, Zoom, 100);
   vY := MulDiv(aPt.Y, Zoom, 100);
+  {$IFDEF DBG_SCROLLINVIEW}
+  Monitor('vX',vX);
+  Monitor('vY',vY);
+  {$ENDIF}
   with HorzScrollBar do
     if IsScrollBarVisible then
     begin
+      {$IFDEF DBG_SCROLLINVIEW}
+      Monitor('SHSB.Pos',Position);
+      {$ENDIF}
       if vX < Position then
         Position := vX
       else if vX > Position + Self.ClientWidth then
         Position := vX - Self.ClientWidth;
+      {$IFDEF DBG_SCROLLINVIEW}
+      Monitor('EHSB.Pos',Position);
+      {$ENDIF}
     end;
   with VertScrollBar do
     if IsScrollBarVisible then
     begin
+      {$IFDEF DBG_SCROLLINVIEW}
+      Monitor('SVSB.Pos',Position);
+      {$ENDIF}
       if vY < Position then
         Position := vY
       else if vY > Position + Self.ClientHeight then
         Position := vY - Self.ClientHeight;
+      {$IFDEF DBG_SCROLLINVIEW}
+      Monitor('EVSB.Pos',Position);
+      {$ENDIF}
     end;
 end;
 
@@ -5474,10 +5475,10 @@ begin
       //EndUpdate;
     end;
     Invalidate;
-    //UpdateWindow(WindowHandle);
-    Update;
+    UpdateWindow(WindowHandle);
+    //Update;
   end
-  else
+  else inherited ScrollBy(aDeltaX, aDeltaY);
   {$ELSE}
   //if WindowHandle <> 0 then
   //begin
@@ -5495,6 +5496,9 @@ begin
   //end
   //else
   inherited ScrollBy(aDeltaX, aDeltaY);
+  Invalidate;
+  UpdateWindow(WindowHandle);
+  //Update;
   {$ENDIF}
 end;
 
@@ -6272,7 +6276,6 @@ begin
   Result.X := ((aPt.X + (GridSize div 2)) div GridSize) * GridSize;
   Result.Y := ((aPt.Y + (GridSize div 2)) div GridSize) * GridSize;
 end;
-
 {$ENDREGION}
 
 {$REGION ' TEvsGraphConstraints '}
@@ -9060,9 +9063,9 @@ begin
     fTextAngle := LineSlopeAngle(fPoints[fTextLine], fPoints[fTextLine + 1]);
     vLineWidth := Trunc(LineLength(fPoints[fTextLine], fPoints[fTextLine + 1]));
     Dec(vLineWidth, Pen.Width + vLineMargin);
-    {$IFDEF CUSTOM_LINEMIN} //ugly hack change it.
-    if EndStyle <> lsNone then Dec(vLineWidth, 12);
-    {$ENDIF}
+    //{$IFDEF CUSTOM_LINEMIN} //ugly hack change it.
+    //if EndStyle <> lsNone then Dec(vLineWidth, 12);
+    //{$ENDIF}
     if vLineWidth > 0 then
     begin
       SetRect(vTextRect, 0, 0, vLineWidth, 0);
@@ -9074,11 +9077,11 @@ begin
         {$IFNDEF WIN}
         vSize := vCanvas.TextExtent(vTmpText);
         vTextRect.Bottom := vSize.cy;
-        {$IFDEF CUSTOM_LINEMIN}
-        vTmpText := LineMinizeText(vCanvas, vTmpText, vLineWidth);
-        {$ELSE}
+        //{$IFDEF CUSTOM_LINEMIN}
+        //vTmpText := LineMinizeText(vCanvas, vTmpText, vLineWidth);
+        //{$ELSE}
         vTmpText := MinimizeText(vCanvas, vTmpText, vTextRect);
-        {$ENDIF}
+        //{$ENDIF}
         {$ELSE}
         windows.DrawText(vCanvas.Handle, PChar(vTmpText), -1, vTextRect,
           Owner.DrawTextBiDiModeFlags(cDrawTextFlags));
@@ -10774,11 +10777,6 @@ end;
 
 {$REGION ' TEVSBezierLink '}
 
-function TEVSBezierLink.AddPoint(const aPt: TPoint): Integer;
-begin
-  Result := inherited AddPoint(aPt);
-end;
-
 procedure TEVSBezierLink.Changed(aFlags : TEvsGraphChangeFlags);
 begin
   inherited;
@@ -10791,11 +10789,9 @@ var
   vOldPenStyle: TPenStyle;
   vOldBrushStyle: TBrushStyle;
   vModifiedPolyline: TPoints;
-//  RealPoints : TPoints;
   vAngle: Double;
   vPtRect: TRect;
   vCntr : Integer;
-  //IPenRes : IEVSRestore;
   vBckPen : TPen;
 begin
   vModifiedPolyline := nil;
@@ -10836,14 +10832,12 @@ begin
       end;
     end;
     vOldBrushStyle := aCanvas.Brush.Style;
+    vBckPen := TPen.Create;
+    vBckPen.Assign(aCanvas.Pen);
     try
       aCanvas.Brush.Style := bsClear;
       if Selected {and ( not Dragging) }then
       begin
-        vBckPen := TPen.Create;
-        vBckPen.Assign(aCanvas.Pen);
-        //IPenRes := TEVSPenRestore.Create(aCanvas.Pen);
-        try
           aCanvas.Pen.Style := psDash;
           vPtRect.TopLeft := Points[0];
           vPtRect.BottomRight := Points[1];
@@ -10860,15 +10854,7 @@ begin
             aCanvas.LineTo(Points[vCntr+1].X, Points[vCntr+1].Y);
             Inc(vCntr, 1);
           end;
-        finally
-          aCanvas.Pen.Assign(vBckPen);
-          vBckPen.Free;
-        end;
       end;
-      //if Selected then begin
-      //  vBckPen := TPen.Create; vBckPen.Assign(aCanvas.Pen);
-      //  aCanvas.Pen.Color := FSelectedColor;
-      //end;
       if vModifiedPolyline <> nil then begin
         OffsetPointsByOwner(vModifiedPolyline, InViewPort);
         aCanvas.PolyBezier(vModifiedPolyline);
@@ -10878,10 +10864,10 @@ begin
         aCanvas.PolyBezier(Polyline);
         OffsetPointsByOwner(Polyline, InGraph);
       end;
-      //aCanvas.Pen.Assign(vBckPen);
-      //vBckPen.Free; // restore the pen not needed it will be auto restored on exit;
     finally
       aCanvas.Brush.Style := vOldBrushStyle;
+      aCanvas.Pen.Assign(vBckPen);
+      vBckPen.Free;
     end;
   end;
   vModifiedPolyline := nil;
@@ -10925,12 +10911,6 @@ begin
     aCanvas.Pen.Assign(vPen);
     vPen.Free;
   end;
-end;
-
-procedure TEVSBezierLink.InsertPoint(aIndex: Integer; const aPt: TPoint);
-begin
-  // do nothing
-  inherited;
 end;
 
 procedure TEVSBezierLink.MouseDown(aButton: TMouseButton; aShift: TShiftState;
@@ -11008,12 +10988,6 @@ begin
     Result := GHT_NOWHERE;
 end;
 
-procedure TEVSBezierLink.RemovePoint(aIndex: Integer);
-begin
-  // do Nothing
-  inherited;
-end;
-
 procedure TEVSBezierLink.UpdateChangeMode(aHT: DWORD; aShift: TShiftState);
 begin
   inherited UpdateChangeMode(aHT, aShift);
@@ -11021,9 +10995,80 @@ begin
     ChangeMode := lcmMovePolyline;
 end;
 
-
-
 {$ENDREGION}
+
+{$REGION ' TEvsPenRecall '}
+
+procedure TEvsPenRecall.SetReference(aValue : TPen);
+begin
+  if fReference = aValue then Exit;
+  Retrieve;
+  fReference := aValue;
+  Store;
+end;
+
+constructor TEvsPenRecall.Create(AReference : TPen);
+begin
+  inherited Create;
+  fReference := AReference;
+  FBackup := TPen.Create;
+  Store;
+end;
+
+destructor TEvsPenRecall.Destroy;
+begin
+  Retrieve;
+  FBackup.Free;
+  inherited Destroy;
+end;
+
+procedure TEvsPenRecall.Store;
+begin
+  if Assigned(fReference) then FBackup.Assign(fReference);
+end;
+
+procedure TEvsPenRecall.Retrieve;
+begin
+  if Assigned(fReference) then
+    fReference.Assign(FBackup);
+end;
+{$ENDREGION}
+
+{$REGION ' TEvsBrushRecall '}
+
+procedure TEvsBrushRecall.SetReference(aValue : TBrush);
+begin
+  if fReference = aValue then Exit;
+  Retrieve;
+  fReference := aValue;
+  Store;
+end;
+
+constructor TEvsBrushRecall.Create(AReference : TBrush);
+begin
+  inherited Create;
+  FReference := AReference;
+  Store;
+end;
+
+destructor TEvsBrushRecall.Destroy;
+begin
+  Retrieve;
+  FBackup.Free;
+  inherited Destroy;
+end;
+
+procedure TEvsBrushRecall.Store;
+begin
+  if Assigned(fReference) then FBackup.Assign(FReference);
+end;
+
+procedure TEvsBrushRecall.Retrieve;
+begin
+  if Assigned(fReference) then FReference.Assign(FBackup);
+end;
+{$ENDREGION}
+
 
 initialization
   // Loads Custom Cursors

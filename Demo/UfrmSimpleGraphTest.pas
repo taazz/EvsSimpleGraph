@@ -108,6 +108,7 @@ type
     procedure actBezierLinkUpdate(Sender : TObject);
     procedure actCopyBmpExecute(Sender : TObject);
     procedure actCopyBmpUpdate(Sender : TObject);
+    procedure actDebugFormUpdate(Sender : TObject);
     procedure actEllipseExecute(Sender : TObject);
     procedure actEllipseUpdate(Sender : TObject);
     procedure actExitExecute(Sender : TObject);
@@ -417,6 +418,11 @@ begin
   actCopyBmp.Enabled := test.SelectedObjects.Count>0;
 end;
 
+procedure TForm1.actDebugFormUpdate(Sender : TObject);
+begin
+  actDebugForm.Checked := dbgFrm.Visible;
+end;
+
 procedure TForm1.actEllipseExecute(Sender : TObject);
 begin
   test.DefaultNodeClass := TEvsEllipticNode;
@@ -491,8 +497,8 @@ begin
   if Tmp.Visible then
     Tmp.Hide
   else begin
-    Tmp.PopupMode   := pmExplicit;
-    Tmp.PopupParent := Self;
+    //Tmp.PopupMode   := pmExplicit;
+    //Tmp.PopupParent := Self;
     Tmp.Show;
   end;
 
@@ -513,9 +519,11 @@ end;
 
 procedure TForm1.FormMouseMove(Sender : TObject; Shift : TShiftState; X,
   Y : Integer);
+var
+  vTmp : TPoint;
 begin
-  //
-  Caption := EvsActiveWidgetSet + ' - ' + Format('Mouse.X %D Mouse.Y %D',[X,Y]);
+  vTmp := Test.ClientToGraph(X,Y);
+  Caption := EvsActiveWidgetSet + ' - ' + Format('M.X %D M.Y %D : G.X %D G.Y %D',[X, Y, vTmp.X, vTmp.Y]);
 end;
 
 procedure TForm1.MenuItem1Click(Sender: TObject);
@@ -562,6 +570,8 @@ begin
   {$ENDIF}
 
   Caption := caption + '-' + EvsActiveWidgetSet;
+  dbgFrm.PopupMode := pmExplicit;
+  dbgFrm.PopupParent := Self;
 end;
 
 procedure TForm1.goDblClick(Graph : TEvsSimpleGraph;

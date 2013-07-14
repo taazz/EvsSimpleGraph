@@ -2,17 +2,17 @@ object Form2: TForm2
   Left = 330
   Height = 313
   Top = 163
-  Width = 575
+  Width = 713
   Caption = 'Form2'
   ClientHeight = 313
-  ClientWidth = 575
+  ClientWidth = 713
   OnClose = FormClose
-  LCLVersion = '1.1'
+  LCLVersion = '1.0.10.0'
   inline SynEdit1: TSynEdit
-    Left = 0
+    Left = 328
     Height = 313
     Top = 0
-    Width = 575
+    Width = 385
     Align = alClient
     Font.Height = -13
     Font.Name = 'Courier New'
@@ -453,6 +453,12 @@ object Form2: TForm2
       'SynEdit1'
     )
     VisibleSpecialChars = [vscSpace, vscTabAtLast]
+    SelectedColor.BackPriority = 50
+    SelectedColor.ForePriority = 50
+    SelectedColor.FramePriority = 50
+    SelectedColor.BoldPriority = 50
+    SelectedColor.ItalicPriority = 50
+    SelectedColor.UnderlinePriority = 50
     BracketHighlightStyle = sbhsBoth
     BracketMatchColor.Background = clNone
     BracketMatchColor.Foreground = clNone
@@ -488,6 +494,8 @@ object Form2: TForm2
       object SynGutterSeparator1: TSynGutterSeparator
         Width = 2
         MouseActions = <>
+        MarkupInfo.Background = clWhite
+        MarkupInfo.Foreground = clGray
       end
       object SynGutterCodeFolding1: TSynGutterCodeFolding
         MouseActions = <>
@@ -497,5 +505,26 @@ object Form2: TForm2
         MouseActionsCollapsed = <>
       end
     end
+  end
+  object StringGrid1: TStringGrid
+    Left = 0
+    Height = 313
+    Top = 0
+    Width = 323
+    Align = alLeft
+    ColCount = 2
+    FixedRows = 0
+    RowCount = 1
+    TabOrder = 1
+    ColWidths = (
+      99
+      300
+    )
+  end
+  object Splitter1: TSplitter
+    Left = 323
+    Height = 313
+    Top = 0
+    Width = 5
   end
 end
