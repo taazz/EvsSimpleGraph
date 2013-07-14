@@ -6184,7 +6184,6 @@ procedure TEvsSimpleGraph.MergeFromStream(aStream: TStream; aOffsetX,
 var
   vSignature         : DWORD;
   vOldObjectCount, I : integer;
-  vObjectList        : TEvsGraphObjectList;
   vNewObjectsBounds  : TRect;
 begin
   aStream.Read(vSignature, SizeOf(vSignature));
@@ -6196,25 +6195,20 @@ begin
     vOldObjectCount := Objects.Count;
     ReadObjects(aStream);
     if vOldObjectCount <> Objects.Count then begin
-      vObjectList := TEvsGraphObjectList.Create;
-      try
-        vObjectList.Capacity := Objects.Count - vOldObjectCount;
-        for I := vOldObjectCount to Objects.Count - 1 do
-          vObjectList.Add(Objects[I]);
-        vNewObjectsBounds := GetObjectsBounds(vObjectList);
-        GraphConstraints.SourceRect := vNewObjectsBounds;
-        if GraphConstraints.ConfineOffset(aOffsetX, aOffsetY, [osLeft, osTop, osRight, osBottom]) then begin
-          SuspendQueryEvents;
-          try
-            for I := 0 to vObjectList.Count - 1 do
-              vObjectList[I].MoveBy(aOffsetX, aOffsetY);
-          finally
-            ResumeQueryEvents;
-          end;
-          OffsetRect(vNewObjectsBounds, aOffsetX, aOffsetY);
+      fSelectedObjects.Capacity := fObjects.Count - vOldObjectCount;
+      for I := vOldObjectCount to fObjects.Count - 1 do
+        Objects[I].Selected := True;
+      vNewObjectsBounds := GetObjectsBounds(fSelectedObjects);
+      GraphConstraints.SourceRect := vNewObjectsBounds;
+      if GraphConstraints.ConfineOffset(aOffsetX, aOffsetY, [osLeft, osTop, osRight, osBottom]) then begin
+        SuspendQueryEvents;
+        try
+          for I := 0 to FSelectedObjects.Count - 1 do
+            FSelectedObjects[I].MoveBy(aOffsetX, aOffsetY);
+        finally
+          ResumeQueryEvents;
         end;
-      finally
-        vObjectList.Free;
+        OffsetRect(vNewObjectsBounds, aOffsetX, aOffsetY);
       end;
     end;
   finally
@@ -10782,7 +10776,7 @@ end;
 
 function TEVSBezierLink.AddPoint(const aPt: TPoint): Integer;
 begin
-  //Result := inherited AddPoint(aPt);
+  Result := inherited AddPoint(aPt);
 end;
 
 procedure TEVSBezierLink.Changed(aFlags : TEvsGraphChangeFlags);
@@ -10851,10 +10845,14 @@ begin
         //IPenRes := TEVSPenRestore.Create(aCanvas.Pen);
         try
           aCanvas.Pen.Style := psDash;
-          aCanvas.MoveTo(Points[0].X, Points[0].Y);
-          aCanvas.LineTo(Points[1].X, Points[1].Y);
-          aCanvas.MoveTo(Points[PointCount -1].X, Points[PointCount -1].Y);
-          aCanvas.LineTo(Points[PointCount -2].X, Points[PointCount -2].Y);
+          vPtRect.TopLeft := Points[0];
+          vPtRect.BottomRight := Points[1];
+          OffsetRectByOwner(vPtRect, InViewPort);
+          aCanvas.Line(vPtRect.TopLeft, vPtRect.BottomRight);
+          vPtRect.TopLeft := Points[PointCount -2];
+          vPtRect.BottomRight := Points[PointCount -1];
+          OffsetRectByOwner(vPtRect, InViewPort);
+          aCanvas.Line(vPtRect.TopLeft, vPtRect.BottomRight);
           vCntr := 2;
           while vCntr < PointCount - 3 do
           begin
@@ -10932,7 +10930,7 @@ end;
 procedure TEVSBezierLink.InsertPoint(aIndex: Integer; const aPt: TPoint);
 begin
   // do nothing
-  //inherited InsertPoint();
+  inherited;
 end;
 
 procedure TEVSBezierLink.MouseDown(aButton: TMouseButton; aShift: TShiftState;
@@ -11013,7 +11011,7 @@ end;
 procedure TEVSBezierLink.RemovePoint(aIndex: Integer);
 begin
   // do Nothing
-  //inherited;
+  inherited;
 end;
 
 procedure TEVSBezierLink.UpdateChangeMode(aHT: DWORD; aShift: TShiftState);

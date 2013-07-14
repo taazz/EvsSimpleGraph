@@ -39,69 +39,130 @@ type
   { TForm1 }
 
   TForm1 = class(TForm)
-    actCopy : TAction;
+    actExit : TAction;
+    actEditCopy : TAction;
     actCopyBmp : TAction;
-    actDeleteSelected : TAction;
-    actSelectAll : TAction;
-    actPaste : TAction;
-    actZoomIn: TAction;
-    actZoomOut: TAction;
-    actZoom1: TAction;
+    actEditDeleteSelected : TAction;
+    ActGraphNew : TAction;
+    actGraphSave : TAction;
+    actGraphSaveAs : TAction;
+    actEditCut : TAction;
+    actEditSelectAll : TAction;
+    actEditPaste : TAction;
+    actEditZoomIn: TAction;
+    actEditZoomOut: TAction;
     actDebugForm: TAction;
-    actLoad : TAction;
-    ActionList1: TActionList;
+    actGraphOpen : TAction;
+    actGraphImport : TAction;
+    actEllipse : TAction;
+    actHexagonNode : TAction;
+    actBezierLink : TAction;
+    actGraphPan : TAction;
+    actViewGrid : TAction;
+    actObjLockNodes : TAction;
+    actObjLockLinks : TAction;
+    actSelection : TAction;
+    actPolyLineLink : TAction;
+    actPentagonNode : TAction;
+    actRhomboidNode : TAction;
+    actTriangularNode : TAction;
+    actRoundRectNode : TAction;
+    actRectNode : TAction;
+    ActionList: TActionList;
+    ImageList : TImageList;
     ImageList1: TImageList;
-    MenuItem1 : TMenuItem;
-    MenuItem2 : TMenuItem;
-    MenuItem3 : TMenuItem;
-    MenuItem4 : TMenuItem;
-    MenuItem5 : TMenuItem;
-    MenuItem6 : TMenuItem;
-    OpenDialog1 : TOpenDialog;
-    pmnuGraphClasses: TPopupMenu;
-    pmnuZoom : TPopupMenu;
+    dlgOpen : TOpenDialog;
     dlgSave : TSaveDialog;
     ToolBar1: TToolBar;
+    ToolBar2 : TToolBar;
     ToolButton1 : TToolButton;
     ToolButton10 : TToolButton;
     ToolButton11 : TToolButton;
     ToolButton12 : TToolButton;
+    btnCut : TToolButton;
+    btnNew : TToolButton;
+    btnSaveAs : TToolButton;
+    btnSave : TToolButton;
+    btnCopy : TToolButton;
     ToolButton13 : TToolButton;
+    ToolButton14 : TToolButton;
+    tbtnSelection : TToolButton;
+    ToolButton16 : TToolButton;
+    ToolButton17 : TToolButton;
+    ToolButton18 : TToolButton;
+    ToolButton19 : TToolButton;
+    tbtnRectNode : TToolButton;
+    tbtnRoundRectNode : TToolButton;
+    tbtnEllipseNode : TToolButton;
     ToolButton2 : TToolButton;
     ToolButton3 : TToolButton;
-    ToolButton4 : TToolButton;
     ToolButton5: TToolButton;
     ToolButton6: TToolButton;
-    ToolButton7: TToolButton;
+    btnPaste: TToolButton;
+    btnDelete : TToolButton;
+    btnOpen : TToolButton;
+    tbtnTRiangularNode : TToolButton;
     ToolButton8 : TToolButton;
     ToolButton9 : TToolButton;
+    procedure actBezierLinkExecute(Sender : TObject);
+    procedure actBezierLinkUpdate(Sender : TObject);
     procedure actCopyBmpExecute(Sender : TObject);
     procedure actCopyBmpUpdate(Sender : TObject);
-    procedure actCopyExecute(Sender : TObject);
-    procedure actCopyUpdate(Sender : TObject);
-    procedure actDeleteSelectedExecute(Sender : TObject);
-    procedure actPasteExecute(Sender : TObject);
-    procedure actPasteUpdate(Sender : TObject);
-    procedure actSelectAllExecute(Sender : TObject);
-    procedure actSelectAllUpdate(Sender : TObject);
+    procedure actEllipseExecute(Sender : TObject);
+    procedure actEllipseUpdate(Sender : TObject);
+    procedure actExitExecute(Sender : TObject);
+    procedure actEditCopyExecute(Sender : TObject);
+    procedure actEditCopyUpdate(Sender : TObject);
+    procedure actEditCutExecute(Sender : TObject);
+    procedure actEditCutUpdate(Sender : TObject);
+    procedure actEditDeleteSelectedExecute(Sender : TObject);
+    procedure actGraphImportExecute(Sender : TObject);
+    procedure ActGraphNewExecute(Sender : TObject);
+    procedure actGraphSaveAsExecute(Sender : TObject);
+    procedure actGraphSaveExecute(Sender : TObject);
+    procedure actEditPasteExecute(Sender : TObject);
+    procedure actEditPasteUpdate(Sender : TObject);
+    procedure actEditSelectAllExecute(Sender : TObject);
+    procedure actEditSelectAllUpdate(Sender : TObject);
+    procedure actHexagonNodeExecute(Sender : TObject);
+    procedure actHexagonNodeUpdate(Sender : TObject);
+    procedure actObjLockLinksExecute(Sender : TObject);
+    procedure actObjLockLinksUpdate(Sender : TObject);
+    procedure actObjLockNodesExecute(Sender : TObject);
+    procedure actObjLockNodesUpdate(Sender : TObject);
+    procedure actPentagonNodeExecute(Sender : TObject);
+    procedure actPentagonNodeUpdate(Sender : TObject);
+    procedure actPolyLineLinkExecute(Sender : TObject);
+    procedure actPolyLineLinkUpdate(Sender : TObject);
+    procedure actRectNodeExecute(Sender : TObject);
+    procedure actRectNodeUpdate(Sender : TObject);
+    procedure actRhomboidNodeExecute(Sender : TObject);
+    procedure actRhomboidNodeUpdate(Sender : TObject);
+    procedure actRoundRectNodeExecute(Sender : TObject);
+    procedure actRoundRectNodeUpdate(Sender : TObject);
+    procedure actSelectionExecute(Sender : TObject);
+    procedure actSelectionUpdate(Sender : TObject);
+    procedure actTriangularNodeExecute(Sender : TObject);
+    procedure actTriangularNodeUpdate(Sender : TObject);
+    procedure actViewGridExecute(Sender : TObject);
+    procedure actViewGridUpdate(Sender : TObject);
     procedure actZoom1Update(Sender : TObject);
-    procedure actZoomInExecute(Sender: TObject);
-    procedure actZoomInUpdate(Sender : TObject);
-    procedure actZoomOutExecute(Sender: TObject);
+    procedure actEditZoomInExecute(Sender: TObject);
+    procedure actEditZoomInUpdate(Sender : TObject);
+    procedure actEditZoomOutExecute(Sender: TObject);
     procedure actZoom1Execute(Sender: TObject);
     procedure Action4Execute(Sender: TObject);
     procedure actDebugFormExecute(Sender: TObject);
-    procedure actLoadExecute(Sender : TObject);
-    procedure actZoomOutUpdate(Sender : TObject);
+    procedure actGraphOpenExecute(Sender : TObject);
+    procedure actEditZoomOutUpdate(Sender : TObject);
     procedure FormMouseMove(Sender : TObject; Shift : TShiftState; X,
       Y : Integer);
     procedure MenuItem1Click(Sender: TObject);
     procedure MenuItem2Click(Sender: TObject);
-    procedure ToolButton3Click(Sender : TObject);
   private
     { private declarations }
     Test : TEvsSimpleGraph;
-  protected
+    FFileName : String;
   public
     { public declarations }
     constructor Create(aOwner:TComponent);override;
@@ -142,7 +203,7 @@ end;
 
 { TForm1 }
 
-procedure TForm1.actZoomInExecute(Sender: TObject);
+procedure TForm1.actEditZoomInExecute(Sender: TObject);
 begin
   //if assigned(Test) then Test.ChangeZoomBy(10, UEvsSimpleGraph.zoCenter);
 end;
@@ -152,12 +213,23 @@ begin
   //if assigned(Test) then actZoom1.Enabled := (Test.Zoom <> 100) else actZoom1.Enabled := False;
 end;
 
-procedure TForm1.actCopyUpdate(Sender : TObject);
+procedure TForm1.actEditCopyUpdate(Sender : TObject);
 begin
-  actCopy.Enabled := Test.SelectedObjects.Count > 0;
+  actEditCopy.Enabled := Test.SelectedObjects.Count > 0;
 end;
 
-procedure TForm1.actDeleteSelectedExecute(Sender : TObject);
+procedure TForm1.actEditCutExecute(Sender : TObject);
+begin
+  actEditCopy.Execute;
+  actEditDeleteSelected.Execute;
+end;
+
+procedure TForm1.actEditCutUpdate(Sender : TObject);
+begin
+  actEditCut.Enabled := Test.SelectedObjects.Count > 0;
+end;
+
+procedure TForm1.actEditDeleteSelectedExecute(Sender : TObject);
 var
   vCntr : Integer;
 begin
@@ -165,17 +237,47 @@ begin
     Test.SelectedObjects[vCntr].Delete;
 end;
 
-procedure TForm1.actPasteExecute(Sender : TObject);
+procedure TForm1.actGraphImportExecute(Sender : TObject);
+begin
+  if dlgOpen.Execute then begin
+    Test.MergeFromFile(dlgOpen.FileName,10,10);
+  end;
+end;
+
+procedure TForm1.ActGraphNewExecute(Sender : TObject);
+begin
+  Test.Clear;
+  Test.CommandMode := cmEdit;
+  //IsReadonly := False;
+  dlgSave.FileName := 'Untitled';
+  Caption := dlgSave.FileName + ' - ' + Application.Title;
+end;
+
+procedure TForm1.actGraphSaveAsExecute(Sender : TObject);
+begin
+  if FFileName <> '' then dlgSave.FileName := FFileName;
+  if dlgSave.Execute then begin
+    Test.SaveToFile(dlgSave.FileName);
+    FFileName := dlgsave.FileName;
+  end;
+end;
+
+procedure TForm1.actGraphSaveExecute(Sender : TObject);
+begin
+  if FFileName <> '' then Test.SaveToFile(FFileName) else actGraphSaveAs.Execute;
+end;
+
+procedure TForm1.actEditPasteExecute(Sender : TObject);
 begin
   Test.PasteFromClipboard;
 end;
 
-procedure TForm1.actPasteUpdate(Sender : TObject);
+procedure TForm1.actEditPasteUpdate(Sender : TObject);
 begin
-  actPaste.Enabled := Clipboard.HasFormat(CF_SIMPLEGRAPH);
+  actEditPaste.Enabled := Clipboard.HasFormat(CF_SIMPLEGRAPH);
 end;
 
-procedure TForm1.actSelectAllExecute(Sender : TObject);
+procedure TForm1.actEditSelectAllExecute(Sender : TObject);
 var
   vCntr : Integer;
 begin
@@ -183,24 +285,152 @@ begin
     Test.Objects[vCntr].Selected := True;
 end;
 
-procedure TForm1.actSelectAllUpdate(Sender : TObject);
+procedure TForm1.actEditSelectAllUpdate(Sender : TObject);
 begin
-  actSelectAll.Enabled := Test.Objects.Count > 0;
+  actEditSelectAll.Enabled := Test.Objects.Count > 0;
 end;
 
-procedure TForm1.actCopyExecute(Sender : TObject);
-var
-  vTmp : TEvsGraphClipboardFormats;
+procedure TForm1.actHexagonNodeExecute(Sender : TObject);
 begin
-  vTmp := Test.ClipboardFormats;
-  Test.ClipboardFormats := [cfNative];
-  Test.CopyToClipboard();
-  Test.ClipboardFormats := vTmp;
+  Test.DefaultNodeClass := TEvsHexagonalNode;
+  Test.CommandMode := cmInsertNode;
+end;
+
+procedure TForm1.actHexagonNodeUpdate(Sender : TObject);
+begin
+  actHexagonNode.Checked := (Test.CommandMode = cmInsertNode) and (Test.DefaultNodeClass = TEvsHexagonalNode);
+end;
+
+procedure TForm1.actObjLockLinksExecute(Sender : TObject);
+begin
+  Test.LockLinks := not Test.LockLinks;
+end;
+
+procedure TForm1.actObjLockLinksUpdate(Sender : TObject);
+begin
+  actObjLockLinks.Checked := Test.LockLinks;
+end;
+
+procedure TForm1.actObjLockNodesExecute(Sender : TObject);
+begin
+  Test.LockNodes := not Test.LockNodes;
+end;
+
+procedure TForm1.actObjLockNodesUpdate(Sender : TObject);
+begin
+  actObjLockNodes.Checked := Test.LockNodes;
+end;
+
+procedure TForm1.actPentagonNodeExecute(Sender : TObject);
+begin
+  Test.DefaultNodeClass := TEvsPentagonalNode;
+  Test.CommandMode := cmInsertNode;
+end;
+
+procedure TForm1.actPentagonNodeUpdate(Sender : TObject);
+begin
+  actPentagonNode.Checked := (Test.CommandMode = cmInsertNode) and (Test.DefaultNodeClass = TEvsPentagonalNode);
+end;
+
+procedure TForm1.actPolyLineLinkExecute(Sender : TObject);
+begin
+  Test.DefaultLinkClass := TEvsGraphLink;
+  Test.CommandMode := cmInsertLink;
+end;
+
+procedure TForm1.actPolyLineLinkUpdate(Sender : TObject);
+begin
+  actPolyLineLink.Checked := (Test.CommandMode = cmInsertLink) and (Test.DefaultLinkClass = TEvsGraphLink);
+end;
+
+procedure TForm1.actRectNodeExecute(Sender : TObject);
+begin
+  Test.CommandMode := cmInsertNode;
+  Test.DefaultNodeClass := TEvsRectangularNode;
+end;
+
+procedure TForm1.actRectNodeUpdate(Sender : TObject);
+begin
+  actRectNode.Checked := (Test.CommandMode = cmInsertNode) and (test.DefaultNodeClass = TEvsRectangularNode);
+end;
+
+procedure TForm1.actRhomboidNodeExecute(Sender : TObject);
+begin
+  Test.DefaultNodeClass := TEvsRhomboidalNode;
+  Test.CommandMode := cmInsertNode;
+end;
+
+procedure TForm1.actRhomboidNodeUpdate(Sender : TObject);
+begin
+  actRhomboidNode.Checked := (Test.CommandMode = cmInsertNode) and (Test.DefaultNodeClass = TEvsRhomboidalNode);
+end;
+
+procedure TForm1.actRoundRectNodeExecute(Sender : TObject);
+begin
+  Test.DefaultNodeClass := TEvsRoundRectangularNode;
+  Test.CommandMode := cmInsertNode;
+end;
+
+procedure TForm1.actRoundRectNodeUpdate(Sender : TObject);
+begin
+  actRoundRectNode.Checked := (Test.CommandMode = cmInsertNode) and (Test.DefaultNodeClass = TEvsRoundRectangularNode);
+end;
+
+procedure TForm1.actSelectionExecute(Sender : TObject);
+begin
+  Test.CommandMode := cmEdit;
+end;
+
+procedure TForm1.actSelectionUpdate(Sender : TObject);
+begin
+  actSelection.Checked := Test.CommandMode in [cmEdit, cmViewOnly];
+end;
+
+procedure TForm1.actTriangularNodeExecute(Sender : TObject);
+begin
+  Test.DefaultNodeClass := TEvsTriangularNode;
+  test.CommandMode := cmInsertNode;
+end;
+
+procedure TForm1.actTriangularNodeUpdate(Sender : TObject);
+begin
+  actTriangularNode.Checked := (Test.CommandMode = cmInsertNode) and (test.DefaultNodeClass =TEvsTriangularNode);
+end;
+
+procedure TForm1.actViewGridExecute(Sender : TObject);
+begin
+  Test.ShowGrid := not Test.ShowGrid;
+end;
+
+procedure TForm1.actViewGridUpdate(Sender : TObject);
+begin
+  actViewGrid.Checked := Test.ShowGrid;
+end;
+
+procedure TForm1.actEditCopyExecute(Sender : TObject);
+begin
+  Test.CopyToClipboard;
 end;
 
 procedure TForm1.actCopyBmpUpdate(Sender : TObject);
 begin
   actCopyBmp.Enabled := test.SelectedObjects.Count>0;
+end;
+
+procedure TForm1.actEllipseExecute(Sender : TObject);
+begin
+  test.DefaultNodeClass := TEvsEllipticNode;
+  test.CommandMode := cmInsertNode;
+end;
+
+procedure TForm1.actEllipseUpdate(Sender : TObject);
+begin
+  actEllipse.Checked := (Test.CommandMode = cmInsertNode) and (Test.DefaultNodeClass = TEvsEllipticNode);
+end;
+
+procedure TForm1.actExitExecute(Sender : TObject);
+begin
+  Close;
 end;
 
 procedure TForm1.actCopyBmpExecute(Sender : TObject);
@@ -213,12 +443,23 @@ begin
   Test.ClipboardFormats := vTmp;
 end;
 
-procedure TForm1.actZoomInUpdate(Sender : TObject);
+procedure TForm1.actBezierLinkExecute(Sender : TObject);
 begin
-  //actZoomIn.Enabled := assigned(test) and (Test.Zoom < High(TZoom));
+  Test.DefaultLinkClass := TEVSBezierLink;
+  Test.CommandMode := cmInsertLink;
 end;
 
-procedure TForm1.actZoomOutExecute(Sender: TObject);
+procedure TForm1.actBezierLinkUpdate(Sender : TObject);
+begin
+  actBezierLink.Checked := (Test.CommandMode = cmInsertLink) and (Test.DefaultLinkClass = TEVSBezierLink);
+end;
+
+procedure TForm1.actEditZoomInUpdate(Sender : TObject);
+begin
+  //actEditZoomIn.Enabled := assigned(test) and (Test.Zoom < High(TZoom));
+end;
+
+procedure TForm1.actEditZoomOutExecute(Sender: TObject);
 begin
   //if assigned(test) then begin
   //  Test.ChangeZoomBy(-10, UEvsSimpleGraph.zoCenter);
@@ -257,14 +498,17 @@ begin
 
 end;
 
-procedure TForm1.actLoadExecute(Sender : TObject);
+procedure TForm1.actGraphOpenExecute(Sender : TObject);
 begin
-  if OpenDialog1.Execute then Test.LoadFromFile(OpenDialog1.FileName);
+  if dlgOpen.Execute then begin
+    Test.LoadFromFile(dlgOpen.FileName);
+    FFileName := dlgOpen.FileName;
+  end;
 end;
 
-procedure TForm1.actZoomOutUpdate(Sender : TObject);
+procedure TForm1.actEditZoomOutUpdate(Sender : TObject);
 begin
-  //actZoomOut.Enabled := (Test.Zoom > Low(TZoom));
+  //actEditZoomOut.Enabled := (Test.Zoom > Low(TZoom));
 end;
 
 procedure TForm1.FormMouseMove(Sender : TObject; Shift : TShiftState; X,
@@ -290,12 +534,6 @@ begin
   end;
 end;
 
-procedure TForm1.ToolButton3Click(Sender : TObject);
-begin
-  if dlgSave.Execute then
-    Test.SaveToFile(dlgSave.FileName);
-end;
-
 constructor TForm1.Create(aOwner : TComponent);
 VAR
   tmp : UnicodeString;
@@ -319,27 +557,6 @@ begin
   Test.OnMouseMove := @FormMouseMove;
   Test.HorzScrollBar.Tracking:=True;
   Test.VertScrollBar.Tracking:=True;
-
-  pmnuGraphClasses.Items.Clear;
-  for Cnt := 0 to TEvsSimpleGraph.NodeClassCount -1 do begin
-    Mnu := TMenuItem.Create(Self);
-    pmnuGraphClasses.Items.Add(Mnu);
-    Mnu.Tag := Cnt+1;
-    Mnu.OnClick:=@MenuItem1Click;
-    Mnu.Caption:= Copy(TEvsSimpleGraph.NodeClasses(Cnt).ClassName,5,255);
-  end;
-
-  Mnu := TMenuItem.Create(Self);
-  pmnuGraphClasses.Items.Add(Mnu);
-  Mnu.Caption:= '-';
-
-  for Cnt := 0 to TEvsSimpleGraph.LinkClassCount -1 do begin
-    Mnu := TMenuItem.Create(Self);
-    pmnuGraphClasses.Items.Add(Mnu);
-    Mnu.Tag := cLinkStart+Cnt+1;
-    Mnu.OnClick:=@MenuItem2Click;
-    Mnu.Caption:= Copy(TEvsSimpleGraph.LinkClasses(Cnt).ClassName,5,255);
-  end;
 
   Test.OnObjectDblClick := @goDblClick;
   {$ENDIF}
