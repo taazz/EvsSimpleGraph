@@ -7,14 +7,14 @@ uses
   cthreads,
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, UfrmSimpleGraphTest, uFrmDebug, UEvsSimpleGraph;
+  Forms, UfrmSimpleGraphTest, uFrmDebug, UEvsSimpleGraph, ufrmnodeproperties;
 
 {$R *.res}
 
 begin
   RequireDerivedFormResource := True;
   Application.Initialize;
-  Application.CreateForm(TForm1, Form1);
+  Application.CreateForm(TEvsMain, EvsMain);
   Application.Run;
 end.
 

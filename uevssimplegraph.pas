@@ -665,9 +665,9 @@ type
       Action: TEvsGraphObjectListAction);
     procedure ReadCustomData(Stream: TStream);
     procedure WriteCustomData(Stream: TStream);
-    procedure OffsetPointsByOwner(var APoints:array of TPOINT; Up:Boolean);
-    procedure OffsetPointByOwner(var aPoint:TPOINT; Up:Boolean);
-    procedure OffsetRectByOwner(var aRect:TRECT; Up:Boolean);
+    //procedure OffsetPointsByOwner(var APoints:array of TPOINT; Up:Boolean);
+    //procedure OffsetPointByOwner(var aPoint:TPOINT; Up:Boolean);
+    //procedure OffsetRectByOwner(var aRect:TRECT; Up:Boolean);
     function OwnerOffsetX:integer;
     function OwnerOffsetY:integer;
   protected
@@ -1050,7 +1050,7 @@ type
      procedure BoundsChanged(dX, dY, dCX, dCY: integer); override;
      function GetCenter: TPoint; override;
      function CreateRegion: HRGN; override;                                      {$MESSAGE WARN 'REGION ALTERNATIVE'}
-     procedure DrawBorder(Canvas: TCanvas); override;
+     procedure DrawBorder(aCanvas: TCanvas); override;
      function LinkIntersect(const LinkPt: TPoint; const LinkAngle: double): TPoints;
        override;
      procedure DefineVertices(const ARect: TRect; var Points: TPoints); virtual; abstract;
@@ -1145,6 +1145,7 @@ type
     fHorzScrollBar        : TEvsGraphScrollBar;
     fVertScrollBar        : TEvsGraphScrollBar;
     fZoom                 : TZoom;
+    FZoomFactor           : Double;
     fGridSize             : TGridSize;
     fGridColor            : TColor;
     fShowGrid             : Boolean;
@@ -1368,6 +1369,8 @@ type
     property MarkedArea: TRect read fMarkedArea write SetMarkedArea;
     property ValidMarkedArea: boolean read fValidMarkedArea;
     property Zoom: TZoom read fZoom write SetZoom default 100;
+    procedure CLtoGP(var Points : array of TPoint);
+    procedure GPtoCL(var Points : array of TPoint);
   public
     class procedure Register(aNodeClass: TEvsGraphNodeClass); overload;                       //CLEAN
     class procedure Unregister(aNodeClass: TEvsGraphNodeClass); overload;                     //CLEAN
@@ -1376,7 +1379,8 @@ type
     class procedure Register(aLinkClass: TEvsGraphLinkClass); overload;                       //CLEAN
     class procedure Unregister(aLinkClass: TEvsGraphLinkClass); overload;                     //CLEAN
     class function LinkClassCount: integer;                                                //CLEAN
-    class function LinkClasses(aIndex: integer): TEvsGraphLinkClass;                           //CLEAN
+    class function LinkClasses(aIndex: integer): TEvsGraphLinkClass;                       //CLEAN
+
   public  //methods
     constructor Create(aOwner: TComponent); override;                                      //CLEAN
     destructor Destroy; override;                                                          //CLEAN
@@ -3702,6 +3706,7 @@ begin
   if Zoom <> AValue then
   begin
     fZoom := AValue;
+    FZoomFactor := FZoom/100;
     CalcAutoRange;
     Invalidate;
     DoZoomChange;
@@ -4221,7 +4226,8 @@ begin
         (HintObject.Text <> HintObject.TextToShow) then
       begin
         CursorRect := HintObject.VisualRect;
-        GPToCP(CursorRect, 2);
+        GPToCP(CursorRect, 2); {$MESSAGE WARN 'GPToCP'}
+        //GPToCl([CursorRect.TopLeft, CursorRect.BottomRight]);
         Application.Hint := HintObject.Hint;
         HintStr := GetShortHint(HintObject.Hint);
         if (HintStr = '') and (HintObject.Text <> HintObject.TextToShow) then
@@ -4870,6 +4876,7 @@ begin
 end;
 
 procedure TEvsSimpleGraph.GPToCP(var aPoints; aCount: Integer);
+Type PPPoint = ^PPOINT;
 var
 {$IFDEF LCLWIN32}
   vMemDC: HDC;
@@ -4887,7 +4894,7 @@ begin
     DeleteDC(vMemDC);
   end;
   {$ELSE}
-  vTmp := pointer(aPoints);
+  vTmp := @aPoints;
   for vCntr := 0 to aCount -1 do begin
     vTmp[vCntr].x := vTmp[vCntr].x - fHorzScrollBar.Position;
     vTmp[vCntr].y := vTmp[vCntr].y - fVertScrollBar.Position;
@@ -4914,7 +4921,7 @@ begin
     DeleteDC(vMemDC);
   end;
   {$ELSE}
-  vTmp := Pointer(aPoints);
+  vTmp := @aPoints;
   for vCntr := 0 to aCount -1 do begin
     vTmp[vCntr].x := vTmp[vCntr].x + fHorzScrollBar.Position;
     vTmp[vCntr].y := vTmp[vCntr].y + fVertScrollBar.Position;
@@ -4927,7 +4934,7 @@ var
   vRect: TRect;
 begin
   vRect := GetObjectsBounds(aObjectList);
-  GPToCP(vRect,2);
+  GPToCP(vRect,2); {$MESSAGE WARN 'GPTOCP'}
   Result := Graphics.TBitmap.Create;
   Result.PixelFormat := pf24bit;
   Result.Canvas.Brush.Color := clWhite;
@@ -5260,6 +5267,7 @@ begin
   fMarkerSize               := 3;
   fMinNodeSize              := 16;
   fZoom                     := 100;
+  fZoomFactor               := 1.0;
   fDefaultKeyMap            := True;
   fCommandMode              := cmEdit;
   fModified                 := False;
@@ -5330,7 +5338,7 @@ var
   ScreenRect: TRect;
 begin
   ScreenRect := Rect;
-  GPToCP(ScreenRect, 2);
+  GPToCP(ScreenRect, 2); {$MESSAGE WARN 'GPTOCP'}
   Inc(ScreenRect.Right);
   Inc(ScreenRect.Bottom);
   if UpdateCount <> 0 then
@@ -5714,6 +5722,7 @@ begin
         vRect.TopLeft := CursorPos;
     end;
     fZoom := aNewZoom;
+    FZoomFactor := 100/aNewZoom;
     CalcAutoRange;
     case aOrigin of
       zoTopLeft:
@@ -5742,6 +5751,29 @@ end;
 function TEvsSimpleGraph.ChangeZoomBy(aDelta: integer; aOrigin: TEvsGraphZoomOrigin): boolean;
 begin
   Result := ChangeZoom(Zoom + aDelta, aOrigin);
+end;
+
+procedure TEvsSimpleGraph.CLtoGP(var Points : array of TPoint);
+var
+  vCntr : Integer;
+  vZoomFactor : Double;
+begin
+  vZoomFactor := Zoom/100;
+  fHorzScrollBar.IsScrollBarVisible;
+  for vCntr := Low(Points) to High(Points) do begin
+    if fHorzScrollBar.IsScrollBarVisible then Points[vCntr].X := Points[vCntr].X + fHorzScrollBar.Position;
+    if fVertScrollBar.IsScrollBarVisible then Points[vCntr].Y := Points[vCntr].Y + fVertScrollBar.Position;
+  end;
+end;
+
+procedure TEvsSimpleGraph.GPtoCL(var Points : array of TPoint);
+var
+  vCntr : Integer;
+begin
+  for vCntr := Low(Points) to High(Points) do begin
+    Points[vCntr].X := round((Points[vCntr].X - fHorzScrollBar.Position) * FZoomFactor);
+    Points[vCntr].Y := round((Points[vCntr].Y - fVertScrollBar.Position) * FZoomFactor);
+  end;
 end;
 
 function TEvsSimpleGraph.AlignSelection(aHorz: TEvsHAlignOption; aVert: TEvsVAlignOption): boolean;
@@ -6258,7 +6290,8 @@ function TEvsSimpleGraph.ClientToGraph(aX, aY: integer): TPoint;
 begin
   Result.X := aX;
   Result.Y := aY;
-  CPToGP(Result, 1);
+  //CPToGP(Result, 1);
+  CLtoGP(Result);
 end;
 
 function TEvsSimpleGraph.GraphToClient(aX, aY: integer): TPoint;
@@ -6266,6 +6299,7 @@ begin
   Result.X := aX;
   Result.Y := aY;
   GPToCP(Result, 1);
+  //GPtoCL(Result);
 end;
 
 function TEvsSimpleGraph.ScreenToGraph(aX, aY: integer): TPoint;
@@ -7470,7 +7504,8 @@ begin
     {$MESSAGE HINT 'METAFILE SUPPORT OMMITED'}
     //if not (aCanvas is TMetafileCanvas) then  // Windows.RectVisible bug!!!
        vDCRect := SelectedVisualRect;
-       OffsetRectByOwner(vDCRect, InViewPort);
+       //OffsetRectByOwner(vDCRect, InViewPort);
+       owner.GPToCP(vDCRect,2);
        Result := RectVisible(aCanvas.Handle, vDCRect)
        //Result := RectVisible(aCanvas.Handle, SelectedVisualRect)
     //else
@@ -7588,7 +7623,8 @@ var
   R: TRect;
 begin
   R := MakeSquare(aPoint, Owner.MarkerSize);
-  OffsetRectByOwner(R, InViewPort);
+  //OffsetRectByOwner(R, InViewPort);
+  Owner.GPToCP(R,2);
   aCanvas.Rectangle(R.Left, R.Top, R.Right, R.Bottom);
   if not Enabled then
   begin
@@ -7768,52 +7804,52 @@ begin
   end;
 end;
 
-procedure TEvsGraphObject.OffsetPointsByOwner(var APoints: array of TPoint; Up: Boolean);
-var
-  OfsX,OfsY : Integer;
-begin
-  if up then begin
-    OfsX := -OwnerOffsetX;
-    OfsY := -OwnerOffsetY;
-  end else begin
-    OfsX := OwnerOffsetX;
-    OfsY := OwnerOffsetY;
-  end;
-  OffsetPoints(APoints,OfsX,OfsY);
-end;
-
-procedure TEvsGraphObject.OffsetPointByOwner(var aPoint : TPOINT; Up : Boolean);
-var
-  OfsX,OfsY : Integer;
-begin
-  if up then begin
-    OfsX := -OwnerOffsetX;
-    OfsY := -OwnerOffsetY;
-  end else begin
-    OfsX := OwnerOffsetX;
-    OfsY := OwnerOffsetY;
-  end;
-  Inc(aPoint.x, OfsX);
-  Inc(aPoint.Y, OfsY);
-end;
-
-procedure TEvsGraphObject.OffsetRectByOwner(var aRect : TRECT; Up : Boolean);
-var
-  vOfsX,vOfsY : Integer;
-begin
-  if up then begin
-    vOfsX := -OwnerOffsetX;
-    vOfsY := -OwnerOffsetY;
-  end else begin
-    vOfsX := OwnerOffsetX;
-    vOfsY := OwnerOffsetY;
-  end;
-  Inc(aRect.Left, vOfsX);
-  Inc(aRect.Top, vOfsY);
-  Inc(aRect.Right, vOfsX);
-  Inc(aRect.Bottom, vOfsY);
-end;
-
+//procedure TEvsGraphObject.OffsetPointsByOwner(var APoints: array of TPoint; Up: Boolean);
+//var
+//  OfsX,OfsY : Integer;
+//begin
+//  if up then begin
+//    OfsX := -OwnerOffsetX;
+//    OfsY := -OwnerOffsetY;
+//  end else begin
+//    OfsX := OwnerOffsetX;
+//    OfsY := OwnerOffsetY;
+//  end;
+//  OffsetPoints(APoints,OfsX,OfsY);
+//end;
+//
+//procedure TEvsGraphObject.OffsetPointByOwner(var aPoint : TPOINT; Up : Boolean);
+//var
+//  OfsX,OfsY : Integer;
+//begin
+//  if up then begin
+//    OfsX := -OwnerOffsetX;
+//    OfsY := -OwnerOffsetY;
+//  end else begin
+//    OfsX := OwnerOffsetX;
+//    OfsY := OwnerOffsetY;
+//  end;
+//  Inc(aPoint.x, OfsX);
+//  Inc(aPoint.Y, OfsY);
+//end;
+//
+//procedure TEvsGraphObject.OffsetRectByOwner(var aRect : TRECT; Up : Boolean);
+//var
+//  vOfsX,vOfsY : Integer;
+//begin
+//  if up then begin
+//    vOfsX := -OwnerOffsetX;
+//    vOfsY := -OwnerOffsetY;
+//  end else begin
+//    vOfsX := OwnerOffsetX;
+//    vOfsY := OwnerOffsetY;
+//  end;
+//  Inc(aRect.Left, vOfsX);
+//  Inc(aRect.Top, vOfsY);
+//  Inc(aRect.Right, vOfsX);
+//  Inc(aRect.Bottom, vOfsY);
+//end;
+//
 function TEvsGraphObject.OwnerOffsetX: integer;
 begin
   Result := Owner.fHorzScrollBar.Position;
@@ -8008,9 +8044,11 @@ begin
       Pts[2] := NextPointOfLine(Angle + Pi / 9, Pt, Size);
       Pts[3] := NextPointOfLine(Angle, Pt, MulDiv(Size, 6, 10));
       Pts[4] := NextPointOfLine(Angle - Pi / 9, Pt, Size);
-      OffsetPointsByOwner(Pts,InViewPort);
+      //OffsetPointsByOwner(Pts,InViewPort);
+      owner.GPtoCL(Pts);
       aCanvas.Polygon(Pts);
-      OffsetPointsByOwner(Pts,InGraph);
+      //OffsetPointsByOwner(Pts,InGraph);
+      Owner.CLtoGP(Pts);
       Result := Pts[3];
     end;
     lsArrowSimple:
@@ -8018,9 +8056,11 @@ begin
       Pts[1] := NextPointOfLine(Angle + Pi / 6, Pt, Size);
       Pts[2] := Pt;
       Pts[3] := NextPointOfLine(Angle - Pi / 6, Pt, Size);
-      OffsetPointsByOwner(Pts,InViewPort);
+      //OffsetPointsByOwner(Pts,InViewPort);
+      Owner.GPtoCL(Pts);
       aCanvas.Polyline(Slice(Pts, 3));
-      OffsetPointsByOwner(Pts,InGraph);
+      //OffsetPointsByOwner(Pts,InGraph);
+      Owner.CLtoGP(Pts);
       Result := Pt;
     end;
     lsCircle:
@@ -8035,9 +8075,11 @@ begin
       Pts[2] := NextPointOfLine(Angle + Pi / 2, Pt, Size);
       Pts[3] := NextPointOfLine(Angle, Pt, -Size);
       Pts[4] := NextPointOfLine(Angle - Pi / 2, Pt, Size);
-      OffsetPointsByOwner(Pts,InViewPort);
+      //OffsetPointsByOwner(Pts,InViewPort);
+      Owner.GPtoCL(Pts);
       aCanvas.Polygon(Pts);
-      OffsetPointsByOwner(Pts,InGraph);
+      //OffsetPointsByOwner(Pts,InGraph);
+      Owner.CLtoGP(Pts);
       Result := Pts[1];
     end;
     else
@@ -8079,13 +8121,15 @@ begin
       //aCanvas.Polyline(vTmp);
     end else vTmp := Copy(Polyline);
 
-    OffsetPointsByOwner(vTmp,InViewPort);
+    //OffsetPointsByOwner(vTmp,InViewPort);
+    Owner.GPtoCL(vTmp);
     aCanvas.Polyline(vTmp);
   end
   else if PointCount = 1 then
   begin
     vPtRect := MakeSquare(Points[0], aCanvas.Pen.Width);
-    OffsetRectByOwner(vPtRect, InViewPort);
+    //OffsetRectByOwner(vPtRect, InViewPort);
+    Owner.GPToCP(vPtRect,2);
     aCanvas.Ellipse(vPtRect.Left, vPtRect.Top, vPtRect.Right, vPtRect.Bottom);
   end;
 end;
@@ -8125,7 +8169,7 @@ begin
     else
       vTextFlags := 0;
     vPoint := TextCenter;
-    Owner.GPToCP(vPoint, 1);
+    Owner.GPToCL(vPoint);
     ExtTextOut(vDC, vPoint.X, vPoint.Y, vTextFlags, @vRect,
       PChar(fTextToShow), Length(fTextToShow), nil);
     SetTextAlign(vDC, TextAlign);
@@ -8173,7 +8217,7 @@ begin
         aCanvas.Font.Orientation := Round(-1800 * TextAngle / Pi);
         RotatePoints(vPt, TextAngle, TextCenter);
       end;
-      Owner.GPToCP(vPt, 1);
+      Owner.GPToCl(vPt);
       aCanvas.TextStyle := vTextStyle;
       //vRect := Classes.Rect(0,0,round(LineLength(FPoints[FTextLine],FPoints[FTextLine+1]))-4,vSize.cy);
       ExtTextOut(aCanvas.Handle, vPt.X, vPt.Y, vTextFlags, nil,
@@ -8199,7 +8243,7 @@ var
   OldPenStyle: TPenStyle;
   OldBrushStyle: TBrushStyle;
   ModifiedPolyline: TPoints;
-  Angle: double;
+  Angle: double =0.0;
   PtRect: TRect;
 begin
   ModifiedPolyline := nil;
@@ -8216,7 +8260,9 @@ begin
   else if PointCount >= 2 then
   begin
     {JKOZ: OFFSET TO ACCOMODATE FPC Canvas rect which is always = 0,0,width,heigth}
-    if ModifiedPolyline = nil then ModifiedPolyline := Copy(Polyline, 0, PointCount);
+    //if ModifiedPolyline = nil then
+    SetLength(ModifiedPolyline, 0);
+    ModifiedPolyline := Copy(Polyline, 0, PointCount);
     //OffsetPoints(ModifiedPolyline,-Owner.fHorzScrollBar.Position,-Owner.fVertScrollBar.Position);
     if (BeginStyle <> lsNone) or (EndStyle <> lsNone) then
     begin
@@ -8248,11 +8294,11 @@ begin
     try
       Canvas.Brush.Style := bsClear;
       //if ModifiedPolyline <> nil then
-        Owner.GPToCP(ModifiedPolyline, Length(ModifiedPolyline));
-        //OffsetPointsByOwner(ModifiedPolyline, InViewPort);
+        //Owner.GPToCP(ModifiedPolyline, Length(ModifiedPolyline));
+        Owner.GPtoCL(ModifiedPolyline);
         Canvas.Polyline(ModifiedPolyline);
-        Owner.CPToGP(ModifiedPolyline, Length(ModifiedPolyline));
-        OffsetPointsByOwner(ModifiedPolyline, InGraph);
+        //Owner.CPToGP(ModifiedPolyline, Length(ModifiedPolyline));
+        //owner.CLtoGP(ModifiedPolyline);
       //else
       //  Canvas.Polyline(Polyline);
     finally
@@ -9964,7 +10010,7 @@ begin
     eM12 := 0;
     eM21 := 0;
     eM22 := DevExt.CY / LogExt.CY;
-    Owner.GPToCP(Org,1);
+    Owner.GPtoCL(Org);
     eDx  := Org.X;
     eDy  := Org.Y;
   end;
@@ -10084,8 +10130,8 @@ begin
 
     //TextAlign := SetTextAlign(DC, TA_LEFT or TA_TOP); //jkoz -STA
 
-    OffsetRectByOwner(Rect, InViewPort);
-
+    //OffsetRectByOwner(Rect, InViewPort);
+     Owner.GPToCP(Rect,2);
     //vOldColor := Canvas.Pen.Color;
     //Canvas.Pen.Color := Canvas.Font.Color;
     //Canvas.Rectangle(Rect);
@@ -10120,8 +10166,7 @@ begin
     ImageRect.Right := Left + Width - MulDiv(Width, BackgroundMargins.Right, 100);
     ImageRect.Bottom := Top + Height - MulDiv(Height, BackgroundMargins.Bottom, 100);
     //OffsetRectByOwner(ImageRect,True);
-    Owner.GPToCP(ImageRect, 2);
-    //Owner.GPToCP(ImageRect, 2);
+    Owner.GPToCP(ImageRect, 2); {$MESSAGE WARN 'GPTOCP CHANGE'}
     ClipRgn := CreateClipRgn(Canvas);
     try
       SelectClipRgn(Canvas.Handle, ClipRgn);
@@ -10491,13 +10536,17 @@ begin
   Result := CreatePolygonRgn({$IFNDEF WIN}@{$ENDIF}FVertices[0], Length(Vertices), WINDING);
 end;
 
-procedure TEvsPolygonalNode.DrawBorder(Canvas: TCanvas);
+procedure TEvsPolygonalNode.DrawBorder(aCanvas: TCanvas);
 var
   Tmp : TPoints;
+  vPen :TPen;
+  VBrush : TBrush;
 begin
   Tmp := Copy(Vertices,0,Length(Vertices));
   OffsetPoints(tmp,-owner.fHorzScrollBar.Position, -Owner.fVertScrollBar.Position);
-  Canvas.Polygon(Tmp);
+  vPen := aCanvas.Pen;
+  VBrush := aCanvas.Brush;
+  aCanvas.Polygon(Tmp);
   SetLength(Tmp,0);
 end;
 
@@ -10862,11 +10911,13 @@ begin
           aCanvas.Pen.Style := psDash;
           vPtRect.TopLeft := Points[0];
           vPtRect.BottomRight := Points[1];
-          OffsetRectByOwner(vPtRect, InViewPort);
+          //OffsetRectByOwner(vPtRect, InViewPort);
+          Owner.GPToCP(vPtRect,2);
           aCanvas.Line(vPtRect.TopLeft, vPtRect.BottomRight);
           vPtRect.TopLeft := Points[PointCount -2];
           vPtRect.BottomRight := Points[PointCount -1];
-          OffsetRectByOwner(vPtRect, InViewPort);
+          //OffsetRectByOwner(vPtRect, InViewPort);
+          Owner.GPToCP(vPtRect,2);
           aCanvas.Line(vPtRect.TopLeft, vPtRect.BottomRight);
           vCntr := 2;
           while vCntr < PointCount - 3 do
@@ -10880,13 +10931,16 @@ begin
         end;
       end;
       if vModifiedPolyline <> nil then begin
-        OffsetPointsByOwner(vModifiedPolyline, InViewPort);
+        //OffsetPointsByOwner(vModifiedPolyline, InViewPort);
+        Owner.GPtoCL(vModifiedPolyline);
         aCanvas.PolyBezier(vModifiedPolyline);
-        OffsetPointsByOwner(vModifiedPolyline, InGraph);
+        //OffsetPointsByOwner(vModifiedPolyline, InGraph);
       end else begin
-        OffsetPointsByOwner(Polyline, InViewPort);
+        //OffsetPointsByOwner(Polyline, InViewPort);
+        Owner.GPtoCL(Polyline);
         aCanvas.PolyBezier(Polyline);
-        OffsetPointsByOwner(Polyline, InGraph);
+        //OffsetPointsByOwner(Polyline, InGraph);
+        Owner.CLtoGP(Polyline);
       end;
     finally
       aCanvas.Brush.Style := vOldBrushStyle;

@@ -1,9 +1,9 @@
-object Form1: TForm1
+object EvsMain: TEvsMain
   Left = 353
   Height = 357
   Top = 167
   Width = 671
-  Caption = 'Form1'
+  Caption = 'EvsMain'
   ClientHeight = 357
   ClientWidth = 671
   LCLVersion = '1.0.10.0'

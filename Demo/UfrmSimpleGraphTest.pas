@@ -4,7 +4,7 @@ unit UfrmSimpleGraphTest;
 
 interface
 {$DEFINE SIMPLEGRAPH_CREATION}
-{$DEFINE GDIPLUS}
+{.$DEFINE GDIPLUS}
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, LMessages, LCLType,
   LCLIntf, StdCtrls, ComCtrls, ActnList, Menus, Clipbrd,
@@ -28,18 +28,8 @@ const
 
 type
 
-  { TTestForm }
-
-  TTestForm = class(TForm)
-  private
-    fTest : TComboBox;
-  public
-    constructor Create(TheOwner : TComponent); override;
-  end;
-
-  { TForm1 }
-
-  TForm1 = class(TForm)
+  { TEvsMain }
+  TEvsMain = class(TForm)
     actExit : TAction;
     actEditCopy : TAction;
     actCopyBmp : TAction;
@@ -173,10 +163,10 @@ type
   end;
 
 var
-  Form1 : TForm1; 
+  EvsMain : TEvsMain;
 
 implementation
-uses {windows, freetype, IniFiles,} uFrmDebug;
+uses {windows, freetype, IniFiles,} uFrmDebug, ufrmnodeproperties;
 
 {$R *.lfm}
 const
@@ -203,35 +193,35 @@ begin
   end;
 end;
 
-{ TForm1 }
+{ TEvsMain }
 
-procedure TForm1.actEditZoomInExecute(Sender: TObject);
+procedure TEvsMain.actEditZoomInExecute(Sender: TObject);
 begin
   //if assigned(Test) then Test.ChangeZoomBy(10, UEvsSimpleGraph.zoCenter);
 end;
 
-procedure TForm1.actZoom1Update(Sender : TObject);
+procedure TEvsMain.actZoom1Update(Sender : TObject);
 begin
   //if assigned(Test) then actZoom1.Enabled := (Test.Zoom <> 100) else actZoom1.Enabled := False;
 end;
 
-procedure TForm1.actEditCopyUpdate(Sender : TObject);
+procedure TEvsMain.actEditCopyUpdate(Sender : TObject);
 begin
   actEditCopy.Enabled := Test.SelectedObjects.Count > 0;
 end;
 
-procedure TForm1.actEditCutExecute(Sender : TObject);
+procedure TEvsMain.actEditCutExecute(Sender : TObject);
 begin
   actEditCopy.Execute;
   actEditDeleteSelected.Execute;
 end;
 
-procedure TForm1.actEditCutUpdate(Sender : TObject);
+procedure TEvsMain.actEditCutUpdate(Sender : TObject);
 begin
   actEditCut.Enabled := Test.SelectedObjects.Count > 0;
 end;
 
-procedure TForm1.actEditDeleteSelectedExecute(Sender : TObject);
+procedure TEvsMain.actEditDeleteSelectedExecute(Sender : TObject);
 var
   vCntr : Integer;
 begin
@@ -239,14 +229,14 @@ begin
     Test.SelectedObjects[vCntr].Delete;
 end;
 
-procedure TForm1.actGraphImportExecute(Sender : TObject);
+procedure TEvsMain.actGraphImportExecute(Sender : TObject);
 begin
   if dlgOpen.Execute then begin
     Test.MergeFromFile(dlgOpen.FileName,10,10);
   end;
 end;
 
-procedure TForm1.ActGraphNewExecute(Sender : TObject);
+procedure TEvsMain.ActGraphNewExecute(Sender : TObject);
 begin
   Test.Clear;
   Test.CommandMode := cmEdit;
@@ -255,7 +245,7 @@ begin
   Caption := dlgSave.FileName + ' - ' + Application.Title;
 end;
 
-procedure TForm1.actGraphSaveAsExecute(Sender : TObject);
+procedure TEvsMain.actGraphSaveAsExecute(Sender : TObject);
 begin
   if FFileName <> '' then dlgSave.FileName := FFileName;
   if dlgSave.Execute then begin
@@ -264,22 +254,22 @@ begin
   end;
 end;
 
-procedure TForm1.actGraphSaveExecute(Sender : TObject);
+procedure TEvsMain.actGraphSaveExecute(Sender : TObject);
 begin
   if FFileName <> '' then Test.SaveToFile(FFileName) else actGraphSaveAs.Execute;
 end;
 
-procedure TForm1.actEditPasteExecute(Sender : TObject);
+procedure TEvsMain.actEditPasteExecute(Sender : TObject);
 begin
   Test.PasteFromClipboard;
 end;
 
-procedure TForm1.actEditPasteUpdate(Sender : TObject);
+procedure TEvsMain.actEditPasteUpdate(Sender : TObject);
 begin
   actEditPaste.Enabled := Clipboard.HasFormat(CF_SIMPLEGRAPH);
 end;
 
-procedure TForm1.actEditSelectAllExecute(Sender : TObject);
+procedure TEvsMain.actEditSelectAllExecute(Sender : TObject);
 var
   vCntr : Integer;
 begin
@@ -287,160 +277,160 @@ begin
     Test.Objects[vCntr].Selected := True;
 end;
 
-procedure TForm1.actEditSelectAllUpdate(Sender : TObject);
+procedure TEvsMain.actEditSelectAllUpdate(Sender : TObject);
 begin
   actEditSelectAll.Enabled := Test.Objects.Count > 0;
 end;
 
-procedure TForm1.actHexagonNodeExecute(Sender : TObject);
+procedure TEvsMain.actHexagonNodeExecute(Sender : TObject);
 begin
   Test.DefaultNodeClass := TEvsHexagonalNode;
   Test.CommandMode := cmInsertNode;
 end;
 
-procedure TForm1.actHexagonNodeUpdate(Sender : TObject);
+procedure TEvsMain.actHexagonNodeUpdate(Sender : TObject);
 begin
   actHexagonNode.Checked := (Test.CommandMode = cmInsertNode) and (Test.DefaultNodeClass = TEvsHexagonalNode);
 end;
 
-procedure TForm1.actObjLockLinksExecute(Sender : TObject);
+procedure TEvsMain.actObjLockLinksExecute(Sender : TObject);
 begin
   Test.LockLinks := not Test.LockLinks;
 end;
 
-procedure TForm1.actObjLockLinksUpdate(Sender : TObject);
+procedure TEvsMain.actObjLockLinksUpdate(Sender : TObject);
 begin
   actObjLockLinks.Checked := Test.LockLinks;
 end;
 
-procedure TForm1.actObjLockNodesExecute(Sender : TObject);
+procedure TEvsMain.actObjLockNodesExecute(Sender : TObject);
 begin
   Test.LockNodes := not Test.LockNodes;
 end;
 
-procedure TForm1.actObjLockNodesUpdate(Sender : TObject);
+procedure TEvsMain.actObjLockNodesUpdate(Sender : TObject);
 begin
   actObjLockNodes.Checked := Test.LockNodes;
 end;
 
-procedure TForm1.actPentagonNodeExecute(Sender : TObject);
+procedure TEvsMain.actPentagonNodeExecute(Sender : TObject);
 begin
   Test.DefaultNodeClass := TEvsPentagonalNode;
   Test.CommandMode := cmInsertNode;
 end;
 
-procedure TForm1.actPentagonNodeUpdate(Sender : TObject);
+procedure TEvsMain.actPentagonNodeUpdate(Sender : TObject);
 begin
   actPentagonNode.Checked := (Test.CommandMode = cmInsertNode) and (Test.DefaultNodeClass = TEvsPentagonalNode);
 end;
 
-procedure TForm1.actPolyLineLinkExecute(Sender : TObject);
+procedure TEvsMain.actPolyLineLinkExecute(Sender : TObject);
 begin
   Test.DefaultLinkClass := TEvsGraphLink;
   Test.CommandMode := cmInsertLink;
 end;
 
-procedure TForm1.actPolyLineLinkUpdate(Sender : TObject);
+procedure TEvsMain.actPolyLineLinkUpdate(Sender : TObject);
 begin
   actPolyLineLink.Checked := (Test.CommandMode = cmInsertLink) and (Test.DefaultLinkClass = TEvsGraphLink);
 end;
 
-procedure TForm1.actRectNodeExecute(Sender : TObject);
+procedure TEvsMain.actRectNodeExecute(Sender : TObject);
 begin
   Test.CommandMode := cmInsertNode;
   Test.DefaultNodeClass := TEvsRectangularNode;
 end;
 
-procedure TForm1.actRectNodeUpdate(Sender : TObject);
+procedure TEvsMain.actRectNodeUpdate(Sender : TObject);
 begin
   actRectNode.Checked := (Test.CommandMode = cmInsertNode) and (test.DefaultNodeClass = TEvsRectangularNode);
 end;
 
-procedure TForm1.actRhomboidNodeExecute(Sender : TObject);
+procedure TEvsMain.actRhomboidNodeExecute(Sender : TObject);
 begin
   Test.DefaultNodeClass := TEvsRhomboidalNode;
   Test.CommandMode := cmInsertNode;
 end;
 
-procedure TForm1.actRhomboidNodeUpdate(Sender : TObject);
+procedure TEvsMain.actRhomboidNodeUpdate(Sender : TObject);
 begin
   actRhomboidNode.Checked := (Test.CommandMode = cmInsertNode) and (Test.DefaultNodeClass = TEvsRhomboidalNode);
 end;
 
-procedure TForm1.actRoundRectNodeExecute(Sender : TObject);
+procedure TEvsMain.actRoundRectNodeExecute(Sender : TObject);
 begin
   Test.DefaultNodeClass := TEvsRoundRectangularNode;
   Test.CommandMode := cmInsertNode;
 end;
 
-procedure TForm1.actRoundRectNodeUpdate(Sender : TObject);
+procedure TEvsMain.actRoundRectNodeUpdate(Sender : TObject);
 begin
   actRoundRectNode.Checked := (Test.CommandMode = cmInsertNode) and (Test.DefaultNodeClass = TEvsRoundRectangularNode);
 end;
 
-procedure TForm1.actSelectionExecute(Sender : TObject);
+procedure TEvsMain.actSelectionExecute(Sender : TObject);
 begin
   Test.CommandMode := cmEdit;
 end;
 
-procedure TForm1.actSelectionUpdate(Sender : TObject);
+procedure TEvsMain.actSelectionUpdate(Sender : TObject);
 begin
   actSelection.Checked := Test.CommandMode in [cmEdit, cmViewOnly];
 end;
 
-procedure TForm1.actTriangularNodeExecute(Sender : TObject);
+procedure TEvsMain.actTriangularNodeExecute(Sender : TObject);
 begin
   Test.DefaultNodeClass := TEvsTriangularNode;
   test.CommandMode := cmInsertNode;
 end;
 
-procedure TForm1.actTriangularNodeUpdate(Sender : TObject);
+procedure TEvsMain.actTriangularNodeUpdate(Sender : TObject);
 begin
   actTriangularNode.Checked := (Test.CommandMode = cmInsertNode) and (test.DefaultNodeClass =TEvsTriangularNode);
 end;
 
-procedure TForm1.actViewGridExecute(Sender : TObject);
+procedure TEvsMain.actViewGridExecute(Sender : TObject);
 begin
   Test.ShowGrid := not Test.ShowGrid;
 end;
 
-procedure TForm1.actViewGridUpdate(Sender : TObject);
+procedure TEvsMain.actViewGridUpdate(Sender : TObject);
 begin
   actViewGrid.Checked := Test.ShowGrid;
 end;
 
-procedure TForm1.actEditCopyExecute(Sender : TObject);
+procedure TEvsMain.actEditCopyExecute(Sender : TObject);
 begin
   Test.CopyToClipboard;
 end;
 
-procedure TForm1.actCopyBmpUpdate(Sender : TObject);
+procedure TEvsMain.actCopyBmpUpdate(Sender : TObject);
 begin
   actCopyBmp.Enabled := test.SelectedObjects.Count>0;
 end;
 
-procedure TForm1.actDebugFormUpdate(Sender : TObject);
+procedure TEvsMain.actDebugFormUpdate(Sender : TObject);
 begin
   actDebugForm.Checked := dbgFrm.Visible;
 end;
 
-procedure TForm1.actEllipseExecute(Sender : TObject);
+procedure TEvsMain.actEllipseExecute(Sender : TObject);
 begin
   test.DefaultNodeClass := TEvsEllipticNode;
   test.CommandMode := cmInsertNode;
 end;
 
-procedure TForm1.actEllipseUpdate(Sender : TObject);
+procedure TEvsMain.actEllipseUpdate(Sender : TObject);
 begin
   actEllipse.Checked := (Test.CommandMode = cmInsertNode) and (Test.DefaultNodeClass = TEvsEllipticNode);
 end;
 
-procedure TForm1.actExitExecute(Sender : TObject);
+procedure TEvsMain.actExitExecute(Sender : TObject);
 begin
   Close;
 end;
 
-procedure TForm1.actCopyBmpExecute(Sender : TObject);
+procedure TEvsMain.actCopyBmpExecute(Sender : TObject);
 var
   vTmp : TEvsGraphClipboardFormats;
 begin
@@ -450,37 +440,37 @@ begin
   Test.ClipboardFormats := vTmp;
 end;
 
-procedure TForm1.actBezierLinkExecute(Sender : TObject);
+procedure TEvsMain.actBezierLinkExecute(Sender : TObject);
 begin
   Test.DefaultLinkClass := TEVSBezierLink;
   Test.CommandMode := cmInsertLink;
 end;
 
-procedure TForm1.actBezierLinkUpdate(Sender : TObject);
+procedure TEvsMain.actBezierLinkUpdate(Sender : TObject);
 begin
   actBezierLink.Checked := (Test.CommandMode = cmInsertLink) and (Test.DefaultLinkClass = TEVSBezierLink);
 end;
 
-procedure TForm1.actEditZoomInUpdate(Sender : TObject);
+procedure TEvsMain.actEditZoomInUpdate(Sender : TObject);
 begin
   //actEditZoomIn.Enabled := assigned(test) and (Test.Zoom < High(TZoom));
 end;
 
-procedure TForm1.actEditZoomOutExecute(Sender: TObject);
+procedure TEvsMain.actEditZoomOutExecute(Sender: TObject);
 begin
   //if assigned(test) then begin
   //  Test.ChangeZoomBy(-10, UEvsSimpleGraph.zoCenter);
   //end;
 end;
 
-procedure TForm1.actZoom1Execute(Sender: TObject);
+procedure TEvsMain.actZoom1Execute(Sender: TObject);
 begin
   //if assigned(Test) then begin
   //  Test.ChangeZoom(100, UEvsSimpleGraph.zoTopLeft);
   //end;
 end;
 
-procedure TForm1.Action4Execute(Sender: TObject);
+procedure TEvsMain.Action4Execute(Sender: TObject);
 begin
   if assigned(Test) then begin
     test.DefaultNodeClass:=TEvsHexagonalNode;
@@ -488,7 +478,7 @@ begin
   end;
 end;
 
-procedure TForm1.actDebugFormExecute(Sender: TObject);
+procedure TEvsMain.actDebugFormExecute(Sender: TObject);
 var
   Tmp : TForm = nil;
 
@@ -505,7 +495,7 @@ begin
 
 end;
 
-procedure TForm1.actGraphOpenExecute(Sender : TObject);
+procedure TEvsMain.actGraphOpenExecute(Sender : TObject);
 begin
   if dlgOpen.Execute then begin
     Test.LoadFromFile(dlgOpen.FileName);
@@ -513,12 +503,12 @@ begin
   end;
 end;
 
-procedure TForm1.actEditZoomOutUpdate(Sender : TObject);
+procedure TEvsMain.actEditZoomOutUpdate(Sender : TObject);
 begin
   //actEditZoomOut.Enabled := (Test.Zoom > Low(TZoom));
 end;
 
-procedure TForm1.FormMouseMove(Sender : TObject; Shift : TShiftState; X,
+procedure TEvsMain.FormMouseMove(Sender : TObject; Shift : TShiftState; X,
   Y : Integer);
 var
   vTmp : TPoint;
@@ -527,7 +517,7 @@ begin
   Caption := EvsActiveWidgetSet + ' - ' + Format('M.X %D M.Y %D : G.X %D G.Y %D',[X, Y, vTmp.X, vTmp.Y]);
 end;
 
-procedure TForm1.MenuItem1Click(Sender: TObject);
+procedure TEvsMain.MenuItem1Click(Sender: TObject);
 begin
   if Assigned(Test) then begin
     Test.DefaultNodeClass:=TEvsSimpleGraph.NodeClasses(TMenuItem(Sender).Tag-1);
@@ -535,7 +525,7 @@ begin
   end;
 end;
 
-procedure TForm1.MenuItem2Click(Sender : TObject);
+procedure TEvsMain.MenuItem2Click(Sender : TObject);
 begin
   if Assigned(Test) then begin
     Test.DefaultLinkClass:=TEvsSimpleGraph.LinkClasses(TMenuItem(Sender).Tag-1-cLinkStart);
@@ -543,7 +533,7 @@ begin
   end;
 end;
 
-constructor TForm1.Create(aOwner : TComponent);
+constructor TEvsMain.Create(aOwner : TComponent);
 VAR
   tmp : UnicodeString;
   Mnu : TMenuItem;
@@ -578,32 +568,12 @@ begin
   dbgFrm.PopupParent := Self;
 end;
 
-procedure TForm1.goDblClick(Graph : TEvsSimpleGraph;
+procedure TEvsMain.goDblClick(Graph : TEvsSimpleGraph;
   GraphObject : TEvsGraphObject);
 begin
-  GraphObject.Text := InputBox(GraphObject.ClassName, 'Enter Caption', GraphObject.Text);
-  Self.Visible := True;
-  Self.WindowState := wsNormal;
-  BringToFront;
-end;
-
-//procedure TForm1.goDblClick2(Graph : TSimpleGraph; GraphObject : TGraphObject);
-//begin
-//  //GraphObject.Text := InputBox(GraphObject.ClassName, 'Enter Caption', GraphObject.Text);
-//  //Self.Visible := True;
-//  //Self.WindowState := wsNormal;
-//  //BringToFront;
-//end;
-
-{ TTestForm }
-
-constructor TTestForm.Create(TheOwner : TComponent);
-begin
-  inherited Create(TheOwner);
-  fTest := TComboBox.Create(Self);
-  fTest.Left := 100;
-  fTest.Top  := 10;
-  fTest.Parent := Self;
+  if Test.SelectedObjects[Test.SelectedObjects.count-1].IsNode then
+    TEvsNodeProperties.Execute(Test.SelectedObjects)
+  else ShowMessage('Under Construction');
 end;
 
 end.
