@@ -25,13 +25,6 @@
   print               -- has to be tested it makes assumption about the Paint structure data
                          that are not true in freepascal. Since it uses Tcanvas to print
                          it should be easy to test.
-
-  SetTextAlign        -- No cross platform version exists yet for now it works as expected
-                         on windows but it will be replaced or removed from the final version.
-                           The code that uses it has now diverged in to two paths
-                           On windows it is still using the settextalign which is by far the faster method
-                           ON non windows widget sets it calculates the point needed to place the
-                             the text correctly on screen, removing the need to find an atlernative.
   TransformRgn        -- Has no alternative outside windows. Needs to be replaced or removed.
                            This and the abilities the code is using can be replicated on QT and GTK2
                            but I do not see any support for them in lcl and I have to dig down to the api level.
@@ -107,6 +100,7 @@
   kambiz@delphiarea.com
   http://www.delphiarea.com
 ------------------------------------------------------------------------------}
+
 unit UEvsSimpleGraph;
 {$mode objfpc}
 {.$MODE DELPHI}
@@ -120,23 +114,17 @@ interface
 {$IFDEF LCLWIN32}
 {$DEFINE WIN}
 {$ENDIF}
-{.$IFDEF LCLQT}
-  {.$DEFINE CUSTOM_LINEMIN} // enable the code to minimize the link text using a custom version do not use
-{.$ENDIF}
+
+
+{$DEFINE CANVAS_TEXTDRAW} //replace the api calls with canvas only calls
 
 {$DEFINE SUBCLASS} // required for the scroll bars to work correctly.
 {$IFDEF SUBCLASS}
   {.$DEFINE SUBCLASS_WMPRINT}      // should I support this ?? is there anything similar on other OSes?
 {$ENDIF}
 
-{$DEFINE DBGFRM} // replace with fpc debug units and remove dependency.
- {$IFDEF DBGFRM}
-    {.$DEFINE DBGFRM_SCROLLMESSAGE}
-    {.$DEFINE DBGFRM_HITTEST}
-    {.$DEFINE DBGFRM_SROLLTEST}
-    {.$DEFINE DBGFRM_OTHEROPTIONS}
-    {.$DEFINE DBGFRM_REGIONTRANSFORM}
-    {$DEFINE DBG_SCROLLINVIEW}
+{.$DEFINE DBGFRM} // replace with fpc debug units and remove dependency.
+{$IFDEF DBGFRM}
 {$ENDIF}
 
 
@@ -186,18 +174,6 @@ const
 
 
 {$IFDEF FPC}
-
-  {$IFDEF SUBCLASS_WMPRINT}
-  WM_PRINT         = $0317;
-  WM_PRINTCLIENT   = $0318;
-  // WM_PRINT flags//
-  PRF_CHECKVISIBLE = $00000001;
-  PRF_NONCLIENT    = $00000002;
-  PRF_CLIENT       = $00000004;
-  PRF_ERASEBKGND   = $00000008;
-  PRF_CHILDREN     = $00000010;
-  PRF_OWNED        = $00000020;
-  {$ENDIF}
 
   ETO_RTLREADING       = 128;  //needed
 
@@ -261,27 +237,6 @@ type
   _XFORM = XFORM;
   TXFORM = XFORM;
   PXFORM = ^XFORM;
-
-  RGNDATAHEADER = record
-    dwSize   : DWORD;
-    iType    : DWORD;
-    nCount   : DWORD;
-    nRgnSize : DWORD;
-    rcBound  : TRECT;
-  end;
-  _RGNDATAHEADER = RGNDATAHEADER;
-  TRGNDATAHEADER = RGNDATAHEADER;
-  PRGNDATAHEADER = ^RGNDATAHEADER;
-
-  RGNDATA = record
-    rdh    : RGNDATAHEADER;
-    Buffer : array[0..0] of char;
-  end;
-  LPRGNDATA = ^RGNDATA;
-  _RGNDATA  = RGNDATA;
-  TRGNDATA  = RGNDATA;
-  PRGNDATA  = ^RGNDATA;
-
 {$ENDIF}
 
   TEvsGraphObjectState = (osCreating, osDestroying, osLoading, osReading, osWriting,
@@ -612,6 +567,8 @@ type
     property OnChange: TEvsGraphObjectListEvent read fOnChange write fOnChange;
   end;
 
+  { TEvsGraphObject }
+
   TEvsGraphObject = class(TPersistent)   //TESTING
   private
     fID: DWORD;
@@ -638,6 +595,7 @@ type
     UpdateCount: integer;
     PendingChanges: TEvsGraphChangeFlags;
     DragDisableCount: integer;
+    function GetOwnerZoomFactor : Double;
     procedure SetBrush(Value: TBrush);
     procedure SetPen(Value: TPen);
     procedure SetText(const Value: string);
@@ -663,11 +621,6 @@ type
       Action: TEvsGraphObjectListAction);
     procedure ReadCustomData(Stream: TStream);
     procedure WriteCustomData(Stream: TStream);
-    //procedure OffsetPointsByOwner(var APoints:array of TPOINT; Up:Boolean);
-    //procedure OffsetPointByOwner(var aPoint:TPOINT; Up:Boolean);
-    //procedure OffsetRectByOwner(var aRect:TRECT; Up:Boolean);
-    function OwnerOffsetX:integer;
-    function OwnerOffsetY:integer;
   protected
     constructor CreateAsReplacement(AGraphObject: TEvsGraphObject); virtual;
     constructor CreateFromStream(AOwner: TEvsSimpleGraph; AStream: TStream); virtual;
@@ -733,6 +686,7 @@ type
     property LinkOutputList: TEvsGraphObjectList read fLinkOutputList;
     property VisualRectFlags: TEvsGraphChangeFlags
       read fVisualRectFlags write fVisualRectFlags;
+    property ParentZoomFactor : Double read GetOwnerZoomFactor;
   public
     constructor Create(AOwner: TEvsSimpleGraph); virtual;
     destructor Destroy; override;
@@ -942,10 +896,14 @@ type
     property TextSpacing: integer read fTextSpacing write SetTextSpacing default 0;
   end;
 
+  { TEVSBezierLink }
+
   TEVSBezierLink = class(TEVSGraphLink)
   protected
     FPolyline : TPoints;
     FCreateByMouse : Boolean;
+    function IndexOfNearestLine(const Pt: TPoint; Neighborhood: integer): integer; override;
+    function RelativeHookAnchor(RefPt: TPoint): TPoint; override;
     procedure MouseUp(aButton: TMouseButton; aShift: TShiftState; const aPt: TPoint);override;
     procedure MouseDown(aButton: TMouseButton; aShift: TShiftState; const aPt: TPoint);override;
     procedure Changed(aFlags: TEvsGraphChangeFlags);override;// called to recalculate everything
@@ -1003,13 +961,13 @@ type
     procedure SnapHitTestOffset(HT: DWORD; var dX, dY: integer); override;      //DONE
     function BeginFollowDrag(HT: DWORD): boolean; override;                     //DONE
     procedure MoveBy(dX, dY: integer); override;                                //DONE
-    procedure DrawControlPoints(Canvas: TCanvas); override;                     //DONE
-    procedure DrawHighlight(Canvas: TCanvas); override;                         //DONE
-    procedure DrawText(Canvas: TCanvas); override;                              //WORKS --DRAWTEXT REPLACEMENT
-    procedure DrawBackground(Canvas: TCanvas); virtual;                         //WORKS --METAFILE REPLACEMENT
-    procedure DrawBorder(Canvas: TCanvas); virtual; abstract;                   //CLEAN
-    procedure DrawBody(Canvas: TCanvas); override;                              //DONE
-    procedure SetBoundsRect(const Rect: TRect); override;                       //DONE
+    procedure DrawControlPoints(aCanvas: TCanvas); override;                     //DONE
+    procedure DrawHighlight(aCanvas: TCanvas); override;                         //DONE
+    procedure DrawText(aCanvas: TCanvas); override;                              //WORKS --DRAWTEXT REPLACEMENT
+    procedure DrawBackground(aCanvas: TCanvas); virtual;                         //WORKS --METAFILE REPLACEMENT
+    procedure DrawBorder(aCanvas: TCanvas); virtual; abstract;                   //CLEAN
+    procedure DrawBody(aCanvas: TCanvas); override;                              //DONE
+    procedure SetBoundsRect(const aRect: TRect); override;                       //DONE
     function GetBoundsRect: TRect; override;                                    //DONE
     function GetCenter: TPoint; virtual;                                        //DONE
   protected
@@ -1081,7 +1039,7 @@ type
 
   TEvsRectangularNode = class(TEvsPolygonalNode)
   protected
-    function QueryHitTest(const Pt : TPoint) : DWORD; override;
+    //function QueryHitTest(const Pt : TPoint) : DWORD; override;
     function CreateRegion: HRGN; override;                                      {$MESSAGE WARN 'REGION ALTERNATIVE'}
     procedure DefineVertices(const ARect: TRect; var Points: TPoints); override;
   end;
@@ -1139,7 +1097,7 @@ type
 
   TEvsSimpleGraph = class(TCustomControl)
   private
-    FCustomCanvas : TCanvasClass;
+    FCustomCanvas         : TCanvasClass;
     fHorzScrollBar        : TEvsGraphScrollBar;
     fVertScrollBar        : TEvsGraphScrollBar;
     fZoom                 : TZoom;
@@ -1367,6 +1325,8 @@ type
     property MarkedArea: TRect read fMarkedArea write SetMarkedArea;
     property ValidMarkedArea: boolean read fValidMarkedArea;
     property Zoom: TZoom read fZoom write SetZoom default 100;
+    procedure OffsetObjects(const aList:TEvsGraphObjectList; aDX, aDY:Integer);
+  public
     procedure CLtoGP(var Points : array of TPoint);
     procedure GPtoCL(var Points : array of TPoint);
   public
@@ -1386,7 +1346,7 @@ type
     procedure EndUpdate;                                                                   //CLEAN
     procedure Invalidate; override;                                                        //CLEAN
     procedure InvalidateRect(const Rect: TRect);                                           //CLEAN
-    procedure Draw(aCanvas: TCanvas);                                                      //CLEAN
+    procedure DrawTo(aCanvas: TCanvas);                                                      //CLEAN
     procedure Print(aCanvas: TCanvas; const Rect: TRect);                                  //-----
     procedure ScrollInView(aGraphObject: TEvsGraphObject); overload;                           //CLEAN
     procedure ScrollInView(const aRect: TRect); overload;                                   //CLEAN
@@ -1659,7 +1619,7 @@ const
 
   EmptyRect: TRect = (Left: +MaxInt; Top: +MaxInt; Right: -MaxInt; Bottom: -MaxInt);
   {$IFDEF WIN}
-  GGI_MARK_NONEXISTING_GLYPHS = $1;
+  //GGI_MARK_NONEXISTING_GLYPHS = $1;
   {$ENDIF}
 var
   RegisteredNodeClasses: TList;
@@ -1684,19 +1644,11 @@ const
   InViewPort = True;
   InGraph    = False;
 
-{$IFDEF WIN}
-
-function GetGlyphIndices (DC:HDC; Text:PChar; Count:Integer; GlyphIndices:PWord; Flag:DWord):DWord;stdcall; external 'gdi32' name 'GetGlyphIndicesA';
-function GetGlyphIndicesW(DC:HDC; Text:PChar; Count:Integer; GlyphIndices:PWord; Flag:DWord):DWord;stdcall; external 'gdi32' name 'GetGlyphIndicesW';
-function GetGlyphIndicesA(DC:HDC; Text:PChar; Count:Integer; GlyphIndices:PWord; Flag:DWord):DWord;stdcall; external 'gdi32' name 'GetGlyphIndicesA';
-
-{$ENDIF}
-
 {$REGION ' HELPER FUNCTIONS '}
 
 function GetBezierPolyline(Control_Points: array of TPoint): TPoints;
 const
-  cBezierTolerance = 0.0001;
+  cBezierTolerance = 0.00001;
   half = 0.5;
 var
    I, J, ArrayLen, ResultCnt: Integer;
@@ -1850,17 +1802,6 @@ begin
   Result := CreateRectRgn(0,0,0,0);
 end;
 
-function SetTextAlign(DC: HDC; Flags: UINT): UINT;
-begin
-  Result := 0; // in any case return something.
-{$IFDEF WIN}
-  Result := Windows.SetTextAlign(DC, Flags);
-{$ELSE}
-  //Result := LCLIntf.SetTextAlign(DC, Flags);
-  {.$MESSAGE ERROR 'SETTEXTALIGN ALTERNATIVE NEEDED'} //JKOZ ERROR
-{$ENDIF}
-end;
-
 function RectInRegion(Rgn: HRGN; ARect: TRect): Boolean;
 var
   RectRgn, TmpRgn: HRGN;
@@ -1938,14 +1879,13 @@ begin
   end;
 end;
 
-function TransformRgn(Rgn: HRGN; const XForm: TXForm): HRGN;                    {$MESSAGE WARN 'REGION ALTERNATIVE'}
+function TransformRgn(Rgn: HRGN; const XForm: TXForm): HRGN;
 {$IFDEF WIN_TRANSFORM}
 var
   RgnData: PRgnData;
   RgnDataSize: DWORD;
 begin
   Result := 0;
-  //{$IFNDEF WIN}{$MESSAGE ERROR 'GetRegionData Alternative'} {$ENDIF} //JKOZ ERROR
   RgnDataSize := GetRegionData(Rgn, 0, nil);
   if RgnDataSize > 0 then
   begin
@@ -1959,52 +1899,11 @@ begin
   end;
 end;
 {$ELSE WIN_TRANSFORM}
-var
-  RgnData     : PRGNDATA;
-  RgnDataSize : DWORD;
 begin
   Result := CreateRegionCopy(Rgn);
   OffsetRgn(Result, round(XForm.eDx), round(XForm.eDy));
-  //RgnDataSize := GetRegionData(Rgn, 0, nil);
-  //if RgnDataSize > 0 then
-  //begin
-  //  GetMem(RgnData, RgnDataSize);
-  //  try
-  //    //{$IFNDEF WIN} {$MESSAGE ERROR 'GetRegionData Alternative'} {$ENDIF}
-  //    GetRegionData(Rgn, RgnDataSize, RgnData);
-  //    //{$IFNDEF WIN} {$MESSAGE ERROR 'ExtCreateRegion Alternative'} {$ENDIF}
-  //    Result := ExtCreateRegion(@Xform, RgnDataSize, RgnData^);
-  //  finally
-  //    FreeMem(RgnData);
-  //  end;
-  //end;
 end;
 {$ENDIF WIN_TRANSFORM}
-
-function LineMinizeText(aCanvas:TCanvas; const aText:String; MaxWidth:Integer):String;
-var
-  vEndStr    : String ='...';
-  DC         : HDC;
-  TextExtent : TSize;
-  S, P       : PChar;
-  TxtExt     : TSize;
-begin
-  Result := '';
-  DC := aCanvas.Handle;
-  P := PChar(aText);
-  while P^ = ' ' do
-    Inc(P);
-  S := P;
-  LCLIntf.GetTextExtentPoint(DC, PChar(vEndStr), length(vEndStr), TxtExt);
-  LCLIntf.GetTextExtentPoint(DC, S, P - S + 1, TextExtent);
-  while (TextExtent.CX + TxtExt.cx) < (MaxWidth -TxtExt.cx) do begin
-    Inc(P);
-    LCLIntf.GetTextExtentPoint(DC, S, P - S + 1, TextExtent);
-  end;
-  SetString(Result, S, P - S);
-  Result := Result + vEndStr;
-end;
-
 
 function WrapText(Canvas: TCanvas; const Text: string; MaxWidth: integer): string;
 var
@@ -2136,17 +2035,9 @@ begin
         until (S < PChar(Result)) or ((S^ = #13) or (S^ = #10));
         SetString(vLastLine, S + 1, E - S - 1);
         SetLength(Result, S - PChar(Result) + 1);
-        {$IFDEF WIN}
-        //vGlyphIndexPointer := @vGlyphIndex;
-        //GetGlyphIndices(vDC, PChar(vEllipsisSingle), 1, vGlyphIndexPointer, //@vGlyphIndex,
-        //  GGI_MARK_NONEXISTING_GLYPHS);
-        //if vGlyphIndex = $FFFF then
-          vEllipsis := @vEllipsisTriple;
-        //else
-          //vEllipsis := @vEllipsisSingle;
-        {$ELSE}
-          vEllipsis := @vEllipsisTriple;
-        {$ENDIF}
+
+        vEllipsis := @vEllipsisTriple;
+
         vLastLine := vLastLine + vEllipsis^;
         GetTextExtentPoint(vDC, PChar(vLastLine), Length(vLastLine), vTextExtent);
         while (vTextExtent.CX > vMaxWidth) and (Length(vLastLine) > Length(vEllipsis^)) do
@@ -2161,12 +2052,12 @@ begin
   end;
 end;
 
-function Sqr(const X: double): double;
+function Sqr(const X: double): double;inline;
 begin
   Result := X * X;
 end;
 
-function IsBetween(Value: integer; Bound1, Bound2: integer): boolean;
+function IsBetween(Value: integer; Bound1, Bound2: integer): boolean; inline;
 begin
   if Bound1 <= Bound2 then
     Result := (Value >= Bound1) and (Value <= Bound2)
@@ -2174,7 +2065,7 @@ begin
     Result := (Value >= Bound2) and (Value <= Bound1);
 end;
 
-function EqualPoint(const Pt1, Pt2: TPoint): boolean;
+function EqualPoint(const Pt1, Pt2: TPoint): boolean; inline;
 begin
   Result := (Pt1.X = Pt2.X) and (Pt1.Y = Pt2.Y);
 end;
@@ -3103,38 +2994,21 @@ var
   Incr, FinalIncr, Count: integer;
   CurrentTime, StartTime, ElapsedTime: longint;
 
-  function GetRealScrollPosition: integer;
-  var
-    SI: TScrollInfo;
-    Code: integer;
-  begin
-    SI.cbSize := SizeOf(TScrollInfo);
-    SI.fMask := SIF_TRACKPOS;
-    Code := SB_HORZ;
-    if fKind = sbVertical then
-      Code := SB_VERT;
-    Result := Msg.Pos;
-    if GetScrollInfo(Owner.Handle, Code, SI) then
-      Result := SI.nTrackPos;
-  end;
- {$IFDEF DBGFRM_SCROLLMESSAGE}
-  procedure PrintMsg;
-  var
-    Tmp :String;
-  begin
-    Tmp:='';
-    WriteStr(Tmp, 'Msg : ',Msg.Msg:4,' | Pos :', Msg.Pos:4,' | Result :',Msg.Result:4,
-                  ' | ScrollBar :',Msg.ScrollBar:4, ' | ScrollCode :',Msg.ScrollCode:4,
-                  ' | SmallPos', Msg.SmallPos:4);
-    EvsDbgPrint(Tmp);
-  end;
-
- {$ENDIF DBGFRM_SCROLLMESSAGE}
-
+  //function GetRealScrollPosition: integer;
+  //var
+  //  SI: TScrollInfo;
+  //  Code: integer;
+  //begin
+  //  SI.cbSize := SizeOf(TScrollInfo);
+  //  SI.fMask := SIF_TRACKPOS;
+  //  Code := SB_HORZ;
+  //  if fKind = sbVertical then
+  //    Code := SB_VERT;
+  //  Result := Msg.Pos;//+6;
+  //  //if GetScrollInfo(Owner.Handle, Code, SI) then
+  //  //  Result := SI.nTrackPos;
+  //end;
 begin
-  {$IFDEF DBGFRM_SCROLLMESSAGE}
-  PrintMsg;
-  {$ENDIF DBGFRM_SCROLLMESSAGE}
   with Msg do
   begin
     if fSmooth and (ScrollCode in [SB_LINEUP, SB_LINEDOWN, SB_PAGEUP, SB_PAGEDOWN]) then
@@ -3192,12 +3066,10 @@ begin
         SB_PAGEUP: SetPosition(fPosition - ControlSize(True, False));
         SB_PAGEDOWN: SetPosition(fPosition + ControlSize(True, False));
         SB_THUMBPOSITION:
-          if fCalcRange > 32767 then
-            SetPosition(GetRealScrollPosition)
-          else begin
-            {$IFDEF DBGFRM_SCROLLMESSAGE}
-            EvsDbgPrint('Pos : '+IntToStr(Pos));
-            {$ENDIF DBGFRM_SCROLLMESSAGE}
+          //if fCalcRange > 32767 then
+          //  //SetPosition(GetRealScrollPosition)
+          //else
+          begin
             if FLastMsgPos = Pos then Exit;
             FLastMsgPos:=Pos;
             if abs(fPosition-Pos) < fIncrement then begin
@@ -3211,9 +3083,9 @@ begin
           end;
         SB_THUMBTRACK:
           if Tracking then
-            if fCalcRange > 32767 then
-              SetPosition(GetRealScrollPosition)
-            else
+            //if fCalcRange > 32767 then
+            //  SetPosition(GetRealScrollPosition)
+            //else
               SetPosition(Pos);
         SB_TOP: SetPosition(0);
         SB_BOTTOM: SetPosition(fCalcRange);
@@ -3598,6 +3470,7 @@ begin
           SelectedObjects.Capacity := Objects.Count - vCount;
           for I := Objects.Count - 1 downto vCount do
             Objects[I].Selected := True;
+          OffsetObjects(SelectedObjects, 10, 10);
           Result := True;
         finally
           EndUpdate;
@@ -3874,7 +3747,6 @@ end;
 
 procedure TEvsSimpleGraph.AdjustDC(aDC: HDC; aOrg: PPoint);
 begin
-  {.$IFDEF LCLWIN32}
   if Assigned(aOrg) then
     LCLIntf.SetViewPortOrgEx(aDC, -(aOrg^.X + HorzScrollBar.Position), -(aOrg^.Y + VertScrollBar.Position), nil)
   else
@@ -3882,16 +3754,6 @@ begin
   LCLIntf.SetMapMode(aDC, MM_ANISOTROPIC);
   LCLIntf.SetWindowExtEx(aDC, 100, 100, nil);
   LCLIntf.SetViewPortExtEx(aDC, Zoom, Zoom, nil);
-  {.$ELSE}
-  //if Assigned(aOrg) then
-  //  LCLIntf.SetViewPortOrgEx(aDC, -(aOrg^.X + HorzScrollBar.Position), -(aOrg^.Y + VertScrollBar.Position), nil)
-  //else
-  //  LCLIntf.SetViewPortOrgEx(aDC, -HorzScrollBar.Position, -VertScrollBar.Position, nil);
-  //LCLIntf.SetMapMode(aDC, MM_ANISOTROPIC);
-  //LCLIntf.SetWindowExtEx(aDC, 100, 100, nil);
-  //LCLIntf.SetViewPortExtEx(aDC, Zoom, Zoom, nil);
-  //Invalidate;
-  {.$ENDIF}
 end;
 
 function TEvsSimpleGraph.CreateUniqueID(aGraphObject: TEvsGraphObject): DWORD;
@@ -4909,7 +4771,6 @@ var
   vCntr : Integer;
 {$ENDIF}
 begin
-  {.$Message 'Implement CPtoGP Method'}
   {$IFDEF LCLWIN32}
   vMemDC := CreateCompatibleDC(0);
   try
@@ -4932,7 +4793,7 @@ var
   vRect: TRect;
 begin
   vRect := GetObjectsBounds(aObjectList);
-  GPToCP(vRect,2); {$MESSAGE WARN 'GPTOCP'}
+  GPToCP(vRect,2);
   Result := Graphics.TBitmap.Create;
   Result.PixelFormat := pf24bit;
   Result.Canvas.Brush.Color := clWhite;
@@ -5273,7 +5134,7 @@ begin
   fClipboardFormats         := [cfNative];
   if NodeClassCount > 0 then fDefaultNodeClass := NodeClasses(0);
   if LinkClassCount > 0 then fDefaultLinkClass := LinkClasses(0);
-  DoubleBuffered := True;
+  //DoubleBuffered := True;
   Color := clWindow;
 end;
 
@@ -5350,7 +5211,7 @@ begin
     PerformInvalidate(@ScreenRect);
 end;
 
-procedure TEvsSimpleGraph.Draw(ACanvas: TCanvas);
+procedure TEvsSimpleGraph.DrawTo(ACanvas: TCanvas);
 begin
   DrawObjects(Canvas, Objects);
 end;
@@ -5423,42 +5284,23 @@ procedure TEvsSimpleGraph.ScrollInView(const aPt: TPoint);
 var
   vX, vY: integer;
 begin
-  {$IFDEF DBG_SCROLLINVIEW}
-  Monitor('InPoint',aPt);
-  {$ENDIF}
   vX := MulDiv(aPt.X, Zoom, 100);
   vY := MulDiv(aPt.Y, Zoom, 100);
-  {$IFDEF DBG_SCROLLINVIEW}
-  Monitor('vX',vX);
-  Monitor('vY',vY);
-  {$ENDIF}
   with HorzScrollBar do
     if IsScrollBarVisible then
     begin
-      {$IFDEF DBG_SCROLLINVIEW}
-      Monitor('SHSB.Pos',Position);
-      {$ENDIF}
       if vX < Position then
         Position := vX
       else if vX > Position + Self.ClientWidth then
         Position := vX - Self.ClientWidth;
-      {$IFDEF DBG_SCROLLINVIEW}
-      Monitor('EHSB.Pos',Position);
-      {$ENDIF}
     end;
   with VertScrollBar do
     if IsScrollBarVisible then
     begin
-      {$IFDEF DBG_SCROLLINVIEW}
-      Monitor('SVSB.Pos',Position);
-      {$ENDIF}
       if vY < Position then
         Position := vY
       else if vY > Position + Self.ClientHeight then
         Position := vY - Self.ClientHeight;
-      {$IFDEF DBG_SCROLLINVIEW}
-      Monitor('EVSB.Pos',Position);
-      {$ENDIF}
     end;
 end;
 
@@ -5488,43 +5330,9 @@ end;
 
 procedure TEvsSimpleGraph.ScrollBy(aDeltaX, aDeltaY: integer);
 begin
-  {$IFDEF WIN}
-  if WindowHandle <> 0 then
-  begin
-    //BeginUpdate;
-    SendMessage(WindowHandle, WM_SETREDRAW, 0, 0);
-    try
-      inherited ScrollBy(aDeltaX, aDeltaY);
-    finally
-      SendMessage(WindowHandle, WM_SETREDRAW, 1, 0);
-      //EndUpdate;
-    end;
-    Invalidate;
-    UpdateWindow(WindowHandle);
-    //Update;
-  end
-  else inherited ScrollBy(aDeltaX, aDeltaY);
-  {$ELSE}
-  //if WindowHandle <> 0 then
-  //begin
-  //  //BeginUpdate;
-  //  SendMessage(WindowHandle, WM_SETREDRAW, 0, 0);
-  //  try
-  //    inherited ScrollBy(aDeltaX, aDeltaY);
-  //  finally
-  //    SendMessage(WindowHandle, WM_SETREDRAW, 1, 0);
-  //    //EndUpdate;
-  //  end;
-  //  Invalidate;
-  //  //UpdateWindow(WindowHandle);
-  //  Update;
-  //end
-  //else
   inherited ScrollBy(aDeltaX, aDeltaY);
   Invalidate;
   UpdateWindow(WindowHandle);
-  //Update;
-  {$ENDIF}
 end;
 
 procedure TEvsSimpleGraph.ToggleSelection(const aRect: TRect; aKeepOld: boolean;
@@ -5771,6 +5579,15 @@ begin
   for vCntr := Low(Points) to High(Points) do begin
     Points[vCntr].X := round((Points[vCntr].X - fHorzScrollBar.Position) * FZoomFactor);
     Points[vCntr].Y := round((Points[vCntr].Y - fVertScrollBar.Position) * FZoomFactor);
+  end;
+end;
+
+procedure TEvsSimpleGraph.OffsetObjects(const aList : TEvsGraphObjectList; aDX, aDY : Integer);
+var
+  vCntr : Integer;
+begin
+  for vCntr := 0 to aList.Count -1 do begin
+    aList[vCntr].MoveBy(aDX,aDY);
   end;
 end;
 
@@ -6811,7 +6628,7 @@ end;
 
 {$ENDREGION}
 
-{$REGION '  TEvsGraphObject '}
+{$REGION ' TEvsGraphObject '}
 { TEvsGraphObject }
 
 constructor TEvsGraphObject.CreateAsReplacement(AGraphObject: TEvsGraphObject);
@@ -7096,17 +6913,11 @@ end;
 
 function TEvsGraphObject.OffsetHitTest(HT: DWORD; dX, dY: integer): boolean;
 begin
-   {$IFDEF DBGFRM_HITTEST}
-  EvsDbgPrint('TEvsGraphObject.OffsetHitTest');
-  {$ENDIF DBGFRM}
  Result := False;
 end;
 
 procedure TEvsGraphObject.SnapHitTestOffset(HT: DWORD; var dX, dY: integer);
 begin
- {$IFDEF DBGFRM_HITTEST}
- EvsDbgPrint('TEvsGraphObject.SnapHitTestOffset');
- {$ENDIF DBGFRM}
 end;
 
 procedure TEvsGraphObject.MouseDown(Button: TMouseButton; Shift: TShiftState;
@@ -7341,6 +7152,11 @@ begin
   Brush.Assign(Value);
 end;
 
+function TEvsGraphObject.GetOwnerZoomFactor : Double;
+begin
+  Result := Owner.FZoomFactor;
+end;
+
 procedure TEvsGraphObject.SetPen(Value: TPen);
 begin
   Pen.Assign(Value);
@@ -7554,9 +7370,6 @@ function TEvsGraphObject.HitTest(const Pt: TPoint): DWORD;
 var
   vPoint :TPoint;
 begin
-  {$IFDEF DBGFRM_HITTEST}
-  EvsDbgPrint('TEvsGraphObject.HitTest');
-  {$ENDIF DBGFRM_HITTEST}
   Result := GHT_NOWHERE;
   vPoint := Pt;
   //OffsetPointByOwner(vPoint, False);
@@ -7802,62 +7615,6 @@ begin
   end;
 end;
 
-//procedure TEvsGraphObject.OffsetPointsByOwner(var APoints: array of TPoint; Up: Boolean);
-//var
-//  OfsX,OfsY : Integer;
-//begin
-//  if up then begin
-//    OfsX := -OwnerOffsetX;
-//    OfsY := -OwnerOffsetY;
-//  end else begin
-//    OfsX := OwnerOffsetX;
-//    OfsY := OwnerOffsetY;
-//  end;
-//  OffsetPoints(APoints,OfsX,OfsY);
-//end;
-//
-//procedure TEvsGraphObject.OffsetPointByOwner(var aPoint : TPOINT; Up : Boolean);
-//var
-//  OfsX,OfsY : Integer;
-//begin
-//  if up then begin
-//    OfsX := -OwnerOffsetX;
-//    OfsY := -OwnerOffsetY;
-//  end else begin
-//    OfsX := OwnerOffsetX;
-//    OfsY := OwnerOffsetY;
-//  end;
-//  Inc(aPoint.x, OfsX);
-//  Inc(aPoint.Y, OfsY);
-//end;
-//
-//procedure TEvsGraphObject.OffsetRectByOwner(var aRect : TRECT; Up : Boolean);
-//var
-//  vOfsX,vOfsY : Integer;
-//begin
-//  if up then begin
-//    vOfsX := -OwnerOffsetX;
-//    vOfsY := -OwnerOffsetY;
-//  end else begin
-//    vOfsX := OwnerOffsetX;
-//    vOfsY := OwnerOffsetY;
-//  end;
-//  Inc(aRect.Left, vOfsX);
-//  Inc(aRect.Top, vOfsY);
-//  Inc(aRect.Right, vOfsX);
-//  Inc(aRect.Bottom, vOfsY);
-//end;
-//
-function TEvsGraphObject.OwnerOffsetX: integer;
-begin
-  Result := Owner.fHorzScrollBar.Position;
-end;
-
-function TEvsGraphObject.OwnerOffsetY: integer;
-begin
-  Result := Owner.fVertScrollBar.Position;
-end;
-
 {$ENDREGION}
 
 {$REGION ' TEvsGraphLink '}
@@ -8064,7 +7821,11 @@ begin
     lsCircle:
     begin
       //OffsetPointsByOwner(Pts,False);
-      aCanvas.Ellipse(Pt.X - Size-OwnerOffsetX, Pt.Y - Size-OwnerOffsetY, Pt.X + Size-OwnerOffsetX, Pt.Y + Size-OwnerOffsetY);
+      Pts[1].x := Pt.x;
+      Pts[1].y := pt.y;
+      Owner.GPtoCL(Pts);
+      Size := round(Size * ParentZoomFactor);
+      aCanvas.Ellipse(Pts[1].X - Size, Pts[1].Y - Size, Pts[1].X + Size, Pts[1].Y + Size);
       Result := NextPointOfLine(Angle, Pt, Size);
     end;
     lsDiamond:
@@ -8116,66 +7877,18 @@ begin
       else vLast := MovingPoint;
 
       vTmp := Copy(Polyline, vFirst, vLast - vFirst + 1);
-      //aCanvas.Polyline(vTmp);
     end else vTmp := Copy(Polyline);
-
-    //OffsetPointsByOwner(vTmp,InViewPort);
     Owner.GPtoCL(vTmp);
     aCanvas.Polyline(vTmp);
   end
   else if PointCount = 1 then
   begin
     vPtRect := MakeSquare(Points[0], aCanvas.Pen.Width);
-    //OffsetRectByOwner(vPtRect, InViewPort);
     Owner.GPToCP(vPtRect,2);
     aCanvas.Ellipse(vPtRect.Left, vPtRect.Top, vPtRect.Right, vPtRect.Bottom);
   end;
 end;
 
-{$IFDEF LCLWIN32}
-procedure TEvsGraphLink.DrawText(aCanvas: TCanvas);
-var
-  vDC         : HDC;
-  vLogFont    : TLogFont;
-  vFontHandle : THandle;
-  vTextFlags,
-  vBkMode,
-  TextAlign   : Integer;
-  vPoint      : TPOINT;
-  vTextStyle  : TTextStyle;
-  vRect : TRECT;
-  //vTSize  : TSIZE;
-  //vRgn,vOldRgn :HRGN;
-  //vTxt : String;
-begin
-  if TextRegion <> 0 then
-  begin
-
-    GetObject(aCanvas.Font.Handle, SizeOf(vLogFont), @vLogFont);
-    if Abs(TextAngle) > Pi / 2 then
-      vLogFont.lfEscapement := Round(-1800 * (TextAngle - Pi) / Pi)
-    else
-      vLogFont.lfEscapement := Round(-1800 * TextAngle / Pi);
-    vLogFont.lfOrientation := vLogFont.lfEscapement;
-    vLogFont.lfQuality     := PROOF_QUALITY;//ANTIALIASED_QUALITY;
-    vDC := aCanvas.Handle;
-    vFontHandle := SelectObject(vDC, CreateFontIndirect(vLogFont));
-    vBkMode := SetBkMode(vDC, TRANSPARENT);
-    TextAlign := SetTextAlign(vDC, TA_BOTTOM or TA_CENTER);
-    if Owner.UseRightToLeftReading then
-      vTextFlags := ETO_RTLREADING
-    else
-      vTextFlags := 0;
-    vPoint := TextCenter;
-    Owner.GPToCL(vPoint);
-    ExtTextOut(vDC, vPoint.X, vPoint.Y, vTextFlags, @vRect,
-      PChar(fTextToShow), Length(fTextToShow), nil);
-    SetTextAlign(vDC, TextAlign);
-    SetBkMode(vDC, vBkMode);
-    DeleteObject(SelectObject(vDC, vFontHandle));
-  end;
-end;
-{$ELSE}
 procedure TEvsGraphLink.DrawText(aCanvas: TCanvas);
 var
   vPoint, vPt : TPOINT;
@@ -8196,11 +7909,14 @@ begin
       vTextStyle.Layout := tlBottom;
       vTextStyle.Opaque := False;
       vTextStyle.Clipping := True;
+      vTextStyle.SingleLine := False;
+      vTextStyle.Wordbreak := True;
+      vTextStyle.RightToLeft := Owner.UseRightToLeftReading;
       if Owner.UseRightToLeftReading then begin
         vTextFlags := ETO_RTLREADING;
-        vTextStyle.RightToLeft := True;
+        //vTextStyle.RightToLeft := True;
       end else begin
-        vTextStyle.RightToLeft := False;
+        //vTextStyle.RightToLeft := False;
         vTextFlags := 0;
       end;
       vSize := aCanvas.TextExtent(TextToShow);
@@ -8209,7 +7925,7 @@ begin
       vPt.y := vPoint.y - vSize.cy;
       if Abs(TextAngle) > Pi / 2 then begin
         aCanvas.Font.Orientation := Round(-1800 * (TextAngle - Pi) / Pi);
-        RotatePoints(vPt, TextAngle - Pi, TextCenter);//needs convertion to radians????
+        RotatePoints(vPt, TextAngle - Pi, TextCenter);
       end
       else begin
         aCanvas.Font.Orientation := Round(-1800 * TextAngle / Pi);
@@ -8217,15 +7933,14 @@ begin
       end;
       Owner.GPToCl(vPt);
       aCanvas.TextStyle := vTextStyle;
-      //vRect := Classes.Rect(0,0,round(LineLength(FPoints[FTextLine],FPoints[FTextLine+1]))-4,vSize.cy);
-      ExtTextOut(aCanvas.Handle, vPt.X, vPt.Y, vTextFlags, nil,
-        PChar(FTextToShow), Length(FTextToShow), nil);
+      aCanvas.TextOut(vPt.x,vPt.y,fTextToShow);
+      //ExtTextOut(aCanvas.Handle, vPt.X, vPt.Y, vTextFlags, nil,
+      //  PChar(FTextToShow), Length(FTextToShow), nil);
     finally
       vCnvBck.Free;
     end;
   end;
 end;
-{$ENDIF}
 
 procedure TEvsGraphLink.DrawBody(Canvas: TCanvas);
   procedure CopyPoints(Var Source,Dest:TPoints);
@@ -8470,13 +8185,7 @@ begin
       Exit;
     end;
 
-  if (TextRegion <> 0) and (goShowCaption in Options) and
-    //{$IFDEF WIN}
-    {$IFDEF LCLGTK2}
-    {$MESSAGE WARN 'PtInRegion does no work on GTK2'}
-    {$ENDIF}
-    PtInRegion(TextRegion, Pt.X, Pt.Y)
-      then
+  if (TextRegion <> 0) and (goShowCaption in Options) and PtInRegion(TextRegion, Pt.X, Pt.Y) then
     Result := GHT_CAPTION or GHT_CLIENT
   else
     Result := inherited QueryHitTest(Pt);
@@ -8484,9 +8193,6 @@ end;
 
 procedure TEvsGraphLink.SnapHitTestOffset(HT: DWORD; var dX, dY: integer);
 begin
-  {$IFDEF DBGFRM_HITTEST}
-  EvsDbgPrint('TEvsGraphLink.SnapHitTestOffset');
-  {$ENDIF DBGFRM_HITTEST}
   if (HT and GHT_POINT) <> 0 then
     Owner.SnapOffset(fPoints[HiWord(HT)], dX, dY)
   else if (HT and GHT_BODY_MASK) <> 0 then
@@ -8509,9 +8215,6 @@ var
   MovedPoints: integer;
   ShiftRef: TPoint;
 begin
-  {$IFDEF DBGFRM_HITTEST}
-  EvsDbgPrint('TEvsGraphLink.OffsetHitTest');
-  {$ENDIF DBGFRM_HITTEST}
   Result := False;
   if (HT and GHT_POINT) <> 0 then
   begin
@@ -8651,9 +8354,6 @@ end;
 
 function TEvsGraphLink.QueryCursor(HT: DWORD): TCursor;
 begin
-  {$IFDEF DBGFRM_QUERYCURSOR}
-  EvsDbgPrint('TEvsGraphLink.QueryCursor');
-  {$ENDIF DBGFRM_QUERYCURSOR}
   case LoWord(HT) and not GHT_CLIENT of
     GHT_POINT:
       case ChangeMode of
@@ -9126,9 +8826,6 @@ begin
     fTextAngle := LineSlopeAngle(fPoints[fTextLine], fPoints[fTextLine + 1]);
     vLineWidth := Trunc(LineLength(fPoints[fTextLine], fPoints[fTextLine + 1]));
     Dec(vLineWidth, Pen.Width + vLineMargin);
-    //{$IFDEF CUSTOM_LINEMIN} //ugly hack change it.
-    //if EndStyle <> lsNone then Dec(vLineWidth, 12);
-    //{$ENDIF}
     if vLineWidth > 0 then
     begin
       SetRect(vTextRect, 0, 0, vLineWidth, 0);
@@ -9137,24 +8834,12 @@ begin
       vCanvas := TEvsCompatibleCanvas.Create;
       try
         vCanvas.Font := Font;
-        {$IFNDEF WIN}
         vSize := vCanvas.TextExtent(vTmpText);
         vTextRect.Bottom := vSize.cy;
-        //{$IFDEF CUSTOM_LINEMIN}
-        //vTmpText := LineMinizeText(vCanvas, vTmpText, vLineWidth);
-        //{$ELSE}
         vTmpText := MinimizeText(vCanvas, vTmpText, vTextRect);
-        //{$ENDIF}
-        {$ELSE}
-        windows.DrawText(vCanvas.Handle, PChar(vTmpText), -1, vTextRect,
-          Owner.DrawTextBiDiModeFlags(cDrawTextFlags));
-        {$ENDIF}
       finally
         vCanvas.Free;
       end;
-      {$IFDEF WIN}
-      SetLength(vTmpText, StrLen(PChar(vTmpText)));
-      {$ENDIF}
       TextToShow := vTmpText;
       if (TextAngle > Pi / 2) or (TextAngle < -Pi / 2) then
         vTextOfs := vTextRect.Top + (TextSpacing + (Pen.Width + 1) div 2)
@@ -9168,6 +8853,7 @@ begin
       vRgnPts[2] := Types.Point(vTextRect.Right, vTextRect.Top);
       vRgnPts[3] := vTextRect.BottomRight;
       vRgnPts[4] := Types.Point(vTextRect.Left, vTextRect.Bottom);
+
       if Abs(TextAngle) > Pi / 2 then
         RotatePoints(vRgnPts, TextAngle - Pi, TextCenter)
       else
@@ -9721,7 +9407,7 @@ end;
 
 {$ENDREGION}
 
-{$REGION 'TEvsGraphNode'}
+{$REGION ' TEvsGraphNode'}
 
 constructor TEvsGraphNode.Create(AOwner: TEvsSimpleGraph);
 begin
@@ -9793,10 +9479,6 @@ function TEvsGraphNode.QueryHitTest(const Pt: TPoint): DWORD;
 var
   Neighborhood: integer;
 begin
-  {$IFDEF DBGFRM_HITTEST}
-  EvsDbgPrint('TEvsGraphNode.QueryHitTest');
-  EvsDbgPrint(Pt);
-  {$ENDIF DBGFRM_HITTEST}
   if Selected then
   begin
     Result := GHT_NOWHERE;
@@ -9823,8 +9505,13 @@ begin
       Exit;
   end;
   Result := inherited QueryHitTest(Pt);
+  {$IFDEF LCLGTK2}
+  if PtInRect(BoundsRect, Pt) then
+    Result := Result or GHT_CLIENT;
+  {$ELSE}
   if PtInRegion(Region, Pt.X, Pt.Y) then
     Result := Result or GHT_CLIENT;
+  {$ENDIF}
   if (goShowCaption in Options) and PtInRect(TextRect, Pt) then
     Result := Result or GHT_CAPTION;
 end;
@@ -10077,85 +9764,60 @@ begin
     FillChar(Rect, SizeOf(Rect), 0);
 end;
 
-procedure TEvsGraphNode.DrawText(Canvas: TCanvas);
-{$IFDEF CANVAS_TEXTDRAW}
+procedure TEvsGraphNode.DrawText(aCanvas: TCanvas);
+//{$IFDEF CANVAS_TEXTDRAW}
 var
-  //DC: HDC;
   Rect: TRect;
-  //DrawTextFlags: integer;
-  //BkMode, TextAlign: integer;
-
-  //---- LCL SPECIFIC ---
   vTextStyle : TTextStyle;
   vOldColor  : TColor;
 begin
   if TextToShow <> '' then
   begin
-    Rect := TextRect;
-
-    vTextStyle           := Canvas.TextStyle;
-    vTextStyle.Alignment := Alignment;
-    vTextStyle.Layout    := Layout;
-    vTextStyle.Opaque    := False;
-    vTextStyle.Wordbreak := True;
-    vTextStyle.ShowPrefix := False;
-    vTextStyle.SystemFont := False;
+    Rect                   := TextRect;
+    vTextStyle             := aCanvas.TextStyle;
+    vTextStyle.Alignment   := Alignment;
+    vTextStyle.Layout      := Layout;
+    vTextStyle.Opaque      := False;
+    vTextStyle.Wordbreak   := True;
+    vTextStyle.ShowPrefix  := False;
+    vTextStyle.SystemFont  := False;
     vTextStyle.EndEllipsis := False;
-
-    OffsetRectByOwner(Rect, InViewPort);
-    Owner.
-    Canvas.TextRect(Rect, Rect.Left, Rect.Top, TextToShow, vTextStyle);
-    //vOldColor := Canvas.Pen.Color;
-    //Canvas.Rect(Rect);
-    //Canvas.Pen.Color := vOldColor;
+    vTextStyle.SingleLine  := False;
+    Owner.GPToCP(Rect,2);
+    aCanvas.TextRect(Rect, Rect.Left, Rect.Top, TextToShow, vTextStyle);
   end;
 end;
-{$ELSE}
-var
-  DC: HDC;
-  Rect: TRect;
-  DrawTextFlags: integer;
-  BkMode, TextAlign: integer;
-  vOldColor : TColor;
-begin
-  if TextToShow <> '' then
-  begin
-    Rect := TextRect;
-    DrawTextFlags := DT_NOPREFIX or DT_EDITCONTROL or DT_NOCLIP or
-      TextAlignFlags[Alignment] or TextLayoutFlags[Layout];
-    DC := Canvas.Handle;
-    BkMode := SetBkMode(DC, TRANSPARENT);
+//{$ELSE}
+//var
+//  DC: HDC;
+//  Rect: TRect;
+//  DrawTextFlags: integer;
+//  BkMode, TextAlign: integer;
+//  vOldColor : TColor;
+//begin
+//  if TextToShow <> '' then
+//  begin
+//    Rect := TextRect;
+//    DrawTextFlags := DT_NOPREFIX or DT_EDITCONTROL or DT_NOCLIP or
+//      TextAlignFlags[Alignment] or TextLayoutFlags[Layout];
+//    DC := Canvas.Handle;
+//    BkMode := SetBkMode(DC, TRANSPARENT);
+//    Owner.GPToCP(Rect,2);
+//    LCLIntf.DrawText(DC, PChar(TextToShow), Length(TextToShow), Rect,
+//    Owner.DrawTextBiDiModeFlags(DrawTextFlags));
+//    SetBkMode(DC, BkMode);
+//  end;
+//end;
+//
+//{$ENDIF}
 
-    //TextAlign := SetTextAlign(DC, TA_LEFT or TA_TOP); //jkoz -STA
-
-    //OffsetRectByOwner(Rect, InViewPort);
-     Owner.GPToCP(Rect,2);
-    //vOldColor := Canvas.Pen.Color;
-    //Canvas.Pen.Color := Canvas.Font.Color;
-    //Canvas.Rectangle(Rect);
-    //Canvas.Pen.Color := vOldColor;
-
-    LCLIntf.DrawText(DC, PChar(TextToShow), Length(TextToShow), Rect,
-    Owner.DrawTextBiDiModeFlags(DrawTextFlags));
-    //SetTextAlign(DC, TextAlign);  // //Jkoz -STA
-    {
-     So far this works as expected with out the settextalign call.
-     test it on the following widget sets
-       GTK2  -- does not work
-       QT
-    }
-    SetBkMode(DC, BkMode);
-  end;
-end;
-
-{$ENDIF}
-
-procedure TEvsGraphNode.DrawBackground(Canvas: TCanvas);
+procedure TEvsGraphNode.DrawBackground(aCanvas: TCanvas);
 var
   ClipRgn: HRGN;
   Bitmap: Graphics.TBitmap;
   Graphic: TGraphic;
   ImageRect: TRect;
+  //vPts : array[0..1] of TPoint absolute ImageRect;
 begin
   if Background.Graphic <> nil then
   begin
@@ -10165,51 +9827,50 @@ begin
     ImageRect.Bottom := Top + Height - MulDiv(Height, BackgroundMargins.Bottom, 100);
     //OffsetRectByOwner(ImageRect,True);
     Owner.GPToCP(ImageRect, 2); {$MESSAGE WARN 'GPTOCP CHANGE'}
-    ClipRgn := CreateClipRgn(Canvas);
+    ClipRgn := CreateClipRgn(aCanvas);
     try
-      SelectClipRgn(Canvas.Handle, ClipRgn);
+      SelectClipRgn(aCanvas.Handle, ClipRgn);
       try
-        //TransformRgn(ClipRgn,);
         Graphic := Background.Graphic;
         Background.OnChange := nil;
         try
           {$IFDEF METAFILE_SUPPORT} //JKOZ:Metafile
-          if (Graphic is TMetafile) and (Canvas is TMetafileCanvas) and
+          if (Graphic is TMetafile) and (aCanvas is TMetafileCanvas) and
             ((ImageRect.Left >= Screen.Width) or (ImageRect.Top >= Screen.Height)) then
           begin // Workaround Windows bug!
             Bitmap := TBitmap.Create;
             try
               Bitmap.Transparent := True;
-              Bitmap.TransparentColor := Canvas.Brush.Color;
-              Bitmap.Canvas.Brush.Color := Canvas.Brush.Color;
+              Bitmap.TransparentColor := aCanvas.Brush.Color;
+              Bitmap.aCanvas.Brush.Color := aCanvas.Brush.Color;
               Bitmap.Width := ImageRect.Right - ImageRect.Left;
               Bitmap.Height := ImageRect.Bottom - ImageRect.Top;
               Bitmap.PixelFormat := pf32bit;
-              Bitmap.Canvas.StretchDraw(Rect(0, 0, Bitmap.Width,
+              Bitmap.aCanvas.StretchDraw(Rect(0, 0, Bitmap.Width,
                 Bitmap.Height), Graphic);
-              Canvas.Draw(ImageRect.Left, ImageRect.Top, Bitmap);
+              aCanvas.Draw(ImageRect.Left, ImageRect.Top, Bitmap);
             finally
               Bitmap.Free;
             end;
           end
           else
           {$ENDIF}
-            Canvas.StretchDraw(ImageRect, Graphic);
+            aCanvas.StretchDraw(ImageRect, Graphic);
         finally
           Background.OnChange := @BackgroundChanged;
         end;
       finally
-        SelectClipRgn(Canvas.Handle, 0);
+        SelectClipRgn(aCanvas.Handle, 0);
       end;
     finally
       DeleteObject(ClipRgn);
     end;
-    Canvas.Brush.Style := bsClear;
-    DrawBorder(Canvas);
+    aCanvas.Brush.Style := bsClear;
+    DrawBorder(aCanvas);
   end;
 end;
 
-procedure TEvsGraphNode.DrawControlPoints(Canvas: TCanvas);
+procedure TEvsGraphNode.DrawControlPoints(aCanvas: TCanvas);
 var
   Enabled: boolean;
   LP,TP:Integer;
@@ -10217,26 +9878,26 @@ begin
   LP := Left;
   TP := Top;
   Enabled := not Owner.LockNodes and (gnoResizable in NodeOptions);
-  DrawControlPoint(Canvas, Types.Point(LP, TP), Enabled);
-  DrawControlPoint(Canvas, Types.Point(LP + Width, TP), Enabled);
-  DrawControlPoint(Canvas, Types.Point(LP, TP + Height), Enabled);
-  DrawControlPoint(Canvas, Types.Point(LP + Width, TP + Height), Enabled);
-  DrawControlPoint(Canvas, Types.Point(LP + Width div 2, TP + Height), Enabled);
-  DrawControlPoint(Canvas, Types.Point(LP + Width, TP + Height div 2), Enabled);
-  DrawControlPoint(Canvas, Types.Point(LP, Tp + Height div 2), Enabled);
-  DrawControlPoint(Canvas, Types.Point(LP + Width div 2, TP), Enabled);
+  DrawControlPoint(aCanvas, Types.Point(LP, TP), Enabled);
+  DrawControlPoint(aCanvas, Types.Point(LP + Width, TP), Enabled);
+  DrawControlPoint(aCanvas, Types.Point(LP, TP + Height), Enabled);
+  DrawControlPoint(aCanvas, Types.Point(LP + Width, TP + Height), Enabled);
+  DrawControlPoint(aCanvas, Types.Point(LP + Width div 2, TP + Height), Enabled);
+  DrawControlPoint(aCanvas, Types.Point(LP + Width, TP + Height div 2), Enabled);
+  DrawControlPoint(aCanvas, Types.Point(LP, Tp + Height div 2), Enabled);
+  DrawControlPoint(aCanvas, Types.Point(LP + Width div 2, TP), Enabled);
 end;
 
-procedure TEvsGraphNode.DrawHighlight(Canvas: TCanvas);
+procedure TEvsGraphNode.DrawHighlight(aCanvas: TCanvas);
 begin
-  DrawBorder(Canvas);
+  DrawBorder(aCanvas);
 end;
 
-procedure TEvsGraphNode.DrawBody(Canvas: TCanvas);
+procedure TEvsGraphNode.DrawBody(aCanvas: TCanvas);
 begin
-  DrawBorder(Canvas);
+  DrawBorder(aCanvas);
   if gnoShowBackground in NodeOptions then
-    DrawBackground(Canvas);
+    DrawBackground(aCanvas);
 end;
 
 function TEvsGraphNode.UpdateTextPlacement(Recalc: boolean; dX, dY: integer): boolean;
@@ -10360,9 +10021,9 @@ begin
   end;
 end;
 
-procedure TEvsGraphNode.SetBoundsRect(const Rect: TRect);
+procedure TEvsGraphNode.SetBoundsRect(const aRect: TRect);
 begin
-  with Rect do
+  with aRect do
     SetBounds(Left, Top, Right - Left, Bottom - Top);
 end;
 
@@ -10654,15 +10315,6 @@ end;
 {$ENDREGION}
 
 {$REGION ' TEvsRectangularNode '}
-
-function TEvsRectangularNode.QueryHitTest(const Pt : TPoint) : DWORD;
-begin
-  Result := inherited QueryHitTest(Pt);
-  if Result = GHT_NOWHERE then begin
-    if PtInRect(BoundsRect, Pt) then Result := GHT_CLIENT;
-  end;
-end;
-
 function TEvsRectangularNode.CreateRegion : HRGN;
 begin
   Result := inherited CreateRegion;
@@ -10682,7 +10334,7 @@ begin
 end;
 {$ENDREGION}
 
-{$REGION TEvsRhomboidalNode }
+{$REGION ' TEvsRhomboidalNode '}
 
 procedure TEvsRhomboidalNode.QueryMaxTextRect(out Rect: TRect);
 var
@@ -10776,7 +10428,7 @@ begin
 end;
 {$ENDREGION}
 
-{$REGION TEvsHexagonalNode }
+{$REGION ' TEvsHexagonalNode '}
 
 procedure TEvsHexagonalNode.QueryMaxTextRect(out Rect: TRect);
 var
@@ -10994,6 +10646,65 @@ begin
     FCreateByMouse := True;
 end;
 
+function TEVSBezierLink.IndexOfNearestLine(const Pt : TPoint;
+  Neighborhood : integer) : integer;
+var
+  I: integer;
+  NearestDistance: double;
+  Distance: double;
+begin
+  Result := -1;
+  NearestDistance := MaxDouble;
+  for I := 0 to Length(FPolyline) - 2 do
+  begin
+    Distance := DistanceToLine(FPolyline[I], FPolyline[I + 1], Pt);
+    if (Trunc(Distance) <= Neighborhood) and (Distance < NearestDistance) then
+    begin
+      NearestDistance := Distance;
+      Result := I;
+    end;
+  end;
+end;
+
+function TEVSBezierLink.RelativeHookAnchor(RefPt : TPoint) : TPoint;
+  function ValidAnchor(Index: integer): boolean;
+  var
+    GraphObject: TEvsGraphObject;
+  begin
+    GraphObject := HookedObjectOf(Index);
+    Result := not Assigned(GraphObject) or GraphObject.IsLink;
+  end;
+
+var
+  Pt: TPoint;
+  Line: integer;
+  Index: integer;
+begin
+  Line := IndexOfNearestLine(RefPt, MaxInt);
+  if Line >= 0 then
+  begin
+    Pt := NearestPointOnLine(FPolyline[Line], FPolyline[Line + 1], RefPt);
+    Index := IndexOfPoint(Pt, NeighborhoodRadius);
+    if Index < 0 then
+      Result := Pt
+    else if ValidAnchor(Index) then
+      Result := FPolyline[Index]
+    else
+    begin
+      if (Index = 0) and ValidAnchor(Index + 1) then
+        Result := FPolyline[Index + 1]
+      else if (Index = Length(FPolyline) - 1) and ValidAnchor(Index - 1) then
+        Result := FPolyline[Index - 1]
+      else
+        Result := FixHookAnchor;
+    end;
+  end
+  else if PointCount = 1 then
+    Result := fPoints[0]
+  else
+    Result := RefPt;
+end;
+
 procedure TEVSBezierLink.MouseUp(aButton: TMouseButton; aShift: TShiftState;
   const aPt: TPoint);
 function PointsEqual ( pt1, PT2:TPoint):Boolean;
@@ -11143,6 +10854,31 @@ end;
 {$ENDREGION}
 
 
+procedure _RegisterClasses;
+begin
+  TEvsSimpleGraph.Register(TEvsGraphLink);
+  TEvsSimpleGraph.Register(TEVSBezierLink);
+  TEvsSimpleGraph.Register(TEvsRectangularNode);
+  TEvsSimpleGraph.Register(TEvsRoundRectangularNode);
+  TEvsSimpleGraph.Register(TEvsEllipticNode);
+  TEvsSimpleGraph.Register(TEvsTriangularNode);
+  TEvsSimpleGraph.Register(TEvsRhomboidalNode);
+  TEvsSimpleGraph.Register(TEvsPentagonalNode);
+  TEvsSimpleGraph.Register(TEvsHexagonalNode);
+end;
+procedure _UnRegisterClasses;
+begin
+  TEvsSimpleGraph.Unregister(TEvsGraphLink);
+  TEvsSimpleGraph.Unregister(TEVSBezierLink);
+  TEvsSimpleGraph.Unregister(TEvsRectangularNode);
+  TEvsSimpleGraph.Unregister(TEvsRoundRectangularNode);
+  TEvsSimpleGraph.Unregister(TEvsEllipticNode);
+  TEvsSimpleGraph.Unregister(TEvsTriangularNode);
+  TEvsSimpleGraph.Unregister(TEvsRhomboidalNode);
+  TEvsSimpleGraph.Unregister(TEvsPentagonalNode);
+  TEvsSimpleGraph.Unregister(TEvsHexagonalNode);
+end;
+
 initialization
   // Loads Custom Cursors
   Screen.Cursors[crHandFlat]  := LoadCursor(HInstance, 'SG_HANDFLAT');
@@ -11155,15 +10891,7 @@ initialization
   // Registers Clipboard Format
   CF_SIMPLEGRAPH := RegisterClipboardFormat('Simple Graph Format');
   // Registers Link and Node classes
-  TEvsSimpleGraph.Register(TEvsGraphLink);
-  TEvsSimpleGraph.Register(TEVSBezierLink);
-  TEvsSimpleGraph.Register(TEvsRectangularNode);
-  TEvsSimpleGraph.Register(TEvsRoundRectangularNode);
-  TEvsSimpleGraph.Register(TEvsEllipticNode);
-  TEvsSimpleGraph.Register(TEvsTriangularNode);
-  TEvsSimpleGraph.Register(TEvsRhomboidalNode);
-  TEvsSimpleGraph.Register(TEvsPentagonalNode);
-  TEvsSimpleGraph.Register(TEvsHexagonalNode);
+  _RegisterClasses;
 
 finalization
   if Assigned(RegisteredLinkClasses) then RegisteredLinkClasses.Free;
