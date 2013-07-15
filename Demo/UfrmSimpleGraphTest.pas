@@ -4,11 +4,12 @@ unit UfrmSimpleGraphTest;
 
 interface
 {$DEFINE SIMPLEGRAPH_CREATION}
+{$DEFINE GDIPLUS}
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, LMessages, LCLType,
   LCLIntf, StdCtrls, ComCtrls, ActnList, Menus, Clipbrd,
 
-  UEvsSimpleGraph;
+  {$IFDEF GDIPLUS} uEvsGDIPlusCanvas, {$ENDIF} UEvsSimpleGraph;
 const
   {$IFDEF  LCLWIN32}
     EvsActiveWidgetSet = 'Win32';
@@ -567,6 +568,9 @@ begin
   Test.VertScrollBar.Tracking:=True;
 
   Test.OnObjectDblClick := @goDblClick;
+    {$IFDEF GDIPLUS}
+    Test.CustomCanvas := TEvsGdiPlusCanvas;
+    {$ENDIF}
   {$ENDIF}
 
   Caption := caption + '-' + EvsActiveWidgetSet;

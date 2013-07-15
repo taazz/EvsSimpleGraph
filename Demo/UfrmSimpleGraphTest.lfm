@@ -1,7 +1,7 @@
 object Form1: TForm1
-  Left = 470
+  Left = 353
   Height = 357
-  Top = 162
+  Top = 167
   Width = 671
   Caption = 'Form1'
   ClientHeight = 357
@@ -61,19 +61,19 @@ object Form1: TForm1
       Action = actEditDeleteSelected
     end
     object ToolButton10: TToolButton
-      Left = 228
+      Left = 261
       Top = 2
       Action = actDebugForm
     end
     object ToolButton11: TToolButton
-      Left = 251
+      Left = 228
       Hint = 'Paste'
       Top = 2
       Caption = 'Paste'
       Visible = False
     end
     object ToolButton12: TToolButton
-      Left = 274
+      Left = 251
       Top = 2
       Width = 10
       Caption = 'ToolButton12'

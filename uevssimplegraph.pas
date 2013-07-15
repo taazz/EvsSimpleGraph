@@ -214,6 +214,7 @@ type
   TEvsGraphNode       = class;
   TEvsGraphLayer      = class;
   TEvsGraphCanvas     = class;
+  TCanvasClass        = class of TCanvas;
 
   TPoints                   = array of TPoint;
   EEvsGraphStreamError      = class(EStreamError);
@@ -1136,8 +1137,11 @@ type
     property MaxBottom: Integer index 3 read GetField write SetField default $0000FFFF;
   end;
 
+  { TEvsSimpleGraph }
+
   TEvsSimpleGraph = class(TCustomControl)
   private
+    FCustomCanvas : TCanvasClass;
     fHorzScrollBar        : TEvsGraphScrollBar;
     fVertScrollBar        : TEvsGraphScrollBar;
     fZoom                 : TZoom;
@@ -1437,7 +1441,7 @@ type
     function PasteFromClipboard: boolean;                                                  //CONVERTED TO CLIPBRD STREAMS TEST IT.
     procedure CopyToClipboard(aSelection: Boolean = True);                                  //USING CLIPBRD METHODS TEST IT
   public  //properties
-    //property CustomCanvas : TControlCanvas;
+    property CustomCanvas : TCanvasClass read FCustomCanvas write FCustomCanvas;
     property CommandMode: TEvsGraphCommandMode read fCommandMode write SetCommandMode;
     property DraggingObjects: TEvsGraphObjectList read fDraggingObjects;
     property DragSource: TEvsGraphObject read fDragSource;
@@ -3576,7 +3580,6 @@ var
   I, vCount: integer;
 begin
   Result := False;
-  {$MESSAGE WARN 'IMPLEMENT TEvsSimpleGraph.PasteFromClipboard'}
   if Clipboard.HasFormat(CF_SIMPLEGRAPH) then
   begin
     Clipboard.Open;
@@ -3587,8 +3590,12 @@ begin
         BeginUpdate;
         try
           SelectedObjects.Clear;
+          vCount := Objects.Count;
           vStream.Position:=0;
-          MergeFromStream(vStream, 10, 10);
+          ReadObjects(vStream);
+          SelectedObjects.Capacity := Objects.Count - vCount;
+          for I := Objects.Count - 1 downto vCount do
+            Objects[I].Selected := True;
           Result := True;
         finally
           EndUpdate;
@@ -4371,24 +4378,35 @@ end;
 
 
 procedure TEvsSimpleGraph.Paint;
+var
+  vTmp : TCanvas;
 begin
-  Canvas.Lock;
+  if Assigned(FCustomCanvas) then begin
+    vTmp := FCustomCanvas.Create;
+    //if vTmp is TControlCanvas then
+    //  TControlCanvas(vTmp).Control := Self
+    //else
+      vTmp.Handle := Canvas.Handle;
+  end else vTmp := Canvas;
+  if vTmp <> Canvas then Canvas.Lock;
+  vTmp.Lock;
   try
     //DrawBackGround(Canvas);
-    if ShowGrid then DrawGrid(Canvas);
-    DrawObjects(Canvas, Objects);
-    DrawEditStates(Canvas);
+    if ShowGrid then DrawGrid(vTmp);
+    DrawObjects(vTmp, Objects);
+    DrawEditStates(vTmp);
     if csDesigning in ComponentState then
     begin
-      Canvas.Brush.Style := bsClear;
-      Canvas.Pen.Style := psDash;
-      Canvas.Pen.Mode := pmCopy;
-      Canvas.Pen.Color := clBlack;
-      Canvas.Pen.Width := 0;
-      Canvas.Rectangle(ClientRect);
+      vTmp.Brush.Style := bsClear;
+      vTmp.Pen.Style := psDash;
+      vTmp.Pen.Mode := pmCopy;
+      vTmp.Pen.Color := clBlack;
+      vTmp.Pen.Width := 0;
+      vTmp.Rectangle(ClientRect);
     end;
   finally
-    Canvas.Unlock;
+    vTmp.Unlock;
+    if vTmp <> Canvas then Canvas.Unlock;
   end;
 end;
 
@@ -4869,7 +4887,7 @@ begin
     DeleteDC(vMemDC);
   end;
   {$ELSE}
-  vTmp := @aPoints;
+  vTmp := pointer(aPoints);
   for vCntr := 0 to aCount -1 do begin
     vTmp[vCntr].x := vTmp[vCntr].x - fHorzScrollBar.Position;
     vTmp[vCntr].y := vTmp[vCntr].y - fVertScrollBar.Position;
@@ -4896,7 +4914,7 @@ begin
     DeleteDC(vMemDC);
   end;
   {$ELSE}
-  vTmp := @aPoints;
+  vTmp := Pointer(aPoints);
   for vCntr := 0 to aCount -1 do begin
     vTmp[vCntr].x := vTmp[vCntr].x + fHorzScrollBar.Position;
     vTmp[vCntr].y := vTmp[vCntr].y + fVertScrollBar.Position;
@@ -5219,6 +5237,7 @@ begin
   //ControlStyle              := [csAcceptsControls, csClickEvents, csDoubleClicks, csOpaque,
   //                              csAutoSizeKeepChildLeft, csAutoSizeKeepChildTop];
 
+  FCustomCanvas             := Nil;
 
   UndoStorage               := TMemoryStream.Create;
   fHorzScrollBar            := TEvsGraphScrollBar.Create(Self, sbHorizontal);
@@ -8229,10 +8248,10 @@ begin
     try
       Canvas.Brush.Style := bsClear;
       //if ModifiedPolyline <> nil then
-        //Owner.GPToCP(ModifiedPolyline, Length(ModifiedPolyline));
-        OffsetPointsByOwner(ModifiedPolyline, InViewPort);
+        Owner.GPToCP(ModifiedPolyline, Length(ModifiedPolyline));
+        //OffsetPointsByOwner(ModifiedPolyline, InViewPort);
         Canvas.Polyline(ModifiedPolyline);
-        //Owner.CPToGP(ModifiedPolyline, Length(ModifiedPolyline));
+        Owner.CPToGP(ModifiedPolyline, Length(ModifiedPolyline));
         OffsetPointsByOwner(ModifiedPolyline, InGraph);
       //else
       //  Canvas.Polyline(Polyline);
@@ -10838,6 +10857,8 @@ begin
       aCanvas.Brush.Style := bsClear;
       if Selected {and ( not Dragging) }then
       begin
+        vOldPenStyle := aCanvas.Pen.Style;
+        try
           aCanvas.Pen.Style := psDash;
           vPtRect.TopLeft := Points[0];
           vPtRect.BottomRight := Points[1];
@@ -10854,6 +10875,9 @@ begin
             aCanvas.LineTo(Points[vCntr+1].X, Points[vCntr+1].Y);
             Inc(vCntr, 1);
           end;
+        finally
+          aCanvas.Pen.Style := vOldPenStyle;
+        end;
       end;
       if vModifiedPolyline <> nil then begin
         OffsetPointsByOwner(vModifiedPolyline, InViewPort);
