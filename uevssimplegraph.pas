@@ -120,7 +120,6 @@ interface
 {$IFDEF LCLWIN32}
 {$DEFINE WIN}
 {$ENDIF}
- {$DEFINE WIN_BACKGROUND}
 {.$IFDEF LCLQT}
   {.$DEFINE CUSTOM_LINEMIN} // enable the code to minimize the link text using a custom version do not use
 {.$ENDIF}
@@ -144,7 +143,6 @@ interface
 {$IFDEF WIN}
   {.$DEFINE METAFILE_SUPPORT}
   {$DEFINE WIN_TRANSFORM}  //required for windows it speeds things up considerably.
-  {.$DEFINE WIN_BACKGROUND} // removes the gnoShowBackground option to disable picture painting.
 {$ENDIF}
 
 uses
@@ -1039,7 +1037,7 @@ type
     property Background: TPicture read fBackground write SetBackground;
     property NodeOptions: TEvsGraphNodeOptions
       read fNodeOptions write SetNodeOptions default
-      [gnoMovable, gnoResizable{$IFDEF WIN_BACKGROUND} , gnoShowBackground{$ENDIF}];
+      [gnoMovable, gnoResizable, gnoShowBackground];
   end;
 
   TEvsPolygonalNode = class(TEvsGraphNode)
@@ -9733,7 +9731,7 @@ begin
   fLayout := tlCenter;
   fBackground := TPicture.Create;
   fBackground.OnChange := @BackgroundChanged;
-  fNodeOptions := [gnoMovable, gnoResizable{$IFDEF WIN_BACKGROUND} , gnoShowBackground {$ENDIF}];
+  fNodeOptions := [gnoMovable, gnoResizable, gnoShowBackground ];
 end;
 
 constructor TEvsGraphNode.CreateNew(AOwner: TEvsSimpleGraph; const Bounds: TRect);
@@ -10440,9 +10438,6 @@ begin
   if NodeOptions <> Value then
   begin
     fNodeOptions := Value;
-    {$IFNDEF WIN_BACKGROUND}
-    fNodeOptions := fNodeOptions -[gnoShowBackground];
-    {$ENDIF}
     Changed([gcView, gcData]);
   end;
 end;
