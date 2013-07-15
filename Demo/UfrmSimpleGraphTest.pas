@@ -9,7 +9,7 @@ uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, LMessages, LCLType,
   LCLIntf, StdCtrls, ComCtrls, ActnList, Menus, Clipbrd,
 
-  {$IFDEF GDIPLUS} uEvsGDIPlusCanvas, {$ENDIF} UEvsSimpleGraph;
+  {$IFDEF GDIPLUS} uEvsGDIPlusCanvas, {$ENDIF} UEvsSimpleGraph, ExtCtrls;
 const
   {$IFDEF  LCLWIN32}
     EvsActiveWidgetSet = 'Win32';
@@ -49,6 +49,8 @@ type
     actHexagonNode : TAction;
     actBezierLink : TAction;
     actGraphPan : TAction;
+    actEditToFront : TAction;
+    actEditToBack : TAction;
     actViewGrid : TAction;
     actObjLockNodes : TAction;
     actObjLockLinks : TAction;
@@ -64,6 +66,11 @@ type
     ImageList1: TImageList;
     dlgOpen : TOpenDialog;
     dlgSave : TSaveDialog;
+    Panel1 : TPanel;
+    StaticText1 : TStaticText;
+    StaticText2 : TStaticText;
+    StaticText3 : TStaticText;
+    StaticText4 : TStaticText;
     ToolBar1: TToolBar;
     ToolBar2 : TToolBar;
     ToolButton1 : TToolButton;
@@ -87,12 +94,14 @@ type
     tbtnEllipseNode : TToolButton;
     ToolButton2 : TToolButton;
     ToolButton3 : TToolButton;
+    ToolButton4 : TToolButton;
     ToolButton5: TToolButton;
     ToolButton6: TToolButton;
     btnPaste: TToolButton;
     btnDelete : TToolButton;
     btnOpen : TToolButton;
     tbtnTRiangularNode : TToolButton;
+    ToolButton7 : TToolButton;
     ToolButton8 : TToolButton;
     ToolButton9 : TToolButton;
     procedure actBezierLinkExecute(Sender : TObject);
@@ -100,6 +109,10 @@ type
     procedure actCopyBmpExecute(Sender : TObject);
     procedure actCopyBmpUpdate(Sender : TObject);
     procedure actDebugFormUpdate(Sender : TObject);
+    procedure actEditToBackExecute(Sender : TObject);
+    procedure actEditToBackUpdate(Sender : TObject);
+    procedure actEditToFrontExecute(Sender : TObject);
+    procedure actEditToFrontUpdate(Sender : TObject);
     procedure actEllipseExecute(Sender : TObject);
     procedure actEllipseUpdate(Sender : TObject);
     procedure actExitExecute(Sender : TObject);
@@ -159,6 +172,7 @@ type
     { public declarations }
     constructor Create(aOwner:TComponent);override;
     procedure goDblClick(Graph: TEvsSimpleGraph; GraphObject: TEvsGraphObject);
+    procedure sgDblClick(Sender:TObject);
     //procedure goDblClick2(Graph: TSimpleGraph; GraphObject: TGraphObject);
   end;
 
@@ -166,7 +180,7 @@ var
   EvsMain : TEvsMain;
 
 implementation
-uses {windows, freetype, IniFiles,} uFrmDebug, ufrmnodeproperties;
+uses {windows, freetype, IniFiles,} uFrmDebug, ufrmnodeproperties, UFrmlinkprop;
 
 {$R *.lfm}
 const
@@ -414,6 +428,32 @@ begin
   actDebugForm.Checked := dbgFrm.Visible;
 end;
 
+procedure TEvsMain.actEditToBackExecute(Sender : TObject);
+var
+  vCntr : Integer;
+begin
+  for vCntr := test.SelectedObjects.Count -1 downto 0 do
+     Test.SelectedObjects[vCntr].SendToBack;
+end;
+
+procedure TEvsMain.actEditToBackUpdate(Sender : TObject);
+begin
+  actEditToBack.Enabled := test.SelectedObjects.Count > 0;
+end;
+
+procedure TEvsMain.actEditToFrontExecute(Sender : TObject);
+var
+  vCntr : Integer;
+begin
+  for vCntr := 0 to test.SelectedObjects.Count -1 do
+     Test.SelectedObjects[vCntr].BringToFront;
+end;
+
+procedure TEvsMain.actEditToFrontUpdate(Sender : TObject);
+begin
+  actEditToFront.Enabled := test.SelectedObjects.Count > 0;
+end;
+
 procedure TEvsMain.actEllipseExecute(Sender : TObject);
 begin
   test.DefaultNodeClass := TEvsEllipticNode;
@@ -558,11 +598,12 @@ begin
   Test.VertScrollBar.Tracking:=True;
 
   Test.OnObjectDblClick := @goDblClick;
+  Test.OnDblClick := @sgDblClick;
     {$IFDEF GDIPLUS}
     Test.CustomCanvas := TEvsGdiPlusCanvas;
     {$ENDIF}
   {$ENDIF}
-
+  Test.FixedScrollBars := True;
   Caption := caption + '-' + EvsActiveWidgetSet;
   dbgFrm.PopupMode := pmExplicit;
   dbgFrm.PopupParent := Self;
@@ -571,9 +612,19 @@ end;
 procedure TEvsMain.goDblClick(Graph : TEvsSimpleGraph;
   GraphObject : TEvsGraphObject);
 begin
-  if Test.SelectedObjects[Test.SelectedObjects.count-1].IsNode then
-    TEvsNodeProperties.Execute(Test.SelectedObjects)
-  else ShowMessage('Under Construction');
+  StaticText4.Caption := IntToStr(GraphObject.ID);
+  if Test.SelectedObjects.Count > 0 then begin
+    if Test.SelectedObjects[Test.SelectedObjects.count-1].IsNode then
+      TEvsNodeProperties.Execute(Test.SelectedObjects)
+    else TEvsLinkProperties.Execute(Test.SelectedObjects); //ShowMessage('Under Construction');
+  end; //else simplegraph properties.
+end;
+
+procedure TEvsMain.sgDblClick(Sender : TObject);
+begin
+  StaticText1.Caption := 'Total Objects :'+IntToStr(Test.Objects.Count);
+  StaticText2.Caption := 'Links : ' +IntToStr(Test.ObjectsCount(TEvsGraphLink));
+  StaticText3.Caption := 'Nodes : ' +IntToStr(Test.ObjectsCount(TEvsGraphNode));
 end;
 
 end.

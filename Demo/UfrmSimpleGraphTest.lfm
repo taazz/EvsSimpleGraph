@@ -1,7 +1,7 @@
 object EvsMain: TEvsMain
-  Left = 353
+  Left = 289
   Height = 357
-  Top = 167
+  Top = 158
   Width = 671
   Caption = 'EvsMain'
   ClientHeight = 357
@@ -23,7 +23,7 @@ object EvsMain: TEvsMain
       Style = tbsSeparator
     end
     object ToolButton6: TToolButton
-      Left = 284
+      Left = 330
       Top = 2
       Action = actExit
     end
@@ -43,7 +43,6 @@ object EvsMain: TEvsMain
       Width = 10
       Caption = 'ToolButton1'
       Style = tbsSeparator
-      Visible = False
     end
     object btnSave: TToolButton
       Left = 47
@@ -61,19 +60,17 @@ object EvsMain: TEvsMain
       Action = actEditDeleteSelected
     end
     object ToolButton10: TToolButton
-      Left = 261
+      Left = 307
       Top = 2
       Action = actDebugForm
     end
     object ToolButton11: TToolButton
-      Left = 228
-      Hint = 'Paste'
+      Left = 274
       Top = 2
-      Caption = 'Paste'
-      Visible = False
+      Action = actEditSelectAll
     end
     object ToolButton12: TToolButton
-      Left = 251
+      Left = 297
       Top = 2
       Width = 10
       Caption = 'ToolButton12'
@@ -98,6 +95,16 @@ object EvsMain: TEvsMain
       Left = 93
       Top = 2
       Action = actGraphImport
+    end
+    object ToolButton4: TToolButton
+      Left = 228
+      Top = 2
+      Action = actEditToFront
+    end
+    object ToolButton7: TToolButton
+      Left = 251
+      Top = 2
+      Action = actEditToBack
     end
   end
   object ToolBar2: TToolBar
@@ -192,8 +199,60 @@ object EvsMain: TEvsMain
       Action = actViewGrid
     end
   end
+  object Panel1: TPanel
+    Left = 0
+    Height = 16
+    Top = 341
+    Width = 671
+    Align = alBottom
+    BevelOuter = bvNone
+    Caption = 'Panel1'
+    ClientHeight = 16
+    ClientWidth = 671
+    TabOrder = 2
+    object StaticText1: TStaticText
+      Left = 0
+      Height = 16
+      Top = 0
+      Width = 171
+      Align = alLeft
+      Alignment = taCenter
+      BorderStyle = sbsSunken
+      TabOrder = 0
+    end
+    object StaticText2: TStaticText
+      Left = 171
+      Height = 16
+      Top = 0
+      Width = 189
+      Align = alLeft
+      Alignment = taCenter
+      BorderStyle = sbsSunken
+      TabOrder = 1
+    end
+    object StaticText3: TStaticText
+      Left = 360
+      Height = 16
+      Top = 0
+      Width = 242
+      Align = alClient
+      Alignment = taCenter
+      BorderStyle = sbsSunken
+      TabOrder = 2
+    end
+    object StaticText4: TStaticText
+      Left = 602
+      Height = 16
+      Top = 0
+      Width = 69
+      Align = alRight
+      Alignment = taCenter
+      BorderStyle = sbsSunken
+      TabOrder = 3
+    end
+  end
   object ImageList1: TImageList
-    left = 128
+    left = 64
     top = 256
     Bitmap = {
       4C691300000010000000100000000101E3000101E4000101AC00000000370000
@@ -809,7 +868,7 @@ object EvsMain: TEvsMain
   end
   object ActionList: TActionList
     Images = ImageList
-    left = 344
+    left = 224
     top = 256
     object actEditZoomIn: TAction
       Category = 'Edit'
@@ -887,6 +946,7 @@ object EvsMain: TEvsMain
       ImageIndex = 14
       OnExecute = actEditSelectAllExecute
       OnUpdate = actEditSelectAllUpdate
+      ShortCut = 16449
     end
     object ActGraphNew: TAction
       Category = 'Graph'
@@ -1040,18 +1100,36 @@ object EvsMain: TEvsMain
       OnExecute = actViewGridExecute
       OnUpdate = actViewGridUpdate
     end
+    object actEditToFront: TAction
+      Category = 'Edit'
+      Caption = 'actEditToFront'
+      Hint = 'Bring to front'
+      ImageIndex = 12
+      OnExecute = actEditToFrontExecute
+      OnUpdate = actEditToFrontUpdate
+      ShortCut = 8225
+    end
+    object actEditToBack: TAction
+      Category = 'Edit'
+      Caption = 'actEditToBack'
+      Hint = 'Sent to back'
+      ImageIndex = 11
+      OnExecute = actEditToBackExecute
+      OnUpdate = actEditToBackUpdate
+      ShortCut = 8226
+    end
   end
   object dlgOpen: TOpenDialog
-    left = 248
+    left = 168
     top = 256
   end
   object dlgSave: TSaveDialog
-    left = 208
+    left = 120
     top = 256
   end
   object ImageList: TImageList
-    left = 40
-    top = 264
+    left = 8
+    top = 256
     Bitmap = {
       4C692D00000010000000100000000000000000000000E0B6A1FFEAC0A1FFEAC0
       A1FFEAC0A1FFEAC0A1FFE0B6A1FFE0B6A1FFEAC0A1FFCAABA1FFAB6A60FF0000
