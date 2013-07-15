@@ -120,7 +120,7 @@ interface
 {$IFDEF LCLWIN32}
 {$DEFINE WIN}
 {$ENDIF}
-
+ {$DEFINE WIN_BACKGROUND}
 {.$IFDEF LCLQT}
   {.$DEFINE CUSTOM_LINEMIN} // enable the code to minimize the link text using a custom version do not use
 {.$ENDIF}
@@ -144,7 +144,7 @@ interface
 {$IFDEF WIN}
   {.$DEFINE METAFILE_SUPPORT}
   {$DEFINE WIN_TRANSFORM}  //required for windows it speeds things up considerably.
-  {$DEFINE WIN_BACKGROUND} // removes the gnoShowBackground option to disable picture painting.
+  {.$DEFINE WIN_BACKGROUND} // removes the gnoShowBackground option to disable picture painting.
 {$ENDIF}
 
 uses
@@ -1965,8 +1965,8 @@ var
   RgnData     : PRGNDATA;
   RgnDataSize : DWORD;
 begin
-  Result := Rgn;
-
+  Result := CreateRegionCopy(Rgn);
+  OffsetRgn(Result, round(XForm.eDx), round(XForm.eDy));
   //RgnDataSize := GetRegionData(Rgn, 0, nil);
   //if RgnDataSize > 0 then
   //begin
