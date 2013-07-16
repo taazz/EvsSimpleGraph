@@ -1,0 +1,76 @@
+//----------------------------------------------------------------------------
+//  Delphi 2-7, C++Builder 5 Ruler component, version 4.0, 4 jun 2003
+//----------------------------------------------------------------------------
+//  (c) 2003 Hans Roos, Roos Software, The Netherlands
+//  Website: www.RoosSoftware.nl
+//  Email: mail@roossoftware.nl
+//----------------------------------------------------------------------------
+//  Features:
+//  4 layouts rdTop, rdLeft, rdRight and rdBottom with
+//    automatic scale adjustments for each layout
+//  Scale: from 1-1000 %
+//  Scale numbers can be reversed
+//  Units: Inches, Centimetres, Millimetres, Pixels, Meters, Kilometers
+//  Automatic calculation of scalenumbers (no overlapping)
+//  Sideways text for vertical layouts
+//  Flat or 3D appearance
+//  TRsRulerCorner: extra component for joining up to 4
+//    rulers, can show the unit ('km', 'm', 'cm', 'mm', 'in' or 'px')
+//  Font can be changed; sideways fonts only possible if True Type font!
+//----------------------------------------------------------------------------
+//  See demo project for usage
+//  Licence: Freeware! Use in non-commercial or commercial apps
+//  Feel free to modify the source for your own needs, but don't remove
+//  my name from this file, please.
+//  If you find this component useful, please let me know.
+//  Don't send money, just be grateful ;)
+//----------------------------------------------------------------------------
+//  Known issues: None
+//  Not yet implemented:
+//  Better scale divisions when Inches are used
+//  (is it customary to divide inches in 4ths, 8ths, 16ths etc?)
+//  Anything YOU can think of; please let me know!! (mail@roossoftware.nl)
+//----------------------------------------------------------------------------
+//  Revision History
+//  v 4.0, 07/11/2003
+//    Added property:
+//    property ScaleDir: to specify reversed scale numbering. e.g. right-to-left
+//    or bottom-to-top
+//    property VersionInfo: quick reference to the version of these components
+//    Added property values: ruKilo, ruMeter (property Units)
+//    Bug-fix: Compiling gave Duplicate Resource errors. Fixed.
+//  v.3.0, 07/11/2001
+//    Added properties:
+//    property Font, ParentFont: user can select any font for scale-drawing.
+//    (vertical fonts can only be drawn if True Type font is chosen)
+//    property Color, TickColor, Font.Color, ScaleColor
+//    property Offset: if you want RsRuler to begin with another number than 0
+//    Offset is recalculated when you choose another measuring unit.
+//    property ShowMinus: if negative offset, toggle minus sign visibility
+//  v.2.0, 31/10/2001
+//    Added property value: ruPixel, for measuring pixel units.
+//    Added public function Pos2Unit: to calculate unit from mouse position.
+//    (see LogoImageMouseMove procedure in demo project for usage)
+//  v.1.1, 30/06/2001
+//    Added properties :
+//    property HairLine, HairLinePos: line on scale, moving with CursorPos.
+//    property HairLineStyle: hlsLine (just a hairline)
+//      or hlsRect (inverted rectangle).
+//  v.1.0, 22/11/2000
+//    First release.
+//----------------------------------------------------------------------------
+
+Installation:
+============
+  Unzip RsRuler.pas and RsRuler.dcr to your components directory
+  In Delphi, choose Component|Install component and specify path to RsRuler.pas
+  TRsRuler and TRsRulerCorner will be installed on the 'Xtra' tab. Feel free to alter this!
+
+Usage:
+=====
+  See demo project (Exe also supplied)
+  First, place TPanels on the sides of the form. (Align = alTop, alLeft, etc.)
+  Then, drop RsRuler component on these panels and set Align property to alClient
+  Now, when you resize your form, the panels will resize with it, and so do the Rulers...
+
+Enjoy! Hans.
