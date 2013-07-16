@@ -25,8 +25,8 @@
         <UnitName Value="DemoForm"/>
         <EditorIndex Value="1"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="566"/>
-        <CursorPos X="29" Y="583"/>
+        <TopLine Value="1"/>
+        <CursorPos X="34" Y="21"/>
         <FoldState Value=" T0rFPE2S"/>
         <UsageCount Value="20"/>
         <Loaded Value="True"/>
@@ -40,8 +40,8 @@
         <IsVisibleTab Value="True"/>
         <EditorIndex Value="2"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="222"/>
-        <CursorPos X="1" Y="241"/>
+        <TopLine Value="220"/>
+        <CursorPos X="1" Y="243"/>
         <FoldState Value=" TM40y="/>
         <UsageCount Value="20"/>
         <Loaded Value="True"/>
