@@ -1,10 +1,10 @@
 program RulerDemo;
 
+{$MODE Delphi}
+
 uses
   Forms,
-  DemoForm in 'DemoForm.pas' {Form1};
-
-{$R *.RES}
+  DemoForm in 'DemoForm.pas', Interfaces {Form1};
 
 begin
   Application.Initialize;

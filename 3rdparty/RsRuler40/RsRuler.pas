@@ -226,6 +226,27 @@ begin
   RegisterComponents('Xtra', [TRsRuler, TRsRulerCorner]);
 end;
 
+procedure InvertRect(aCanvas:TCanvas; aRect:TRect);
+var
+  vBuf : TBitmap;
+begin
+  vBuf := TBitmap.Create;
+  try
+    vBuf.PixelFormat := pf32bit;
+    vBuf.SetSize(aRect.Right - aRect.Left, aRect.Bottom - aRect.Top);
+    vBuf.Canvas.Brush.Color := clBlack;
+    vbuf.canvas.pen.Style := psClear;
+    vbuf.canvas.brush.style := bsSolid;
+    vBuf.Canvas.FillRect(0,0,vBuf.Width, vBuf.Height);
+    vBuf.Canvas.CopyRect(Classes.Rect(0,0,vBuf.Width, vBuf.Height), aCanvas, aRect);
+    //
+    LCLIntf.BitBlt(aCanvas.Handle,aRect.Left,aRect.Top, aRect.Right-aRect.Left, aRect.Bottom - aRect.Top,
+                   vBuf.Handle,0,0, DSTINVERT);
+  finally
+    vBuf.Free;
+  end;
+end;
+
 { TRsBaseRuler }
 
 constructor TRsBaseRuler.Create(AOwner: TComponent);
@@ -649,35 +670,35 @@ begin
     if fDirection = rdTop then
     begin
       if fHairLineStyle = hlsLine
-      then InvertRect(Canvas.Handle, Rect(fHairLinePos - 1, Height - He - 1, fHairLinePos, Height - 8))
+      then InvertRect(Canvas{.Handle}, Rect(fHairLinePos - 1, Height - He - 1, fHairLinePos, Height - 8))
       else
-      if fScaleDir = rsdNormal then InvertRect(Canvas.Handle, Rect(1, Height - He - 1, fHairLinePos, Height - 8))
-      else InvertRect(Canvas.Handle, Rect(Width, Height - He - 1, fHairLinePos, Height - 8));
+      if fScaleDir = rsdNormal then InvertRect(Canvas{.Handle}, Rect(1, Height - He - 1, fHairLinePos, Height - 8))
+      else InvertRect(Canvas{.Handle}, Rect(Width, Height - He - 1, fHairLinePos, Height - 8));
     end;
     if fDirection = rdBottom then
     begin
       if fHairLineStyle = hlsLine
-      then InvertRect(Canvas.Handle, Rect(fHairLinePos - 1, 8, fHairLinePos, He))
+      then InvertRect(Canvas{.Handle}, Rect(fHairLinePos - 1, 8, fHairLinePos, He))
       else
       if fScaleDir = rsdNormal
-      then InvertRect(Canvas.Handle, Rect(1, 8, fHairLinePos, He + 1))
-      else InvertRect(Canvas.Handle, Rect(Width, 8, fHairLinePos, He + 1));
+      then InvertRect(Canvas{.Handle}, Rect(1, 8, fHairLinePos, He + 1))
+      else InvertRect(Canvas{.Handle}, Rect(Width, 8, fHairLinePos, He + 1));
     end;
     if fDirection = rdLeft then
     begin
       if fHairLineStyle = hlsLine
-      then InvertRect(Canvas.Handle, Rect(Width - He, fHairLinePos - 1, Width - 8, fHairLinePos))
+      then InvertRect(Canvas{.Handle}, Rect(Width - He, fHairLinePos - 1, Width - 8, fHairLinePos))
       else
-      if fScaleDir = rsdNormal then InvertRect(Canvas.Handle, Rect(Width - He, 1, Width - 8, fHairLinePos))
-      else InvertRect(Canvas.Handle, Rect(Width - He, Height, Width - 8, fHairLinePos));
+      if fScaleDir = rsdNormal then InvertRect(Canvas{.Handle}, Rect(Width - He, 1, Width - 8, fHairLinePos))
+      else InvertRect(Canvas{.Handle}, Rect(Width - He, Height, Width - 8, fHairLinePos));
     end;
     if fDirection = rdRight then
     begin
       if fHairLineStyle = hlsLine
-      then InvertRect(Canvas.Handle, Rect(8, fHairLinePos - 1, He, fHairLinePos))
+      then InvertRect(Canvas{.Handle}, Rect(8, fHairLinePos - 1, He, fHairLinePos))
       else
-      if fScaleDir = rsdNormal then InvertRect(Canvas.Handle, Rect(8, 1, He, fHairLinePos))
-      else InvertRect(Canvas.Handle, Rect(8, Height, He, fHairLinePos));
+      if fScaleDir = rsdNormal then InvertRect(Canvas{.Handle}, Rect(8, 1, He, fHairLinePos))
+      else InvertRect(Canvas{.Handle}, Rect(8, Height, He, fHairLinePos));
     end;
     Pen.Mode := pmCopy;
   end;

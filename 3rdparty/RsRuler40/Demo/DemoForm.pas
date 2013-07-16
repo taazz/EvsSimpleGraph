@@ -13,60 +13,62 @@ const
   NumPaletteEntries = 20;
 
 type
+
+  { TForm1 }
+
   TForm1 = class(TForm)
-    Panel1: TPanel;
-    Panel2: TPanel;
-    Panel4: TPanel;
-    RsRulerCorner2: TRsRulerCorner;
-    RsRulerCorner3: TRsRulerCorner;
-    RsRuler2: TRsRuler;
-    SpeedButton1: TSpeedButton;
-    SpeedButton2: TSpeedButton;
-    SpeedButton3: TSpeedButton;
-    SpeedButton4: TSpeedButton;
-    Label1: TLabel;
-    TrackBar1: TTrackBar;
-    PctBtn: TSpeedButton;
-    SpeedButton5: TSpeedButton;
-    SpeedButton6: TSpeedButton;
-    SpeedButton7: TSpeedButton;
-    Label2: TLabel;
-    SpeedButton8: TSpeedButton;
-    PosLabel: TLabel;
-    Panel7: TPanel;
-    FontBox: TComboBox;
-    SizeBox: TComboBox;
-    BoldBtn: TSpeedButton;
-    ItalicBtn: TSpeedButton;
-    ColorGrid1: TColorGrid;
-    ColorSwitchBtn: TSpeedButton;
-    Panel3: TPanel;
-    RsRulerCorner1: TRsRulerCorner;
-    RsRuler1: TRsRuler;
-    RsRulerCorner4: TRsRulerCorner;
-    Panel5: TPanel;
-    RsRuler4: TRsRuler;
-    Panel6: TPanel;
-    RsRuler3: TRsRuler;
-    LogoImage: TImage;
-    HorTrack: TTrackBar;
-    Label3: TLabel;
-    Label4: TLabel;
-    Bevel1: TBevel;
-    Label5: TLabel;
-    Label6: TLabel;
-    Label7: TLabel;
-    Bevel2: TBevel;
-    Label8: TLabel;
-    VerTrack: TTrackBar;
-    Label9: TLabel;
-    SpeedButton9: TSpeedButton;
-    SpeedButton10: TSpeedButton;
-    Label10: TLabel;
-    SpeedButton11: TSpeedButton;
-    SpeedButton12: TSpeedButton;
-    SpeedButton13: TSpeedButton;
-    SpeedButton14: TSpeedButton;
+    Panel1         : TPanel;
+    Panel2         : TPanel;
+    Panel4         : TPanel;
+    SpeedButton1   : TSpeedButton;
+    SpeedButton2   : TSpeedButton;
+    SpeedButton3   : TSpeedButton;
+    SpeedButton4   : TSpeedButton;
+    Label1         : TLabel;
+    TrackBar1      : TTrackBar;
+    PctBtn         : TSpeedButton;
+    SpeedButton5   : TSpeedButton;
+    SpeedButton6   : TSpeedButton;
+    SpeedButton7   : TSpeedButton;
+    Label2         : TLabel;
+    SpeedButton8   : TSpeedButton;
+    PosLabel       : TLabel;
+    Panel7         : TPanel;
+    FontBox        : TComboBox;
+    SizeBox        : TComboBox;
+    BoldBtn        : TSpeedButton;
+    ItalicBtn      : TSpeedButton;
+    ColorSwitchBtn : TSpeedButton;
+    Panel3         : TPanel;
+    RsRulerCorner1 : TRsRulerCorner;
+    RsRuler1       : TRsRuler;
+    RsRulerCorner4 : TRsRulerCorner;
+    Panel5         : TPanel;
+    Panel6         : TPanel;
+    LogoImage      : TImage;
+    HorTrack       : TTrackBar;
+    Label3         : TLabel;
+    Label4         : TLabel;
+    Bevel1         : TBevel;
+    Label5         : TLabel;
+    Label6         : TLabel;
+    Label7         : TLabel;
+    Bevel2         : TBevel;
+    Label8         : TLabel;
+    VerTrack       : TTrackBar;
+    Label9         : TLabel;
+    SpeedButton9   : TSpeedButton;
+    SpeedButton10  : TSpeedButton;
+    Label10        : TLabel;
+    SpeedButton11  : TSpeedButton;
+    SpeedButton12  : TSpeedButton;
+    SpeedButton13  : TSpeedButton;
+    SpeedButton14  : TSpeedButton;
+    RsRulerCorner2 : TRsRulerCorner;
+    RsRulerCorner3 : TRsRulerCorner;
+    RsRuler2       : TRsRuler;
+    RsRuler4       : TRsRuler;
+    RsRuler3       : TRsRuler;
     procedure SpeedButton1Click(Sender: TObject);
     procedure SpeedButton2Click(Sender: TObject);
     procedure SpeedButton3Click(Sender: TObject);
@@ -98,6 +100,7 @@ type
     PaletteEntries: array[0..NumPaletteEntries - 1] of TPaletteEntry;
   public
     { Public declarations }
+    constructor Create(TheOwner : TComponent); override;
   end;
 
 var
@@ -304,69 +307,69 @@ var
 begin
   if Button = mbLeft then
   begin
-    Idx := ColorGrid1.ForegroundIndex;
-    if Idx >= 8 then Inc(Idx, 4);
-    with PaletteEntries[Idx] do
-    begin
-      if ColorSwitchBtn.Down then
-      begin
-        RsRuler1.TickColor := TColor(RGB(peRed, peGreen, peBlue));
-        RsRuler2.TickColor := TColor(RGB(peRed, peGreen, peBlue));
-        RsRuler3.TickColor := TColor(RGB(peRed, peGreen, peBlue));
-        RsRuler4.TickColor := TColor(RGB(peRed, peGreen, peBlue));
-        RsRulerCorner1.TickColor := TColor(RGB(peRed, peGreen, peBlue));
-        RsRulerCorner2.TickColor := TColor(RGB(peRed, peGreen, peBlue));
-        RsRulerCorner3.TickColor := TColor(RGB(peRed, peGreen, peBlue));
-        RsRulerCorner4.TickColor := TColor(RGB(peRed, peGreen, peBlue));
-      end else
-      begin
-        RsRuler1.Font.Color := TColor(RGB(peRed, peGreen, peBlue));
-        RsRuler2.Font.Color := TColor(RGB(peRed, peGreen, peBlue));
-        RsRuler3.Font.Color := TColor(RGB(peRed, peGreen, peBlue));
-        RsRuler4.Font.Color := TColor(RGB(peRed, peGreen, peBlue));
-        RsRulerCorner1.Font.Color := TColor(RGB(peRed, peGreen, peBlue));
-        RsRulerCorner2.Font.Color := TColor(RGB(peRed, peGreen, peBlue));
-        RsRulerCorner3.Font.Color := TColor(RGB(peRed, peGreen, peBlue));
-        RsRulerCorner4.Font.Color := TColor(RGB(peRed, peGreen, peBlue));
-      end;
-    end;
+    //Idx := ColorGrid1.ForegroundIndex;
+    //if Idx >= 8 then Inc(Idx, 4);
+    //with PaletteEntries[Idx] do
+    //begin
+    //  if ColorSwitchBtn.Down then
+    //  begin
+    //    RsRuler1.TickColor := TColor(RGB(peRed, peGreen, peBlue));
+    //    RsRuler2.TickColor := TColor(RGB(peRed, peGreen, peBlue));
+    //    RsRuler3.TickColor := TColor(RGB(peRed, peGreen, peBlue));
+    //    RsRuler4.TickColor := TColor(RGB(peRed, peGreen, peBlue));
+    //    RsRulerCorner1.TickColor := TColor(RGB(peRed, peGreen, peBlue));
+    //    RsRulerCorner2.TickColor := TColor(RGB(peRed, peGreen, peBlue));
+    //    RsRulerCorner3.TickColor := TColor(RGB(peRed, peGreen, peBlue));
+    //    RsRulerCorner4.TickColor := TColor(RGB(peRed, peGreen, peBlue));
+    //  end else
+    //  begin
+    //    RsRuler1.Font.Color := TColor(RGB(peRed, peGreen, peBlue));
+    //    RsRuler2.Font.Color := TColor(RGB(peRed, peGreen, peBlue));
+    //    RsRuler3.Font.Color := TColor(RGB(peRed, peGreen, peBlue));
+    //    RsRuler4.Font.Color := TColor(RGB(peRed, peGreen, peBlue));
+    //    RsRulerCorner1.Font.Color := TColor(RGB(peRed, peGreen, peBlue));
+    //    RsRulerCorner2.Font.Color := TColor(RGB(peRed, peGreen, peBlue));
+    //    RsRulerCorner3.Font.Color := TColor(RGB(peRed, peGreen, peBlue));
+    //    RsRulerCorner4.Font.Color := TColor(RGB(peRed, peGreen, peBlue));
+    //  end;
+    //end;
   end;
   if Button = mbRight then
   begin
-    Idx := ColorGrid1.BackgroundIndex;
-    if Idx >= 8 then Inc(Idx, 4);
-    with PaletteEntries[Idx] do
-    begin
-      if ColorSwitchBtn.Down then
-      begin
-        RsRuler1.Color := TColor(RGB(peRed, peGreen, peBlue));
-        RsRuler2.Color := TColor(RGB(peRed, peGreen, peBlue));
-        RsRuler3.Color := TColor(RGB(peRed, peGreen, peBlue));
-        RsRuler4.Color := TColor(RGB(peRed, peGreen, peBlue));
-        RsRulerCorner1.Color := TColor(RGB(peRed, peGreen, peBlue));
-        RsRulerCorner2.Color := TColor(RGB(peRed, peGreen, peBlue));
-        RsRulerCorner3.Color := TColor(RGB(peRed, peGreen, peBlue));
-        RsRulerCorner4.Color := TColor(RGB(peRed, peGreen, peBlue));
-      end else
-      begin
-        RsRuler1.ScaleColor := TColor(RGB(peRed, peGreen, peBlue));
-        RsRuler2.ScaleColor := TColor(RGB(peRed, peGreen, peBlue));
-        RsRuler3.ScaleColor := TColor(RGB(peRed, peGreen, peBlue));
-        RsRuler4.ScaleColor := TColor(RGB(peRed, peGreen, peBlue));
-        RsRulerCorner1.ScaleColor := TColor(RGB(peRed, peGreen, peBlue));
-        RsRulerCorner2.ScaleColor := TColor(RGB(peRed, peGreen, peBlue));
-        RsRulerCorner3.ScaleColor := TColor(RGB(peRed, peGreen, peBlue));
-        RsRulerCorner4.ScaleColor := TColor(RGB(peRed, peGreen, peBlue));
-      end;
-    end;
+    //Idx := ColorGrid1.BackgroundIndex;
+    //if Idx >= 8 then Inc(Idx, 4);
+    //with PaletteEntries[Idx] do
+    //begin
+    //  if ColorSwitchBtn.Down then
+    //  begin
+    //    RsRuler1.Color := TColor(RGB(peRed, peGreen, peBlue));
+    //    RsRuler2.Color := TColor(RGB(peRed, peGreen, peBlue));
+    //    RsRuler3.Color := TColor(RGB(peRed, peGreen, peBlue));
+    //    RsRuler4.Color := TColor(RGB(peRed, peGreen, peBlue));
+    //    RsRulerCorner1.Color := TColor(RGB(peRed, peGreen, peBlue));
+    //    RsRulerCorner2.Color := TColor(RGB(peRed, peGreen, peBlue));
+    //    RsRulerCorner3.Color := TColor(RGB(peRed, peGreen, peBlue));
+    //    RsRulerCorner4.Color := TColor(RGB(peRed, peGreen, peBlue));
+    //  end else
+    //  begin
+    //    RsRuler1.ScaleColor := TColor(RGB(peRed, peGreen, peBlue));
+    //    RsRuler2.ScaleColor := TColor(RGB(peRed, peGreen, peBlue));
+    //    RsRuler3.ScaleColor := TColor(RGB(peRed, peGreen, peBlue));
+    //    RsRuler4.ScaleColor := TColor(RGB(peRed, peGreen, peBlue));
+    //    RsRulerCorner1.ScaleColor := TColor(RGB(peRed, peGreen, peBlue));
+    //    RsRulerCorner2.ScaleColor := TColor(RGB(peRed, peGreen, peBlue));
+    //    RsRulerCorner3.ScaleColor := TColor(RGB(peRed, peGreen, peBlue));
+    //    RsRulerCorner4.ScaleColor := TColor(RGB(peRed, peGreen, peBlue));
+    //  end;
+    //end;
   end;
 end;
 
 procedure TForm1.ColorSwitchBtnClick(Sender: TObject);
 begin
-  if ColorSwitchBtn.Down
-  then ColorGrid1.Hint := 'FG = TickColor, BG = Color'
-  else ColorGrid1.Hint := 'FG = Fontcolor, BG = ScaleColor';
+  //if ColorSwitchBtn.Down
+  //then ColorGrid1.Hint := 'FG = TickColor, BG = Color'
+  //else ColorGrid1.Hint := 'FG = Fontcolor, BG = ScaleColor';
 end;
 
 procedure TForm1.HorTrackChange(Sender: TObject);
@@ -434,6 +437,175 @@ begin
     RsRuler3.ScaleDir := rsdNormal;
     RsRuler4.ScaleDir := rsdNormal;
   end;
+end;
+
+constructor TForm1.Create(TheOwner : TComponent);
+begin
+  inherited Create(TheOwner);
+  RsRulerCorner2 := TRsRulerCorner.Create(Self);
+  with RsRulerCorner2 do begin
+    Left       := 0;
+    Top        := 0;
+    Width      := 25;
+    Height     := 24;
+    Units      := ruNone;
+    Flat       := False;
+    ScaleColor := clWhite;
+    TickColor  := clNavy;
+    Align      := alLeft;
+    Position   := cpLeftBottom;
+    Color      := clActiveBorder;
+    ShowHint   := True;
+    Parent     := Panel4;
+  end;
+  RsRulerCorner3 := TRsRulerCorner.Create(self);
+  with RsRulerCorner3 do begin
+    Left       := 476;
+    Top        := 0;
+    Width      := 25;
+    Height     := 24;
+    Units      := ruNone;
+    Flat       := False;
+    ScaleColor := clWhite;
+    TickColor  := clNavy;
+    Align      := alRight;
+    Position   := cpRightBottom;
+    Color      := clActiveBorder;
+    ShowHint   := True;
+    Parent     := Panel4;
+  end;
+  RsRuler2       := TRsRuler.Create(Self);
+  with RsRuler2 do begin
+    Left          := 23;
+    Top           := 0;
+    Width         := 453;
+    Height        := 24;
+    Hint          := 'TRsRuler: Direction = rdBottom';
+    Units         := ruCenti;
+    Flat          := False;
+    ScaleColor    := clWhite;
+    TickColor     := clNavy;
+    Direction     := rdBottom;
+    ScaleDir      := rsdNormal;
+    Scale         := 100;
+    HairLine      := False;
+    HairLinePos   := -1;
+    HairLineStyle := hlsLine;
+    ShowMinus     := True;
+    Align         := alClient;
+    Color         := clActiveBorder;
+    ShowHint      := True;
+    parent        := Panel4;
+  end;
+  RsRulerCorner1 := TRsRulerCorner.Create(Self);
+  with RsRulerCorner1 do begin
+    Left := 0;
+    Top := 0;
+    Width := 25;
+    Height := 25;
+    Hint := 'TRsRulerCorner, Position = cpLeftTop, showing unit';
+    Units := ruCenti;
+    Flat := False;
+    ScaleColor := clWhite;
+    TickColor := clNavy;
+    Align := alLeft;
+    Position := cpLeftTop;
+    Color := clActiveBorder;
+    ShowHint := True;
+    parent := Panel3;
+  end;
+  RsRuler1 := TRsRuler.Create(Self);
+  with RsRuler1 do begin
+    Left          := 23;
+    Top           := 0;
+    Width         := 453;
+    Height        := 25;
+    Hint          := 'TRsRuler: Direction = rdTop';
+    Units         := ruCenti;
+    Flat          := False;
+    ScaleColor    := clWhite;
+    TickColor     := clNavy;
+    Direction     := rdTop;
+    ScaleDir      := rsdNormal;
+    Scale         := 100;
+    HairLine      := False;
+    HairLinePos   := -1;
+    HairLineStyle := hlsLine;
+    ShowMinus     := True;
+    Align         := alClient;
+    Font.Charset  := DEFAULT_CHARSET;
+    Font.Color    := clMenuText;
+    Font.Height   := -12;
+    Font.Name     := 'Tahoma';
+    Font.Style    := [];
+    Color         := clActiveBorder;
+    ShowHint      := True;
+    ParentFont    := False;
+    Parent        := Panel3;
+  end;
+  RsRulerCorner4 := TRsRulerCorner.Create(Self);
+  with RsRulerCorner4 do begin
+    Left       := 476;
+    Top        := 0;
+    Width      := 25;
+    Height     := 25;
+    Units      := ruNone;
+    Flat       := False;
+    ScaleColor := clWhite;
+    TickColor  := clNavy;
+    Align      := alRight;
+    Position   := cpRightTop;
+    Color      := clActiveBorder;
+    ShowHint   := True;
+    Parent     := Panel3;
+  end;
+  RsRuler4 := TRsRuler.Create(Self);
+  with RsRuler4 do begin
+    Left          := 0;
+    Top           := 0;
+    Width         := 25;
+    Height        := 342;
+    Hint          := 'TRsRuler: Direction = rdLeft (Text sideways)';
+    Units         := ruCenti;
+    Flat          := False;
+    ScaleColor    := clWhite;
+    TickColor     := clNavy;
+    Direction     := rdRight;
+    ScaleDir      := rsdNormal;
+    Scale         := 100;
+    HairLine      := False;
+    HairLinePos   := -1;
+    HairLineStyle := hlsLine;
+    ShowMinus     := True;
+    Align         := alClient;
+    Color         := clActiveBorder;
+    ShowHint      := True;
+    Parent        := Panel5;
+  end;
+  RsRuler3 := TRsRuler.Create(Self);
+  with RsRuler3 do begin
+    Left          := 0;
+    Top           := 0;
+    Width         := 25;
+    Height        := 342;
+    Hint          := 'TRsRuler: Direction = rdLeft (Text sideways)';
+    Units         := ruCenti;
+    Flat          := False;
+    ScaleColor    := clWhite;
+    TickColor     := clNavy;
+    Direction     := rdLeft;
+    ScaleDir      := rsdNormal;
+    Scale         := 100;
+    HairLine      := False;
+    HairLinePos   := -1;
+    HairLineStyle := hlsLine;
+    ShowMinus     := True;
+    Align         := alClient;
+    Color         := clActiveBorder;
+    ShowHint      := True;
+    Parent        := Panel6;
+  end;
+
 end;
 
 end.

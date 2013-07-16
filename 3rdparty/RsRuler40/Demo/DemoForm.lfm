@@ -1,297 +1,284 @@
 object Form1: TForm1
-  Left = 485
-  Top = 365
-  Width = 653
+  Left = 185
   Height = 450
+  Top = 145
+  Width = 653
   Caption = 'Demo RsRuler v. 4.0'
+  ClientHeight = 450
+  ClientWidth = 653
   Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
   Font.Name = 'Tahoma'
-  Font.Style = []
   OnCreate = FormCreate
   OnShow = FormShow
-  PixelsPerInch = 96
+  LCLVersion = '1.0.10.0'
   object Label8: TLabel
     Left = 8
+    Height = 14
     Top = 352
-    Width = 86
-    Height = 13
+    Width = 87
     Caption = 'Horizontal Offset:'
+    ParentColor = False
   end
   object Panel1: TPanel
     Left = 0
-    Top = 0
-    Width = 645
     Height = 25
+    Top = 0
+    Width = 653
     Align = alTop
     BevelInner = bvRaised
     BevelOuter = bvNone
+    ClientHeight = 25
+    ClientWidth = 653
     TabOrder = 0
     object SpeedButton1: TSpeedButton
       Left = 3
+      Height = 16
       Top = 2
       Width = 22
-      Height = 16
       AllowAllUp = True
-      GroupIndex = 1
       Caption = 'Flat'
       Flat = True
-      Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -9
       Font.Name = 'Tahoma'
-      Font.Style = []
-      ParentFont = False
+      GroupIndex = 1
+      NumGlyphs = 0
       OnClick = SpeedButton1Click
+      ParentFont = False
     end
     object SpeedButton2: TSpeedButton
       Left = 172
-      Top = 2
-      Width = 16
       Height = 16
       Hint = 'Units = ruCenti'
-      GroupIndex = 2
-      Down = True
+      Top = 2
+      Width = 16
       Caption = 'cm'
+      Down = True
       Flat = True
-      Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -9
       Font.Name = 'Tahoma'
-      Font.Style = []
+      GroupIndex = 2
+      NumGlyphs = 0
+      OnClick = SpeedButton2Click
+      ShowHint = True
       ParentFont = False
       ParentShowHint = False
-      ShowHint = True
-      OnClick = SpeedButton2Click
     end
     object SpeedButton3: TSpeedButton
       Left = 188
-      Top = 2
-      Width = 18
       Height = 16
       Hint = 'Units = ruMilli'
-      GroupIndex = 2
+      Top = 2
+      Width = 18
       Caption = 'mm'
       Flat = True
-      Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -9
       Font.Name = 'Tahoma'
-      Font.Style = []
+      GroupIndex = 2
+      NumGlyphs = 0
+      OnClick = SpeedButton3Click
+      ShowHint = True
       ParentFont = False
       ParentShowHint = False
-      ShowHint = True
-      OnClick = SpeedButton3Click
     end
     object SpeedButton4: TSpeedButton
       Left = 206
-      Top = 2
-      Width = 16
       Height = 16
       Hint = 'Units = ruInch'
-      GroupIndex = 2
+      Top = 2
+      Width = 16
       Caption = 'in'
       Flat = True
-      Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -9
       Font.Name = 'Tahoma'
-      Font.Style = []
+      GroupIndex = 2
+      NumGlyphs = 0
+      OnClick = SpeedButton4Click
+      ShowHint = True
       ParentFont = False
       ParentShowHint = False
-      ShowHint = True
-      OnClick = SpeedButton4Click
     end
     object Label1: TLabel
       Left = 482
+      Height = 12
       Top = 4
-      Width = 25
-      Height = 11
+      Width = 26
       Caption = 'Scale:'
-      Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -9
       Font.Name = 'Tahoma'
-      Font.Style = []
+      ParentColor = False
       ParentFont = False
     end
     object PctBtn: TSpeedButton
       Left = 595
-      Top = 1
-      Width = 41
       Height = 16
       Hint = 'Click = 100%'
+      Top = 1
+      Width = 41
       Caption = '100%'
       Flat = True
-      Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -9
       Font.Name = 'Tahoma'
-      Font.Style = []
+      NumGlyphs = 0
+      OnClick = PctBtnClick
+      ShowHint = True
       ParentFont = False
       ParentShowHint = False
-      ShowHint = True
-      OnClick = PctBtnClick
     end
     object SpeedButton5: TSpeedButton
       Left = 26
+      Height = 16
       Top = 2
       Width = 41
-      Height = 16
       AllowAllUp = True
-      GroupIndex = 3
       Caption = 'HairLines'
       Flat = True
-      Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -9
       Font.Name = 'Tahoma'
-      Font.Style = []
-      ParentFont = False
+      GroupIndex = 3
+      NumGlyphs = 0
       OnClick = SpeedButton5Click
+      ParentFont = False
     end
     object SpeedButton6: TSpeedButton
       Left = 70
+      Height = 16
       Top = 2
       Width = 34
-      Height = 16
-      GroupIndex = 4
-      Down = True
       Caption = 'hlsLine'
+      Down = True
       Flat = True
-      Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -9
       Font.Name = 'Tahoma'
-      Font.Style = []
-      ParentFont = False
+      GroupIndex = 4
+      NumGlyphs = 0
       Visible = False
       OnClick = SpeedButton6Click
+      ParentFont = False
     end
     object SpeedButton7: TSpeedButton
       Left = 103
+      Height = 16
       Top = 2
       Width = 34
-      Height = 16
-      GroupIndex = 4
       Caption = 'hlsRect'
       Flat = True
-      Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -9
       Font.Name = 'Tahoma'
-      Font.Style = []
-      ParentFont = False
+      GroupIndex = 4
+      NumGlyphs = 0
       Visible = False
       OnClick = SpeedButton7Click
+      ParentFont = False
     end
     object SpeedButton8: TSpeedButton
       Left = 222
-      Top = 2
-      Width = 16
       Height = 16
       Hint = 'Units = ruPixel'
-      GroupIndex = 2
+      Top = 2
+      Width = 16
       Caption = 'px'
       Flat = True
-      Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -9
       Font.Name = 'Tahoma'
-      Font.Style = []
+      GroupIndex = 2
+      NumGlyphs = 0
+      OnClick = SpeedButton8Click
+      ShowHint = True
       ParentFont = False
       ParentShowHint = False
-      ShowHint = True
-      OnClick = SpeedButton8Click
     end
     object PosLabel: TLabel
       Left = 382
-      Top = 4
-      Width = 3
-      Height = 11
+      Height = 1
       Hint = 'Current position, including Offset'
-      Font.Charset = DEFAULT_CHARSET
+      Top = 4
+      Width = 1
       Font.Color = clWindowText
       Font.Height = -9
       Font.Name = 'Tahoma'
-      Font.Style = []
+      ParentColor = False
       ParentFont = False
       ParentShowHint = False
       ShowHint = True
-      Transparent = True
     end
     object SpeedButton12: TSpeedButton
       Left = 158
+      Height = 16
       Top = 2
       Width = 16
-      Height = 16
-      GroupIndex = 2
       Caption = 'm'
       Flat = True
-      Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -9
       Font.Name = 'Tahoma'
-      Font.Style = []
-      ParentFont = False
+      GroupIndex = 2
+      NumGlyphs = 0
       OnClick = SpeedButton12Click
+      ParentFont = False
     end
     object SpeedButton13: TSpeedButton
       Left = 140
+      Height = 16
       Top = 2
       Width = 18
-      Height = 16
-      GroupIndex = 2
       Caption = 'km'
       Flat = True
-      Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -9
       Font.Name = 'Tahoma'
-      Font.Style = []
-      ParentFont = False
+      GroupIndex = 2
+      NumGlyphs = 0
       OnClick = SpeedButton13Click
+      ParentFont = False
     end
     object TrackBar1: TTrackBar
       Left = 505
-      Top = 0
-      Width = 89
       Height = 22
       Hint = '100%'
+      Top = 0
+      Width = 89
+      Frequency = 50
       Max = 1000
       Min = 1
-      Orientation = trHorizontal
-      ParentShowHint = False
+      OnChange = TrackBar1Change
       PageSize = 10
-      Frequency = 50
       Position = 100
-      SelEnd = 0
-      SelStart = 0
+      ParentShowHint = False
       ShowHint = True
       TabOrder = 0
-      TickMarks = tmBottomRight
-      TickStyle = tsAuto
-      OnChange = TrackBar1Change
     end
   end
   object Panel2: TPanel
     Left = 142
+    Height = 425
     Top = 25
-    Width = 503
-    Height = 391
+    Width = 511
     Align = alClient
     BevelOuter = bvNone
+    ClientHeight = 425
+    ClientWidth = 511
     TabOrder = 1
     object LogoImage: TImage
+      Cursor = crCross
       Left = 23
+      Height = 133
       Top = 22
       Width = 200
-      Height = 133
-      Cursor = crCross
+      OnMouseMove = LogoImageMouseMove
       Picture.Data = {
-        0A544A504547496D616765A9200000FFD8FFE000104A46494600010101004800
+        0A544A706567496D616765A9200000FFD8FFE000104A46494600010101004800
         480000FFDB0043000503040404030504040405050506070C08070707070F0B0B
         090C110F1212110F111113161C1713141A1511111821181A1D1D1F1F1F131722
         24221E241C1E1F1EFFDB0043010505050706070E08080E1E1411141E1E1E1E1E
@@ -552,420 +539,276 @@ object Form1: TForm1
         12F5CCFDD1FF007D9A28A0070F899AE7A0FF00BECD28F89DAE8EC3FEFB345140
         0A3E27EBBE83FEFB34A3E286BDE83FEFB3451400EFF85A5AFE7A0FFBECD387C5
         3D7C761FF7D9A28A0051F157C41E83FEFB34A3E2B7880761FF007D9FF0A28A00
-        A7AD7C45D5B56D3A5B2BC895E37523EFF4FD28A28A00FFD9}
+        A7AD7C45D5B56D3A5B2BC895E37523EFF4FD28A28A00FFD9
+      }
       Stretch = True
       Transparent = True
-      OnMouseMove = LogoImageMouseMove
     end
     object Label2: TLabel
       Left = 30
-      Top = 348
-      Width = 337
-      Height = 13
+      Height = 14
+      Top = 381
+      Width = 338
       Alignment = taCenter
       Anchors = [akLeft, akBottom]
-      Caption = 
-        'RsRuler v. 4.0  (c) 2003, Hans Roos, Roos Software, The Netherla' +
-        'nds'
-      Transparent = True
+      Caption = 'RsRuler v. 4.0  (c) 2003, Hans Roos, Roos Software, The Netherlands'
+      ParentColor = False
     end
     object Panel4: TPanel
       Left = 0
-      Top = 365
-      Width = 503
       Height = 24
+      Top = 401
+      Width = 511
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 0
-      object RsRulerCorner2: TRsRulerCorner
-        Left = 0
-        Top = 0
-        Width = 25
-        Height = 24
-        Units = ruNone
-        Flat = False
-        ScaleColor = clWhite
-        TickColor = clNavy
-        Align = alLeft
-        Position = cpLeftBottom
-        Color = clActiveBorder
-        ShowHint = True
-      end
-      object RsRulerCorner3: TRsRulerCorner
-        Left = 476
-        Top = 0
-        Width = 25
-        Height = 24
-        Units = ruNone
-        Flat = False
-        ScaleColor = clWhite
-        TickColor = clNavy
-        Align = alRight
-        Position = cpRightBottom
-        Color = clActiveBorder
-        ShowHint = True
-      end
-      object RsRuler2: TRsRuler
-        Left = 23
-        Top = 0
-        Width = 453
-        Height = 24
-        Hint = 'TRsRuler: Direction = rdBottom'
-        Units = ruCenti
-        Flat = False
-        ScaleColor = clWhite
-        TickColor = clNavy
-        Direction = rdBottom
-        ScaleDir = rsdNormal
-        Scale = 100
-        HairLine = False
-        HairLinePos = -1
-        HairLineStyle = hlsLine
-        ShowMinus = True
-        Align = alClient
-        Color = clActiveBorder
-        ShowHint = True
-      end
     end
     object Panel3: TPanel
       Left = 0
-      Top = 0
-      Width = 503
       Height = 25
+      Top = 0
+      Width = 511
       Align = alTop
       BevelOuter = bvNone
       Caption = 'Panel3'
       TabOrder = 1
-      object RsRulerCorner1: TRsRulerCorner
-        Left = 0
-        Top = 0
-        Width = 25
-        Height = 25
-        Hint = 'TRsRulerCorner, Position = cpLeftTop, showing unit'
-        Units = ruCenti
-        Flat = False
-        ScaleColor = clWhite
-        TickColor = clNavy
-        Align = alLeft
-        Position = cpLeftTop
-        Color = clActiveBorder
-        ShowHint = True
-      end
-      object RsRuler1: TRsRuler
-        Left = 23
-        Top = 0
-        Width = 453
-        Height = 25
-        Hint = 'TRsRuler: Direction = rdTop'
-        Units = ruCenti
-        Flat = False
-        ScaleColor = clWhite
-        TickColor = clNavy
-        Direction = rdTop
-        ScaleDir = rsdNormal
-        Scale = 100
-        HairLine = False
-        HairLinePos = -1
-        HairLineStyle = hlsLine
-        ShowMinus = True
-        Align = alClient
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clMenuText
-        Font.Height = -12
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        Color = clActiveBorder
-        ShowHint = True
-        ParentFont = False
-      end
-      object RsRulerCorner4: TRsRulerCorner
-        Left = 476
-        Top = 0
-        Width = 25
-        Height = 25
-        Units = ruNone
-        Flat = False
-        ScaleColor = clWhite
-        TickColor = clNavy
-        Align = alRight
-        Position = cpRightTop
-        Color = clActiveBorder
-        ShowHint = True
-      end
     end
     object Panel5: TPanel
-      Left = 476
-      Top = 23
+      Left = 486
+      Height = 376
+      Top = 25
       Width = 25
-      Height = 342
       Align = alRight
       BevelOuter = bvNone
       TabOrder = 2
-      object RsRuler4: TRsRuler
-        Left = 0
-        Top = 0
-        Width = 25
-        Height = 342
-        Hint = 'TRsRuler: Direction = rdLeft (Text sideways)'
-        Units = ruCenti
-        Flat = False
-        ScaleColor = clWhite
-        TickColor = clNavy
-        Direction = rdRight
-        ScaleDir = rsdNormal
-        Scale = 100
-        HairLine = False
-        HairLinePos = -1
-        HairLineStyle = hlsLine
-        ShowMinus = True
-        Align = alClient
-        Color = clActiveBorder
-        ShowHint = True
-      end
     end
     object Panel6: TPanel
       Left = 0
-      Top = 23
+      Height = 376
+      Top = 25
       Width = 25
-      Height = 342
       Align = alLeft
       BevelOuter = bvNone
       TabOrder = 3
-      object RsRuler3: TRsRuler
-        Left = 0
-        Top = 0
-        Width = 25
-        Height = 342
-        Hint = 'TRsRuler: Direction = rdLeft (Text sideways)'
-        Units = ruCenti
-        Flat = False
-        ScaleColor = clWhite
-        TickColor = clNavy
-        Direction = rdLeft
-        ScaleDir = rsdNormal
-        Scale = 100
-        HairLine = False
-        HairLinePos = -1
-        HairLineStyle = hlsLine
-        ShowMinus = True
-        Align = alClient
-        Color = clActiveBorder
-        ShowHint = True
-      end
     end
   end
   object Panel7: TPanel
     Left = 0
+    Height = 425
     Top = 25
     Width = 142
-    Height = 391
     Align = alLeft
+    ClientHeight = 425
+    ClientWidth = 142
     TabOrder = 2
     object BoldBtn: TSpeedButton
       Left = 57
-      Top = 52
-      Width = 23
       Height = 22
       Hint = 'Bold'
+      Top = 52
+      Width = 23
       AllowAllUp = True
-      GroupIndex = 1
       Caption = 'B'
       Flat = True
-      Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -16
       Font.Name = 'Times New Roman'
       Font.Style = [fsBold]
+      GroupIndex = 1
+      NumGlyphs = 0
+      OnClick = BoldBtnClick
+      ShowHint = True
       ParentFont = False
       ParentShowHint = False
-      ShowHint = True
-      OnClick = BoldBtnClick
     end
     object ItalicBtn: TSpeedButton
       Left = 80
-      Top = 52
-      Width = 23
       Height = 22
       Hint = 'Italic'
+      Top = 52
+      Width = 23
       AllowAllUp = True
-      GroupIndex = 2
       Caption = 'I '
       Flat = True
-      Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -16
       Font.Name = 'Times New Roman'
       Font.Style = [fsBold, fsItalic]
+      GroupIndex = 2
+      NumGlyphs = 0
+      OnClick = ItalicBtnClick
+      ShowHint = True
       ParentFont = False
       ParentShowHint = False
-      ShowHint = True
-      OnClick = ItalicBtnClick
     end
     object ColorSwitchBtn: TSpeedButton
       Left = 110
-      Top = 83
-      Width = 23
       Height = 22
       Hint = 'Switch color selection'
+      Top = 83
+      Width = 23
       AllowAllUp = True
-      GroupIndex = 3
       Caption = 'Clr'
       Flat = True
-      ParentShowHint = False
-      ShowHint = True
+      GroupIndex = 3
+      NumGlyphs = 0
       OnClick = ColorSwitchBtnClick
+      ShowHint = True
+      ParentShowHint = False
     end
     object Label3: TLabel
       Left = 6
+      Height = 14
       Top = 286
-      Width = 63
-      Height = 13
+      Width = 64
       Caption = 'Scale Offset:'
+      ParentColor = False
     end
     object Label4: TLabel
       Left = 6
+      Height = 14
       Top = 6
-      Width = 104
-      Height = 13
+      Width = 105
       Caption = 'Ruler font properties:'
+      ParentColor = False
     end
     object Bevel1: TBevel
       Left = 6
+      Height = 9
       Top = 78
       Width = 127
-      Height = 9
       Shape = bsTopLine
     end
     object Label5: TLabel
       Left = 6
+      Height = 14
       Top = 86
-      Width = 60
-      Height = 13
+      Width = 61
       Caption = 'Ruler colors:'
+      ParentColor = False
     end
     object Label6: TLabel
       Left = 6
+      Height = 14
       Top = 107
-      Width = 130
-      Height = 13
+      Width = 131
       Caption = 'Clr button toggles colors of'
+      ParentColor = False
     end
     object Label7: TLabel
       Left = 6
+      Height = 14
       Top = 123
-      Width = 126
-      Height = 13
+      Width = 127
       Caption = 'scale/font and bkgnd/ticks'
+      ParentColor = False
     end
     object Bevel2: TBevel
       Left = 5
+      Height = 9
       Top = 278
       Width = 127
-      Height = 9
       Shape = bsTopLine
     end
     object Label9: TLabel
       Left = 6
+      Height = 14
       Top = 302
-      Width = 17
-      Height = 13
+      Width = 18
       Caption = 'Hor'
+      ParentColor = False
     end
     object SpeedButton9: TSpeedButton
       Left = 112
-      Top = 298
-      Width = 23
       Height = 22
       Hint = 'Press for Offset = 0'
+      Top = 298
+      Width = 23
       Caption = '0'
       Flat = True
-      ParentShowHint = False
-      ShowHint = True
+      NumGlyphs = 0
       OnClick = SpeedButton9Click
+      ShowHint = True
+      ParentShowHint = False
     end
     object SpeedButton10: TSpeedButton
       Left = 112
-      Top = 324
-      Width = 23
       Height = 22
       Hint = 'Press for Offset = 0'
+      Top = 324
+      Width = 23
       Caption = '0'
       Flat = True
-      ParentShowHint = False
-      ShowHint = True
+      NumGlyphs = 0
       OnClick = SpeedButton10Click
+      ShowHint = True
+      ParentShowHint = False
     end
     object Label10: TLabel
       Left = 6
+      Height = 14
       Top = 326
-      Width = 16
-      Height = 13
+      Width = 17
       Caption = 'Ver'
+      ParentColor = False
     end
     object SpeedButton11: TSpeedButton
       Left = 6
-      Top = 358
-      Width = 46
       Height = 18
       Hint = 'Shows or hides the minus sign if negative offset'
+      Top = 358
+      Width = 46
       AllowAllUp = True
-      GroupIndex = 3
-      Down = True
       Caption = 'ShowMin'
+      Down = True
       Flat = True
-      Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -9
       Font.Name = 'Tahoma'
-      Font.Style = []
+      GroupIndex = 3
       Layout = blGlyphRight
+      NumGlyphs = 0
+      OnClick = SpeedButton11Click
+      ShowHint = True
       ParentFont = False
       ParentShowHint = False
-      ShowHint = True
-      OnClick = SpeedButton11Click
     end
     object SpeedButton14: TSpeedButton
       Left = 62
+      Height = 18
       Top = 358
       Width = 65
-      Height = 18
       AllowAllUp = True
-      GroupIndex = 4
       Caption = 'Reverse Scale'
       Flat = True
-      Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -9
       Font.Name = 'Tahoma'
-      Font.Style = []
-      ParentFont = False
+      GroupIndex = 4
+      NumGlyphs = 0
       OnClick = SpeedButton14Click
+      ParentFont = False
     end
     object FontBox: TComboBox
       Left = 6
-      Top = 26
-      Width = 129
       Height = 21
       Hint = 'Font'
+      Top = 26
+      Width = 129
       ItemHeight = 13
+      OnChange = FontBoxChange
       ParentShowHint = False
       ShowHint = True
       TabOrder = 0
-      OnChange = FontBoxChange
     end
     object SizeBox: TComboBox
       Left = 6
-      Top = 52
-      Width = 47
       Height = 21
       Hint = 'Size'
+      Top = 52
+      Width = 47
       ItemHeight = 13
       ItemIndex = 4
-      ParentShowHint = False
-      ShowHint = True
-      TabOrder = 1
-      Text = '8'
-      OnChange = SizeBoxChange
       Items.Strings = (
         '4'
         '5'
@@ -981,61 +824,47 @@ object Form1: TForm1
         '20'
         '22'
         '24'
-        '26')
-    end
-    object ColorGrid1: TColorGrid
-      Left = 3
-      Top = 142
-      Width = 132
-      Height = 128
-      Hint = 'FG = Fontcolor, BG = ScaleColor'
-      Ctl3D = True
-      BackgroundIndex = 15
-      ParentCtl3D = False
+        '26'
+      )
+      OnChange = SizeBoxChange
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 2
-      OnMouseUp = ColorGrid1MouseUp
+      TabOrder = 1
+      Text = '8'
     end
     object HorTrack: TTrackBar
       Left = 26
+      Height = 17
       Top = 303
       Width = 83
-      Height = 17
+      Frequency = 50
       Max = 50
       Min = -50
-      Orientation = trHorizontal
-      ParentShowHint = False
+      OnChange = HorTrackChange
       PageSize = 10
-      Frequency = 50
       Position = 0
-      SelEnd = 0
-      SelStart = 0
-      ShowHint = True
-      TabOrder = 3
       TickMarks = tmBoth
       TickStyle = tsNone
-      OnChange = HorTrackChange
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 2
     end
   end
   object VerTrack: TTrackBar
     Left = 28
+    Height = 17
     Top = 358
     Width = 83
-    Height = 17
+    Frequency = 50
     Max = 50
     Min = -50
-    Orientation = trHorizontal
-    ParentShowHint = False
+    OnChange = VerTrackChange
     PageSize = 10
-    Frequency = 50
     Position = 0
-    SelEnd = 0
-    SelStart = 0
-    ShowHint = True
-    TabOrder = 3
     TickMarks = tmBoth
     TickStyle = tsNone
-    OnChange = VerTrackChange
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 3
   end
 end
