@@ -6,7 +6,8 @@ interface
 
 uses
   LCLIntf, LCLType, LMessages, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  RsRuler, ExtCtrls, Buttons, ComCtrls, StdCtrls, Math{, ColorGrd};
+  RsRuler, ExtCtrls, Buttons, ComCtrls, StdCtrls, Math, Grids{, ColorGrd}
+  ,windows ;
 
 
 const
@@ -499,10 +500,10 @@ begin
   end;
   RsRulerCorner1 := TRsRulerCorner.Create(Self);
   with RsRulerCorner1 do begin
-    Left := 0;
-    Top := 0;
-    Width := 25;
-    Height := 25;
+    //Left := 0;
+    //Top := 0;
+    //Width := 25;
+    //Height := 25;
     Hint := 'TRsRulerCorner, Position = cpLeftTop, showing unit';
     Units := ruCenti;
     Flat := False;
@@ -512,7 +513,7 @@ begin
     Position := cpLeftTop;
     Color := clActiveBorder;
     ShowHint := True;
-    parent := Panel3;
+    Parent := Panel3;
   end;
   RsRuler1 := TRsRuler.Create(Self);
   with RsRuler1 do begin
@@ -545,10 +546,10 @@ begin
   end;
   RsRulerCorner4 := TRsRulerCorner.Create(Self);
   with RsRulerCorner4 do begin
-    Left       := 476;
-    Top        := 0;
-    Width      := 25;
-    Height     := 25;
+    //Left       := 476;
+    //Top        := 0;
+    //Width      := 25;
+    //Height     := 25;
     Units      := ruNone;
     Flat       := False;
     ScaleColor := clWhite;
@@ -561,10 +562,10 @@ begin
   end;
   RsRuler4 := TRsRuler.Create(Self);
   with RsRuler4 do begin
-    Left          := 0;
-    Top           := 0;
-    Width         := 25;
-    Height        := 342;
+    //Left          := 0;
+    //Top           := 0;
+    //Width         := 25;
+    //Height        := 342;
     Hint          := 'TRsRuler: Direction = rdLeft (Text sideways)';
     Units         := ruCenti;
     Flat          := False;

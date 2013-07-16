@@ -138,6 +138,7 @@ uses
   LCLIntf, LCLType, LCLProc
   {$IFDEF WIN        } ,Windows   {$ENDIF}
   {$IFDEF DBGFRM     } ,UFrmDebug {$ENDIF}
+ // {$IFDEF METAFILE_SUPPORT},UMetafile {$ENDIF}
   ;
 
 {%REGION Const}
@@ -1175,6 +1176,7 @@ type
     UndoStorage           : TMemoryStream;
     UpdateCount           : Integer;
     UpdatingScrollBars    : Boolean;  //for internal use only.
+    FPrinting             : Boolean;
 
     function GetMidPoint  : TPoint;
     function GetBoundingRect(AIndex: Integer): TRect; {$MESSAGE HINT 'Remove it after ported'}
@@ -1325,8 +1327,13 @@ type
     property MarkedArea: TRect read fMarkedArea write SetMarkedArea;
     property ValidMarkedArea: boolean read fValidMarkedArea;
     property Zoom: TZoom read fZoom write SetZoom default 100;
+    property Printing : Boolean read fPrinting;
     procedure OffsetObjects(const aList:TEvsGraphObjectList; aDX, aDY:Integer);
+
   public
+    procedure StartPrinting;
+    procedure EndPrinting;
+
     procedure CLtoGP(var Points : array of TPoint);
     procedure GPtoCL(var Points : array of TPoint);
   public
@@ -5132,6 +5139,8 @@ begin
   fModified                 := False;
   fMarkedArea               := EmptyRect;
   fClipboardFormats         := [cfNative];
+  fPrinting                 := False;
+
   if NodeClassCount > 0 then fDefaultNodeClass := NodeClasses(0);
   if LinkClassCount > 0 then fDefaultLinkClass := LinkClasses(0);
   //DoubleBuffered := True;
@@ -5226,36 +5235,41 @@ var
 begin
   {$MSSAGE WARN 'IMPLEMENT TEvsSimpleGraph.Print'}
   vGraphRect := GraphBounds;
-  if not IsRectEmpty(vGraphRect) then
-  begin
-    vGraphSize.X := vGraphRect.Right - vGraphRect.Left;
-    vGraphSize.Y := vGraphRect.Bottom - vGraphRect.Top;
-    vRectSize.X := Rect.Right - Rect.Left;
-    vRectSize.Y := Rect.Bottom - Rect.Top;
-    if (vRectSize.X / vGraphSize.X) < (vRectSize.Y / vGraphSize.Y) then
+  FPrinting := True;
+  try
+    if not IsRectEmpty(vGraphRect) then
     begin
-      vGraphSize.Y := MulDiv(vGraphSize.Y, vRectSize.X, vGraphSize.X);
-      vGraphSize.X := vRectSize.X;
-    end
-    else
-    begin
-      vGraphSize.X := MulDiv(vGraphSize.X, vRectSize.Y, vGraphSize.Y);
-      vGraphSize.Y := vRectSize.Y;
+      vGraphSize.X := vGraphRect.Right - vGraphRect.Left;
+      vGraphSize.Y := vGraphRect.Bottom - vGraphRect.Top;
+      vRectSize.X := Rect.Right - Rect.Left;
+      vRectSize.Y := Rect.Bottom - Rect.Top;
+      if (vRectSize.X / vGraphSize.X) < (vRectSize.Y / vGraphSize.Y) then
+      begin
+        vGraphSize.Y := MulDiv(vGraphSize.Y, vRectSize.X, vGraphSize.X);
+        vGraphSize.X := vRectSize.X;
+      end
+      else
+      begin
+        vGraphSize.X := MulDiv(vGraphSize.X, vRectSize.Y, vGraphSize.Y);
+        vGraphSize.Y := vRectSize.Y;
+      end;
+      SetRect(vGraphRect, 0, 0, vGraphSize.X, vGraphSize.Y);
+      OffsetRect(vGraphRect,
+        Rect.Left + (vRectSize.X - vGraphSize.X) div 2,
+        Rect.Top + (vRectSize.Y - vGraphSize.Y) div 2);
+      {$IFDEF METAFILE_SUPPORT}
+      vMetafile := GetAsMetafile(aCanvas.Handle, Objects);
+      try
+        aCanvas.StretchDraw(vGraphRect, vMetafile);
+      finally
+        vMetafile.Free;
+      end;
+      {$ELSE}
+        {$MESSAGE WARN 'NO PRINTING SUPPORT'}
+      {$ENDIF}
     end;
-    SetRect(vGraphRect, 0, 0, vGraphSize.X, vGraphSize.Y);
-    OffsetRect(vGraphRect,
-      Rect.Left + (vRectSize.X - vGraphSize.X) div 2,
-      Rect.Top + (vRectSize.Y - vGraphSize.Y) div 2);
-    {$IFDEF METAFILE_SUPPORT}
-    vMetafile := GetAsMetafile(aCanvas.Handle, Objects);
-    try
-      aCanvas.StretchDraw(vGraphRect, vMetafile);
-    finally
-      vMetafile.Free;
-    end;
-    {$ELSE}
-      {$MESSAGE WARN 'NO PRINTING SUPPORT'}
-    {$ENDIF}
+  finally
+    FPrinting := False;
   end;
 end;
 
@@ -5589,6 +5603,16 @@ begin
   for vCntr := 0 to aList.Count -1 do begin
     aList[vCntr].MoveBy(aDX,aDY);
   end;
+end;
+
+procedure TEvsSimpleGraph.StartPrinting;
+begin
+  FPrinting := True;
+end;
+
+procedure TEvsSimpleGraph.EndPrinting;
+begin
+  FPrinting := False;
 end;
 
 function TEvsSimpleGraph.AlignSelection(aHorz: TEvsHAlignOption; aVert: TEvsVAlignOption): boolean;
@@ -7316,14 +7340,15 @@ Var
 begin
   if Showing then begin
     {$MESSAGE HINT 'METAFILE SUPPORT OMMITED'}
+    if not Owner.Printing then begin
     //if not (aCanvas is TMetafileCanvas) then  // Windows.RectVisible bug!!!
        vDCRect := SelectedVisualRect;
        //OffsetRectByOwner(vDCRect, InViewPort);
        owner.GPToCP(vDCRect,2);
        Result := RectVisible(aCanvas.Handle, vDCRect)
        //Result := RectVisible(aCanvas.Handle, SelectedVisualRect)
-    //else
-    //  Result := True
+    end else
+      Result := True
   end else
     Result := False;
 end;

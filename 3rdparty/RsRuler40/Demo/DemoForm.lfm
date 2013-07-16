@@ -1,7 +1,7 @@
 object Form1: TForm1
-  Left = 185
+  Left = 289
   Height = 450
-  Top = 145
+  Top = 143
   Width = 653
   Caption = 'Demo RsRuler v. 4.0'
   ClientHeight = 450
