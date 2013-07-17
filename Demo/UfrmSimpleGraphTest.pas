@@ -6,7 +6,7 @@ interface
 {$DEFINE SIMPLEGRAPH_CREATION}
 {.$DEFINE GDIPLUS}
 uses
-  Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, LMessages, LCLType,
+  Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, LCLType,
   LCLIntf, StdCtrls, ComCtrls, ActnList, Menus, Clipbrd,
 
   {$IFDEF GDIPLUS} uEvsGDIPlusCanvas, {$ENDIF} usimplegraph, ExtCtrls;
@@ -190,7 +190,6 @@ procedure SaveScreenShot(const aFilename:string);
 var
   ScreenDC   : HDC;
   SaveBitmap : TBitmap;
-  SB         : TScrollBar;
 begin
   SaveBitmap := TBitmap.Create;
   try
@@ -574,10 +573,10 @@ begin
 end;
 
 constructor TEvsMain.Create(aOwner : TComponent);
-VAR
-  tmp : UnicodeString;
-  Mnu : TMenuItem;
-  Cnt: Integer;
+//VAR
+//  tmp : UnicodeString;
+//  Mnu : TMenuItem;
+  //Cnt: Integer;
 begin
   inherited Create(Owner);
   {$IFDEF SIMPLEGRAPH_CREATION}
