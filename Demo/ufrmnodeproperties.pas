@@ -6,7 +6,7 @@ interface
 
 uses
   LCLIntf, LCLType, LMessages, Messages, SysUtils, Classes, Graphics, Controls, Forms,
-  Dialogs, UevsSimplegraph, ExtCtrls, StdCtrls, ComCtrls, ExtDlgs, CheckLst;
+  Dialogs, usimplegraph, ExtCtrls, StdCtrls, ComCtrls, ExtDlgs, CheckLst;
 
 type
   TEvsNodeProperties = class(TForm)

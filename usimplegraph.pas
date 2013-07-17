@@ -101,7 +101,7 @@
   http://www.delphiarea.com
 ------------------------------------------------------------------------------}
 
-unit UEvsSimpleGraph;
+unit usimplegraph;
 {$mode objfpc}
 {.$MODE DELPHI}
 {$H+}

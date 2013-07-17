@@ -251,8 +251,8 @@ object EvsNodeProperties: TEvsNodeProperties
   end
   object AllOptions: TCheckListBox
     Left = 25
-    Height = 43
-    Top = 105
+    Height = 51
+    Top = 104
     Width = 318
     Columns = 2
     Items.Strings = (

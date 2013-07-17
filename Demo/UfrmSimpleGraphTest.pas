@@ -9,7 +9,7 @@ uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, LMessages, LCLType,
   LCLIntf, StdCtrls, ComCtrls, ActnList, Menus, Clipbrd,
 
-  {$IFDEF GDIPLUS} uEvsGDIPlusCanvas, {$ENDIF} UEvsSimpleGraph, ExtCtrls;
+  {$IFDEF GDIPLUS} uEvsGDIPlusCanvas, {$ENDIF} usimplegraph, ExtCtrls;
 const
   {$IFDEF  LCLWIN32}
     EvsActiveWidgetSet = 'Win32';
@@ -514,7 +514,7 @@ procedure TEvsMain.Action4Execute(Sender: TObject);
 begin
   if assigned(Test) then begin
     test.DefaultNodeClass:=TEvsHexagonalNode;
-    test.CommandMode:=UEvsSimpleGraph.cmInsertNode;
+    test.CommandMode:=usimplegraph.cmInsertNode;
   end;
 end;
 
@@ -561,7 +561,7 @@ procedure TEvsMain.MenuItem1Click(Sender: TObject);
 begin
   if Assigned(Test) then begin
     Test.DefaultNodeClass:=TEvsSimpleGraph.NodeClasses(TMenuItem(Sender).Tag-1);
-    test.CommandMode:=UEvsSimpleGraph.cmInsertNode;
+    test.CommandMode:=usimplegraph.cmInsertNode;
   end;
 end;
 
@@ -569,7 +569,7 @@ procedure TEvsMain.MenuItem2Click(Sender : TObject);
 begin
   if Assigned(Test) then begin
     Test.DefaultLinkClass:=TEvsSimpleGraph.LinkClasses(TMenuItem(Sender).Tag-1-cLinkStart);
-    Test.CommandMode:=UEvsSimpleGraph.cmInsertLink;
+    Test.CommandMode:=usimplegraph.cmInsertLink;
   end;
 end;
 
@@ -614,10 +614,10 @@ procedure TEvsMain.goDblClick(Graph : TEvsSimpleGraph;
 begin
   StaticText4.Caption := IntToStr(GraphObject.ID);
   if Test.SelectedObjects.Count > 0 then begin
-    if Test.SelectedObjects[Test.SelectedObjects.count-1].IsNode then
+    if GraphObject.IsNode then
       TEvsNodeProperties.Execute(Test.SelectedObjects)
-    else TEvsLinkProperties.Execute(Test.SelectedObjects); //ShowMessage('Under Construction');
-  end; //else simplegraph properties.
+    else TEvsLinkProperties.Execute(Test.SelectedObjects);
+  end;
 end;
 
 procedure TEvsMain.sgDblClick(Sender : TObject);
