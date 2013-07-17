@@ -4,14 +4,14 @@
     <PathDelim Value="\"/>
     <Version Value="9"/>
     <BuildModes Active="Default"/>
-    <Units Count="7">
+    <Units Count="9">
       <Unit0>
         <Filename Value="RulerDemo.lpr"/>
         <IsPartOfProject Value="True"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="15" Y="8"/>
-        <UsageCount Value="23"/>
+        <UsageCount Value="28"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit0>
       <Unit1>
@@ -23,10 +23,9 @@
         <UnitName Value="DemoForm"/>
         <EditorIndex Value="0"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="506"/>
-        <CursorPos X="30" Y="554"/>
-        <FoldState Value=" T0rGPE211S"/>
-        <UsageCount Value="23"/>
+        <TopLine Value="167"/>
+        <CursorPos X="1" Y="187"/>
+        <UsageCount Value="28"/>
         <Bookmarks Count="1">
           <Item0 X="1" Y="162" ID="0"/>
         </Bookmarks>
@@ -41,10 +40,10 @@
         <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="806"/>
-        <CursorPos X="1" Y="820"/>
-        <FoldState Value=" TM40y T7j7HT1R"/>
-        <UsageCount Value="23"/>
+        <TopLine Value="675"/>
+        <CursorPos X="21" Y="692"/>
+        <FoldState Value=" TM40y="/>
+        <UsageCount Value="28"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit2>
@@ -53,39 +52,49 @@
         <WindowIndex Value="0"/>
         <TopLine Value="832"/>
         <CursorPos X="1" Y="839"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="9"/>
         <DefaultSyntaxHighlighter Value="LFM"/>
       </Unit3>
       <Unit4>
         <Filename Value="C:\lazarus.1.0\lcl\graphics.pp"/>
         <UnitName Value="Graphics"/>
-        <EditorIndex Value="3"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="1168"/>
+        <TopLine Value="1111"/>
         <CursorPos X="14" Y="1183"/>
-        <UsageCount Value="12"/>
-        <Loaded Value="True"/>
+        <UsageCount Value="14"/>
       </Unit4>
       <Unit5>
         <Filename Value="C:\lazarus.1.0\fpc\2.6.2\Source\packages\fcl-image\src\fpcanvas.pp"/>
         <UnitName Value="FPCanvas"/>
-        <EditorIndex Value="4"/>
         <WindowIndex Value="0"/>
         <TopLine Value="97"/>
         <CursorPos X="35" Y="114"/>
-        <UsageCount Value="12"/>
-        <Loaded Value="True"/>
+        <UsageCount Value="14"/>
       </Unit5>
       <Unit6>
         <Filename Value="C:\lazarus.1.0\lcl\lcltype.pp"/>
         <UnitName Value="LCLType"/>
-        <EditorIndex Value="2"/>
         <WindowIndex Value="0"/>
         <TopLine Value="195"/>
         <CursorPos X="3" Y="212"/>
-        <UsageCount Value="12"/>
-        <Loaded Value="True"/>
+        <UsageCount Value="14"/>
       </Unit6>
+      <Unit7>
+        <Filename Value="..\..\..\..\..\Evosi\Components\Controls\Source\uevsruler.pas"/>
+        <UnitName Value="uEvsRuler"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="42" Y="89"/>
+        <UsageCount Value="12"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="..\..\..\..\..\Evosi\Components\Controls\uEvsControlReg.pas"/>
+        <UnitName Value="uEvsControlReg"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="54" Y="32"/>
+        <UsageCount Value="10"/>
+      </Unit8>
     </Units>
     <General>
       <ActiveWindowIndexAtStart Value="0"/>
@@ -93,123 +102,123 @@
     <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
         <Filename Value="..\RsRuler.pas"/>
-        <Caret Line="238" Column="22" TopLine="220"/>
+        <Caret Line="444" Column="26" TopLine="416"/>
       </Position1>
       <Position2>
         <Filename Value="..\RsRuler.pas"/>
-        <Caret Line="239" Column="45" TopLine="209"/>
+        <Caret Line="468" Column="21" TopLine="441"/>
       </Position2>
       <Position3>
         <Filename Value="..\RsRuler.pas"/>
-        <Caret Line="242" Column="5" TopLine="220"/>
+        <Caret Line="475" Column="75" TopLine="444"/>
       </Position3>
       <Position4>
         <Filename Value="..\RsRuler.pas"/>
-        <Caret Line="245" Column="1" TopLine="228"/>
+        <Caret Line="479" Column="22" TopLine="460"/>
       </Position4>
       <Position5>
         <Filename Value="..\RsRuler.pas"/>
-        <Caret Line="701" Column="30" TopLine="674"/>
+        <Caret Line="534" Column="26" TopLine="506"/>
       </Position5>
       <Position6>
         <Filename Value="..\RsRuler.pas"/>
-        <Caret Line="675" Column="55" TopLine="657"/>
+        <Caret Line="543" Column="26" TopLine="515"/>
       </Position6>
       <Position7>
         <Filename Value="..\RsRuler.pas"/>
-        <Caret Line="692" Column="63" TopLine="676"/>
+        <Caret Line="582" Column="26" TopLine="554"/>
       </Position7>
       <Position8>
-        <Filename Value="DemoForm.pas"/>
-        <Caret Line="73" Column="1" TopLine="42"/>
+        <Filename Value="..\RsRuler.pas"/>
+        <Caret Line="592" Column="13" TopLine="564"/>
       </Position8>
       <Position9>
-        <Filename Value="DemoForm.pas"/>
-        <Caret Line="41" Column="1" TopLine="25"/>
+        <Filename Value="..\RsRuler.pas"/>
+        <Caret Line="652" Column="26" TopLine="624"/>
       </Position9>
       <Position10>
-        <Filename Value="DemoForm.pas"/>
-        <Caret Line="361" Column="1" TopLine="333"/>
+        <Filename Value="..\RsRuler.pas"/>
+        <Caret Line="658" Column="21" TopLine="630"/>
       </Position10>
       <Position11>
-        <Filename Value="DemoForm.pas"/>
-        <Caret Line="371" Column="1" TopLine="354"/>
+        <Filename Value="..\RsRuler.pas"/>
+        <Caret Line="684" Column="52" TopLine="656"/>
       </Position11>
       <Position12>
         <Filename Value="..\RsRuler.pas"/>
-        <Caret Line="699" Column="20" TopLine="683"/>
+        <Caret Line="712" Column="26" TopLine="684"/>
       </Position12>
       <Position13>
         <Filename Value="..\RsRuler.pas"/>
-        <Caret Line="231" Column="11" TopLine="220"/>
+        <Caret Line="771" Column="9" TopLine="743"/>
       </Position13>
       <Position14>
-        <Filename Value="DemoForm.pas"/>
-        <Caret Line="506" Column="48" TopLine="531"/>
+        <Filename Value="..\RsRuler.pas"/>
+        <Caret Line="787" Column="14" TopLine="759"/>
       </Position14>
       <Position15>
-        <Filename Value="DemoForm.pas"/>
-        <Caret Line="515" Column="48" TopLine="515"/>
+        <Filename Value="..\RsRuler.pas"/>
+        <Caret Line="181" Column="31" TopLine="148"/>
       </Position15>
       <Position16>
-        <Filename Value="DemoForm.pas"/>
-        <Caret Line="180" Column="1" TopLine="164"/>
+        <Filename Value="..\RsRuler.pas"/>
+        <Caret Line="115" Column="48" TopLine="99"/>
       </Position16>
       <Position17>
-        <Filename Value="DemoForm.pas"/>
-        <Caret Line="169" Column="22" TopLine="162"/>
+        <Filename Value="..\RsRuler.pas"/>
+        <Caret Line="116" Column="16" TopLine="101"/>
       </Position17>
       <Position18>
-        <Filename Value="DemoForm.pas"/>
-        <Caret Line="180" Column="25" TopLine="163"/>
+        <Filename Value="..\RsRuler.pas"/>
+        <Caret Line="115" Column="39" TopLine="101"/>
       </Position18>
       <Position19>
-        <Filename Value="DemoForm.pas"/>
-        <Caret Line="166" Column="1" TopLine="161"/>
+        <Filename Value="..\RsRuler.pas"/>
+        <Caret Line="120" Column="19" TopLine="105"/>
       </Position19>
       <Position20>
-        <Filename Value="DemoForm.pas"/>
-        <Caret Line="165" Column="1" TopLine="160"/>
+        <Filename Value="..\RsRuler.pas"/>
+        <Caret Line="253" Column="1" TopLine="237"/>
       </Position20>
       <Position21>
         <Filename Value="..\RsRuler.pas"/>
-        <Caret Line="327" Column="3" TopLine="317"/>
+        <Caret Line="284" Column="1" TopLine="263"/>
       </Position21>
       <Position22>
         <Filename Value="..\RsRuler.pas"/>
-        <Caret Line="119" Column="20" TopLine="90"/>
+        <Caret Line="338" Column="1" TopLine="322"/>
       </Position22>
       <Position23>
         <Filename Value="..\RsRuler.pas"/>
-        <Caret Line="277" Column="12" TopLine="251"/>
+        <Caret Line="383" Column="9" TopLine="355"/>
       </Position23>
       <Position24>
         <Filename Value="..\RsRuler.pas"/>
-        <Caret Line="341" Column="19" TopLine="324"/>
+        <Caret Line="575" Column="34" TopLine="558"/>
       </Position24>
       <Position25>
         <Filename Value="..\RsRuler.pas"/>
-        <Caret Line="600" Column="16" TopLine="583"/>
+        <Caret Line="115" Column="40" TopLine="101"/>
       </Position25>
       <Position26>
         <Filename Value="..\RsRuler.pas"/>
-        <Caret Line="679" Column="28" TopLine="661"/>
+        <Caret Line="117" Column="15" TopLine="101"/>
       </Position26>
       <Position27>
         <Filename Value="..\RsRuler.pas"/>
-        <Caret Line="682" Column="27" TopLine="664"/>
+        <Caret Line="582" Column="39" TopLine="566"/>
       </Position27>
       <Position28>
         <Filename Value="..\RsRuler.pas"/>
-        <Caret Line="316" Column="1" TopLine="299"/>
+        <Caret Line="589" Column="44" TopLine="572"/>
       </Position28>
       <Position29>
         <Filename Value="..\RsRuler.pas"/>
-        <Caret Line="816" Column="1" TopLine="793"/>
+        <Caret Line="595" Column="43" TopLine="578"/>
       </Position29>
       <Position30>
         <Filename Value="..\RsRuler.pas"/>
-        <Caret Line="817" Column="1" TopLine="793"/>
+        <Caret Line="692" Column="22" TopLine="675"/>
       </Position30>
     </JumpHistory>
   </ProjectSession>

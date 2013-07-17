@@ -73,14 +73,14 @@ uses
   LCLIntf, LCLType, LMessages, SysUtils, Messages, Classes, Graphics, Controls, Forms, ExtCtrls;
 
 const
-  Kilo: String = 'km';
-  Meter: String = 'm';
-  Centi: String = 'cm';
-  Milli: String = 'mm';
-  Inch: String = 'in';
-  Pixel: String = 'px';
-  None: String = '';
-  cVer: String = 'Version 4.0 (c) Roos Software 2003';
+  Kilo  : String = 'km';
+  Meter : String = 'm';
+  Centi : String = 'cm';
+  Milli : String = 'mm';
+  Inch  : String = 'in';
+  Pixel : String = 'px';
+  None  : String = '';
+  cVer  : String = 'Version 4.0 (c) Roos Software 2003';
 
 type
   TRulerDir = (rdTop, rdLeft, rdRight, rdBottom);
@@ -91,6 +91,9 @@ type
 
   // base class, defines common properties and behaviour of its
   // descendants TRsRuler and TRsRulerCorner
+
+  { TRsBaseRuler }
+
   TRsBaseRuler = class(TGraphicControl)
   private
     fFlat: Boolean;
@@ -104,16 +107,22 @@ type
   protected
     LeftSideLF, RightSideLF, NormLF: TLogFont;
     //OldFont, NormFont, LeftSideFont, RightSideFont: HFont;
-    OldFont, NormFont, LeftSideFont, RightSideFont: TFont;
+    //OldFont, NormFont, LeftSideFont, RightSideFont: TFont;
+    fOldFont : TFont;
     FirstTime: Boolean;
     procedure Paint; override;
     procedure SetUnit(const Value: TRulerUnit); virtual;
     procedure FontChange(Sender: TObject);
+    procedure SetLeftSideFontData(const aFont:TFont);
+    procedure SetRightSideFontData(const aFont:TFont);
+    procedure SetNormalFontData(const aFont:TFont);
     procedure ChangeFonts;
-    procedure DeleteFonts;
+    procedure BackupFont(const aFont:TFont);
+    procedure RestoreFont(const aFont:TFont);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+
   published
     property Units: TRulerUnit read fUnits write SetUnit;
     property Flat: Boolean read fFlat write SetFlat;
@@ -217,15 +226,15 @@ type
     property OnResize;
   end;
 
-procedure Register;
+//procedure Register;
 
 implementation
 
 
-procedure Register;
-begin
-  RegisterComponents('Xtra', [TRsRuler, TRsRulerCorner]);
-end;
+//procedure Register;
+//begin
+//  RegisterComponents('Xtra', [TRsRuler, TRsRulerCorner]);
+//end;
 
 procedure InvertRect(aDC:HDC; aRect:TRect);
 begin
@@ -246,79 +255,57 @@ begin
   fVersionInfo := cVer;
   FirstTime := True;
 
-  OldFont       := TFont.Create;
-  NormFont      := TFont.Create;
-  LeftSideFont  := TFont.Create;
-  RightSideFont := TFont.Create;
-
-  //OldFont := 0;
-  //NormFont := 0;
-  //LeftSideFont := 0;
-  //RightSideFont := 0;
+  fOldFont       := TFont.Create;
+  //NormFont      := TFont.Create;
+  //LeftSideFont  := TFont.Create;
+  //RightSideFont := TFont.Create;
   Font.OnChange := FontChange;
 end;
 
 procedure TRsBaseRuler.ChangeFonts;
 begin
-  DeleteFonts;
-  LeftSideFont := TFont.Create;
-  with LeftSideFont do
-  begin
-    Orientation := 900;
-    Name   := Font.Name;
-    Height := -Font.Height;
-    Style  := Font.Style;
-    Color  := Font.Color;
-  end;
-  RightSideFont := Font.Create;
-  with RightSideFont do
-  begin
-    Orientation := 2700;
-    Name   := Font.Name;
-    Height := -Font.Height;
-    Style  := Font.Style;
-    Color  := Font.Color;
-    //FillChar(RightSideLF, SizeOf(RightSideLF), 0);
-    //lfEscapement := 2700;
-    //lfOrientation := 2700;
-    //StrPCopy(lfFaceName, Font.Name);
-    //lfHeight := -Font.Height;
-    //lfWeight := FW_BOLD * Integer(fsBold in Font.Style);
-    //lfItalic := Integer(fsItalic in Font.Style);
-  end;
-  NormFont := TFont.Create;
-  with NormFont do
-  begin
-    //Orientation := 900;
-    Name   := Font.Name;
-    Height := -Font.Height;
-    Style  := Font.Style;
-    Color  := Font.Color;
-    //FillChar(NormLF, SizeOf(NormLF), 0);
-    //StrPCopy(lfFaceName, Font.Name);
-    //lfHeight := -Font.Height;
-    //lfWeight := FW_BOLD * Integer(fsBold in Font.Style);
-    //lfItalic := Integer(fsItalic in Font.Style);
-  end;
+  //with LeftSideFont do
+  //begin
+  //  Orientation := 900;
+  //  Name   := Font.Name;
+  //  Height := -Font.Height;
+  //  Style  := Font.Style;
+  //  Color  := Font.Color;
+  //end;
+  //with RightSideFont do
+  //begin
+  //  Orientation := 2700;
+  //  Name   := Font.Name;
+  //  Height := -Font.Height;
+  //  Style  := Font.Style;
+  //  Color  := Font.Color;
+  //end;
+  //with NormFont do
+  //begin
+  //  Name   := Font.Name;
+  //  Height := -Font.Height;
+  //  Style  := Font.Style;
+  //  Color  := Font.Color;
+  //end;
   Canvas.Font.Color := Font.Color;
-  //LeftSideFont := CreateFontIndirect(LeftSideLF);
-  //RightSideFont := CreateFontIndirect(RightSideLF);
-  //NormFont := CreateFontIndirect(NormLF);
 end;
 
-procedure TRsBaseRuler.DeleteFonts;
+procedure TRsBaseRuler.BackupFont(const aFont : TFont);
 begin
-  //if NormFont <> 0 then DeleteObject(NormFont);
-  //if LeftSideFont <> 0 then DeleteObject(LeftSideFont);
-  //if RightSideFont <> 0 then DeleteObject(RightSideFont);
-  //if Assigned(NormFont) then FreeAndNil(NormFont);
-  //if Assigned(LeftSideFont) then FreeAndNil(LeftSideFont);
-  //if Assigned(RightSideFont) then FreeAndNil(RightSideFont);
+  fOldFont.Assign(aFont);
+end;
+
+procedure TRsBaseRuler.RestoreFont(const aFont : TFont);
+begin
+  aFont.Assign(aFont);
 end;
 
 destructor TRsBaseRuler.Destroy;
 begin
-  DeleteFonts;
+  //NormFont.Free;
+  //LeftSideFont.Free;
+  //RightSideFont.Free;
+  fOldFont.Free;
   inherited;
 end;
 
@@ -326,6 +313,32 @@ procedure TRsBaseRuler.FontChange(Sender: TObject);
 begin
   ChangeFonts;
   Invalidate;
+end;
+
+procedure TRsBaseRuler.SetLeftSideFontData(const aFont : TFont);
+begin
+  aFont.Orientation := 900;
+  aFont.Name   := Font.Name;
+  aFont.Height := -Font.Height;
+  aFont.Style  := Font.Style;
+  aFont.Color  := Font.Color;
+end;
+
+procedure TRsBaseRuler.SetRightSideFontData(const aFont : TFont);
+begin
+  aFont.Orientation := 2700;
+  aFont.Name   := Font.Name;
+  aFont.Height := -Font.Height;
+  aFont.Style  := Font.Style;
+  aFont.Color  := Font.Color;
+end;
+
+procedure TRsBaseRuler.SetNormalFontData(const aFont : TFont);
+begin
+  aFont.Name   := Font.Name;
+  aFont.Height := -Font.Height;
+  aFont.Style  := Font.Style;
+  aFont.Color  := Font.Color;
 end;
 
 procedure TRsBaseRuler.Paint;
@@ -338,7 +351,7 @@ begin
   begin
     FirstTime := False;
     ChangeFonts;
-    OldFont.Assign(Canvas.Font);//.Handle;
+    //OldFont.Assign(Canvas.Font);//.Handle;
   end;
 end;
 
@@ -420,8 +433,10 @@ procedure TRsRuler.PaintScaleTics;
 var
   Pos: Double;
   Start, N, Last, LongTick, Adv: Integer;
+  W, H : Integer;
 begin
-  if (fDirection = rdTop) or (fDirection = rdBottom) then Last := Width else Last := Height;
+  W := Width; H := Height;
+  if (fDirection = rdTop) or (fDirection = rdBottom) then Last := W else Last := H;
   Start := 0;
   Adv := 1;
   if fScaleDir = rsdReverse then
@@ -439,8 +454,8 @@ begin
     begin
       if fDirection = rdTop then
       begin
-        MoveTo(Start + Adv * Trunc(Pos), Height - 1);
-        LineTo(Start + Adv * Trunc(Pos), Height - LongTick);
+        MoveTo(Start + Adv * Trunc(Pos), H - 1);
+        LineTo(Start + Adv * Trunc(Pos), H - LongTick);
       end;
       if fDirection = rdBottom then
       begin
@@ -451,8 +466,8 @@ begin
     begin
       if fDirection = rdLeft then
       begin
-        MoveTo(Width - 1, Start + Adv * Trunc(Pos));
-        LineTo(Width - LongTick, Start + Adv * Trunc(Pos));
+        MoveTo(W - 1, Start + Adv * Trunc(Pos));
+        LineTo(W - LongTick, Start + Adv * Trunc(Pos));
       end;
       if fDirection = rdRight then
       begin
@@ -470,8 +485,10 @@ var
   Pos, Number, ScaleN: Double;
   Start, N, Last, Wi, He, Center, Adv: Integer;
   S: String;
+  W, H : integer;
 begin
-  if (fDirection = rdTop) or (fDirection = rdBottom) then Last := Width else Last := Height;
+  W := Width; H := Height;
+  if (fDirection = rdTop) or (fDirection = rdBottom) then Last := W else Last := H;
   Start := 0;
   Adv := 1;
   if fScaleDir = rsdReverse then
@@ -501,11 +518,11 @@ begin
       if fDirection = rdTop then
       begin
         // draw number..
-        if (N <> 0) and (N mod 10 = 0) then TextOut(PenPos.X - Wi div 2, Height - He - 8, S)
+        if (N <> 0) and (N mod 10 = 0) then TextOut(PenPos.X - Wi div 2, H - He - 8, S)
         else if (N <> 0) and (N mod 5 = 0) then
         begin
           // or just a notch
-          Center := Height + (-(He + 6) - 8) div 2;
+          Center := H + (-(He + 6) - 8) div 2;
           MoveTo(Start + Adv * Trunc(Pos), Center - 1);
           LineTo(Start + Adv * Trunc(Pos), Center + 2);
         end;
@@ -528,11 +545,11 @@ begin
       if fDirection = rdLeft then
       begin
         // draw number..
-        if (N <> 0) and (N mod 10 = 0) then TextOut(Width - He - 7, PenPos.Y + Wi div 2, S)
+        if (N <> 0) and (N mod 10 = 0) then TextOut(W - He - 7, PenPos.Y + Wi div 2, S)
         else if (N <> 0) and (N mod 5 = 0) then
         begin
           // or just a notch
-          Center := Width + (-(He + 6) - 8) div 2;
+          Center := W + (-(He + 6) - 8) div 2;
           MoveTo(Center - 1, Start + Adv * Trunc(Pos));
           LineTo(Center + 2, Start + Adv * Trunc(Pos));
         end;
@@ -558,60 +575,61 @@ procedure TRsRuler.Paint;
 var
   Rect: TRect;
   He, d: Integer;
+  W,H:Integer;
 begin
+  W := Width; H := Height;
   inherited;
   fHairLinePos := -1;
   Rect := ClientRect;
   if Not Flat then DrawEdge(Canvas.Handle, Rect, EDGE_RAISED, BF_RECT);
   d := 2 - Integer(Flat);
-  //SelectObject(Canvas.Handle, NormFont);
-  OldFont.Assign(Canvas.Font);
-  Canvas.Font := NormFont;
-  He := Canvas.TextHeight('0') + 6;
-  if (fDirection = rdTop) or (fDirection = rdBottom) then
-  begin
-    if fDirection = rdTop then SetRect(Rect, d, Height - He - 1, Width - d, Height - 8);
-    if (fDirection = rdBottom) then SetRect(Rect, d, 8, Width - d, He + 1);
-    //SelectObject(Canvas.Handle, NormFont);
-    Canvas.Font := NormFont;
-  end else
-  begin
-    if fDirection = rdLeft then
-    begin
-      SetRect(Rect, Width - He, d, Width - 8, Height - d);
-      //SelectObject(Canvas.Handle, LeftSideFont);
-      Canvas.Font := LeftSideFont;
+  BackupFont(Canvas.Font);
+  try
+    SetNormalFontData(Canvas.Font);// := NormFont;
+    He := Canvas.TextHeight('0') + 6;
+    if (fDirection = rdTop) or (fDirection = rdBottom) then begin
+      if fDirection = rdTop then SetRect(Rect, d, H - He - 1, W - d, H - 8);
+      if (fDirection = rdBottom) then SetRect(Rect, d, 8, W - d, He + 1);
+      SetNormalFontData(Canvas.Font)// := NormFont;
+    end else begin
+      if fDirection = rdLeft then
+      begin
+        SetRect(Rect, W - He, d, W - 8, H - d);
+        SetLeftSideFontData(Canvas.Font);// := LeftSideFont;
+      end;
+      if fDirection = rdRight then
+      begin
+        SetRect(Rect, He, d, 8, H - d);
+        SetRightSideFontData(Canvas.Font);// := RightSideFont;
+      end;
     end;
-    if fDirection = rdRight then
-    begin
-      SetRect(Rect, He, d, 8, Height - d);
-      //SelectObject(Canvas.Handle, RightSideFont);
-      Canvas.Font := RightSideFont;
-    end;
+    Canvas.Brush.Color := fScaleColor;
+    Canvas.FillRect(Rect);
+    CalcAdvance;
+    SetBKMode(Canvas.Handle, TRANSPARENT);
+    PaintScaleTics;
+    PaintScaleLabels;
+    SetBKMode(Canvas.Handle, OPAQUE);
+  finally
+    self.RestoreFont(Canvas.Font);
   end;
-  Canvas.Brush.Color := fScaleColor;
-  Canvas.FillRect(Rect);
-  CalcAdvance;
-  SetBKMode(Canvas.Handle, TRANSPARENT);
-  PaintScaleTics;
-  PaintScaleLabels;
-  SetBKMode(Canvas.Handle, OPAQUE);
-  //SelectObject(Canvas.Handle, OldFont);
-  Canvas.Font := OldFont;
 end;
 
 procedure TRsRuler.SetDirection(const Value: TRulerDir);
 var
   Dim: TPoint;
   OldDir: TRulerDir;
+  W,H : Integer;
 begin
+  W := Width; H := Height;
   OldDir := fDirection;
   if Value <> fDirection then
   begin
-    if ((OldDir = rdTop) or (OldDir = rdBottom)) and ((Value = rdLeft) or (Value = rdRight))
+    if ((csDesigning in ComponentState) and (not(csLoading in ComponentState))) and
+    ((OldDir = rdTop) or (OldDir = rdBottom)) and ((Value = rdLeft) or (Value = rdRight))
     or ((OldDir = rdLeft) or (OldDir = rdRight)) and ((Value = rdTop) or (Value = rdBottom)) then
     begin
-      Dim := Point(Width, Height);
+      Dim := Point(W, H);
       Width := Dim.Y;
       Height := Dim.X;
     end;
@@ -671,22 +689,24 @@ end;
 procedure TRsRuler.DrawHairLine;
 var
   He: Integer;
+  W,H : Integer;
 begin
+  W := Width; H := Height;
   if fHairLine then if fHairLinePos <> -1 then with Canvas do
   begin
     Pen.Mode := pmNotXOr;
     //SelectObject(Canvas.Handle, NormFont);
-    Canvas.Font := NormFont;
+    SetNormalFontData(Canvas.Font);// := NormFont;
     He := TextHeight('0') + 6;
     //SelectObject(Canvas.Handle, OldFont);
-    Canvas.Font := OldFont;
+    ///Canvas.Font := OldFont;
     if fDirection = rdTop then
     begin
       if fHairLineStyle = hlsLine
-      then InvertRect(Canvas.Handle, Rect(fHairLinePos - 1, Height - He - 1, fHairLinePos, Height - 8))
+      then InvertRect(Canvas.Handle, Rect(fHairLinePos - 1, H - He - 1, fHairLinePos, H - 8))
       else
-      if fScaleDir = rsdNormal then InvertRect(Canvas.Handle, Rect(1, Height - He - 1, fHairLinePos, Height - 8))
-      else InvertRect(Canvas.Handle, Rect(Width, Height - He - 1, fHairLinePos, Height - 8));
+      if fScaleDir = rsdNormal then InvertRect(Canvas.Handle, Rect(1, H - He - 1, fHairLinePos, H - 8))
+      else InvertRect(Canvas.Handle, Rect(W, H - He - 1, fHairLinePos, H - 8));
     end;
     if fDirection = rdBottom then
     begin
@@ -695,15 +715,15 @@ begin
       else
       if fScaleDir = rsdNormal
       then InvertRect(Canvas.Handle, Rect(1, 8, fHairLinePos, He + 1))
-      else InvertRect(Canvas.Handle, Rect(Width, 8, fHairLinePos, He + 1));
+      else InvertRect(Canvas.Handle, Rect(W, 8, fHairLinePos, He + 1));
     end;
     if fDirection = rdLeft then
     begin
       if fHairLineStyle = hlsLine
-      then InvertRect(Canvas.Handle, Rect(Width - He, fHairLinePos - 1, Width - 8, fHairLinePos))
+      then InvertRect(Canvas.Handle, Rect(W - He, fHairLinePos - 1, W - 8, fHairLinePos))
       else
-      if fScaleDir = rsdNormal then InvertRect(Canvas.Handle, Rect(Width - He, 1, Width - 8, fHairLinePos))
-      else InvertRect(Canvas.Handle, Rect(Width - He, Height, Width - 8, fHairLinePos));
+      if fScaleDir = rsdNormal then InvertRect(Canvas.Handle, Rect(W - He, 1, W - 8, fHairLinePos))
+      else InvertRect(Canvas.Handle, Rect(W - He, H, W - 8, fHairLinePos));
     end;
     if fDirection = rdRight then
     begin
@@ -711,7 +731,7 @@ begin
       then InvertRect(Canvas.Handle, Rect(8, fHairLinePos - 1, He, fHairLinePos))
       else
       if fScaleDir = rsdNormal then InvertRect(Canvas.Handle, Rect(8, 1, He, fHairLinePos))
-      else InvertRect(Canvas.Handle, Rect(8, Height, He, fHairLinePos));
+      else InvertRect(Canvas.Handle, Rect(8, H, He, fHairLinePos));
     end;
     Pen.Mode := pmCopy;
   end;
@@ -729,9 +749,11 @@ end;
 function TRsRuler.Pos2Unit(APos: Integer): Double;
 var
   ThePos, EndPos: Integer;
+  W,H : Integer;
 begin
+  W := Width; H := Height;
   ThePos := APos;
-  if (fDirection = rdTop) or (fDirection = rdBottom) then EndPos := Width else EndPos := Height;
+  if (fDirection = rdTop) or (fDirection = rdBottom) then EndPos := W else EndPos := H;
   if fScaleDir = rsdReverse then ThePos := EndPos - APos;
   Result := fOffset;
   if fUnits = ruPixel then Result := Trunc(Result) + Trunc(ThePos / Scale * 100); // zero-based counting of pixels
@@ -800,49 +822,50 @@ var
 begin
   inherited;
   R := ClientRect;
-  OldFont.Assign(Canvas.Font);
-  Canvas.Font := NormFont;
-  //SelectObject(Canvas.Handle, NormFont);
-  W := Width;
-  H := Height;
-  with Canvas do
-  begin
-    if Not Flat then DrawEdge(Handle, R, EDGE_RAISED, BF_RECT);
-    Brush.Color := fScaleColor;
-    Brush.Style := bsSolid;
-    He := TextHeight('0') + 6;
-    //SetBKMode(Handle, TRANSPARENT);
-    Canvas.Font.Color := Font.Color;
-    Wi := TextWidth(fUStr);
-    d := 2 - Integer(Flat);
-    if fPosition = cpLeftTop then
+  BackupFont(Canvas.Font);
+  try
+    SetNormalFontData(Canvas.Font);// := NormFont;
+
+    W := Width;
+    H := Height;
+    with Canvas do
     begin
-      Canvas.Rectangle(W - He, H - He - 1, W - d, H - 8);
-      FillRect(W - He, H - He, W - 8, H - d);
-      TextOut(W - He + 1 + (He - 2 - Wi) div 2, H - He - 1, fUStr);
+      if Not Flat then DrawEdge(Handle, R, EDGE_RAISED, BF_RECT);
+      Brush.Color := fScaleColor;
+      Brush.Style := bsSolid;
+      He := TextHeight('0') + 6;
+      //SetBKMode(Handle, TRANSPARENT);
+      Canvas.Font.Color := Font.Color;
+      Wi := TextWidth(fUStr);
+      d := 2 - Integer(Flat);
+      if fPosition = cpLeftTop then
+      begin
+        Canvas.Rectangle(W - He, H - He - 1, W - d, H - 8);
+        FillRect(W - He, H - He, W - 8, H - d);
+        TextOut(W - He + 1 + (He - 2 - Wi) div 2, H - He - 1, fUStr);
+      end;
+      if fPosition = cpRightTop then
+      begin
+        FillRect(Rect(d, H - He - 1, He, H - 8));
+        FillRect(Rect(8, H - He, He, H - d));
+        TextOut(2 + (He - Wi) div 2, H - He, fUStr);
+      end;
+      if fPosition = cpLeftBottom then
+      begin
+        FillRect(Rect(W - He, 8, W - d, He + 1));
+        FillRect(Rect(W - He, d, W - 8, He));
+        TextOut(W - He + 1 + (He - 2 - Wi) div 2, 8, fUStr);
+      end;
+      if fPosition = cpRightBottom then
+      begin
+        FillRect(Rect(d, 8, He, He + 1));
+        FillRect(Rect(8, d, He, He));
+        TextOut(2 + (He - Wi) div 2, 8, fUStr);
+      end;
     end;
-    if fPosition = cpRightTop then
-    begin
-      FillRect(Rect(d, H - He - 1, He, H - 8));
-      FillRect(Rect(8, H - He, He, H - d));
-      TextOut(2 + (He - Wi) div 2, H - He, fUStr);
-    end;
-    if fPosition = cpLeftBottom then
-    begin
-      FillRect(Rect(W - He, 8, W - d, He + 1));
-      FillRect(Rect(W - He, d, W - 8, He));
-      TextOut(W - He + 1 + (He - 2 - Wi) div 2, 8, fUStr);
-    end;
-    if fPosition = cpRightBottom then
-    begin
-      FillRect(Rect(d, 8, He, He + 1));
-      FillRect(Rect(8, d, He, He));
-      TextOut(2 + (He - Wi) div 2, 8, fUStr);
-    end;
+  finally
+    RestoreFont(Canvas.Font);
   end;
-  //SetBKMode(Canvas.Handle, OPAQUE);
-  //SelectObject(Canvas.Handle, OldFont);
-  Canvas.Font := OldFont;
 end;
 
 
