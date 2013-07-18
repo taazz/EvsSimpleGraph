@@ -125,11 +125,6 @@ interface
 {$IFDEF DBGFRM}
 {$ENDIF}
 
-{$DEFINE EVS_CANVAS} { enable the new canvas that traslates automaticaly from
-                       logical coordinates to screen coordinates. This should help
-                       clean up the mess I made when I made the nodes and links
-                       aware of the owners state.}
-
 {$IFDEF WIN}
   {.$DEFINE METAFILE_SUPPORT}
   {$DEFINE WIN_TRANSFORM}  //required for windows it speeds things up considerably.
@@ -140,7 +135,6 @@ uses
   LCLIntf, LCLType, LCLProc, GraphType, Graphics
   {$IFDEF WIN        } ,Windows   {$ENDIF}
   {$IFDEF DBGFRM     } ,UFrmDebug {$ENDIF}
- // {$IFDEF METAFILE_SUPPORT},UMetafile {$ENDIF}
   ;
 
 {%REGION Const}
@@ -390,16 +384,96 @@ type
     property Name stored False;
   end;
 
+  { TEvsCustomCanvas }
+
+  TEvsCustomCanvas = class(TCanvas)
+  private
+    FOffsetX : Double;
+    FOffsetY : Double;
+    FScaleX  : Double;
+    FScaleY  : Double;
+    procedure SetOffsetX(aValue : Double);
+    procedure SetOffsetY(aValue : Double);
+    procedure SetScaleX (aValue : Double);
+    procedure SetScaleY (aValue : Double);
+  protected
+    procedure DoArc(ALeft, ATop, ARight, ABottom, Angle16Deg, Angle16DegLength: Integer);                               virtual;
+    procedure DoArc(ALeft, ATop, ARight, ABottom, SX, SY, EX, EY: Integer);                                             virtual;
+    procedure DoBrushCopy (ADestRect: TRect; ABitmap: Graphics.TBitmap; ASourceRect: TRect; ATransparentColor: TColor); virtual;
+    procedure DoChord     (X1, Y1, X2, Y2, Angle16Deg, Angle16DegLength: Integer);                                      virtual;overload;
+    procedure DoChord     (X1, Y1, X2, Y2, SX, SY, EX, EY: Integer);                                                    virtual;overload;
+    procedure DoCopyRect  (const Dest: TRect; SrcCanvas: TCanvas; const Source: TRect);                                 virtual;
+    procedure DoDraw      (X,Y: Integer; SrcGraphic: TGraphic);                                                         virtual;
+    procedure DoDrawFocusRect(const ARect: TRect);                                                                      virtual;
+    procedure DoStretchDraw  (const DestRect: TRect; SrcGraphic: TGraphic);                                             virtual;
+    procedure DoEllipse      (x1, y1, x2, y2: Integer);                                                                 virtual;
+    procedure DoFillRect     (const ARect: TRect);                                                                      virtual;
+    procedure DoFloodFill    (X, Y: Integer; FillColor: TColor; FillStyle: TFillStyle);                                 virtual;
+    procedure DoFrame3d      (var ARect: TRect; const FrameWidth: integer; const Style: TGraphicsBevelCut);             virtual;
+    procedure DoFrame        (const ARect: TRect);                                                                      virtual;
+    procedure DoFrameRect    (const ARect: TRect);                                                                      virtual;
+    procedure DoGradientFill (ARect: TRect; AStart, AStop: TColor; ADirection: TGradientDirection);                     virtual;
+    procedure DoRadialPie    (X1, Y1, X2, Y2, StartAngle16Deg, Angle16DegLength: Integer);                              override;
+    procedure DoPie          (EllipseX1,EllipseY1,EllipseX2,EllipseY2,StartX,StartY,EndX,EndY: Integer);                virtual;
+    procedure DoRectangle    (X1,Y1,X2,Y2: Integer);                                                                    virtual;
+    procedure DoRoundRect    (X1, Y1, X2, Y2: Integer; RX,RY: Integer);                                                 virtual;
+    procedure DoTextOut      (X,Y: Integer; const Text: String);                                                        virtual;
+    procedure DoTextRect     (ARect: TRect; X, Y: integer; const Text: string;const Style: TTextStyle);                 virtual;
+    procedure DoPolyBezier(Points: PPoint; NumPts: Integer; Filled : boolean = False;Continuous: boolean = False);      override;
+    procedure DoPolygon   (Points: PPoint; NumPts: Integer; Winding: boolean = False);                                  virtual;
+    procedure DoPolyline  (Points: PPoint; NumPts: Integer);                                                            virtual;
+
+    procedure TranslateCoordinates(var InCoords : Array of TPOINT);           virtual; overload;
+    procedure TranslateCoordinates(var InCoords : PPOINT; NumPoints:Integer); virtual; overload;
+  public
+    procedure Arc          (ALeft, ATop, ARight, ABottom, Angle16Deg, Angle16DegLength: Integer);                        override;
+    procedure Arc          (ALeft, ATop, ARight, ABottom, SX, SY, EX, EY: Integer);                                      override;
+    procedure BrushCopy    (ADestRect: TRect; ABitmap: Graphics.TBitmap; ASourceRect: TRect; ATransparentColor: TColor); override;
+    procedure Chord        (x1, y1, x2, y2, Angle16Deg, Angle16DegLength: Integer);                                      override;
+    procedure Chord        (x1, y1, x2, y2, SX, SY, EX, EY: Integer);                                                    override;
+    procedure CopyRect     (const Dest: TRect; SrcCanvas: TCanvas; const Source: TRect);                                 override;
+    procedure Draw         (X,Y: Integer; SrcGraphic: TGraphic);                                                         override;
+    procedure DrawFocusRect(const ARect: TRect);                                                                         override;
+    procedure StretchDraw  (const DestRect: TRect; SrcGraphic: TGraphic);                                                override;
+    procedure Ellipse      (x1, y1, x2, y2: Integer);                                                                    override;
+    procedure FillRect     (const ARect: TRect);                                                                         override;
+    procedure FloodFill    (X, Y: Integer; FillColor: TColor; FillStyle: TFillStyle);                                    override;
+    procedure Frame3d      (var ARect: TRect; const FrameWidth: integer; const Style: TGraphicsBevelCut);                override;
+    procedure Frame        (const ARect: TRect);                                                                         override;
+    procedure FrameRect    (const ARect: TRect);                                                                         override;
+    procedure GradientFill (ARect: TRect; AStart, AStop: TColor; ADirection: TGradientDirection);
+    procedure RadialPie    (x1, y1, x2, y2, StartAngle16Deg, Angle16DegLength: Integer);                                 override;
+    procedure Pie          (EllipseX1,EllipseY1,EllipseX2,EllipseY2,StartX,StartY,EndX,EndY: Integer);                   override;
+    procedure Rectangle    (X1,Y1,X2,Y2: Integer);                                                                       override;
+    procedure RoundRect    (X1, Y1, X2, Y2: Integer; RX,RY: Integer);                                                    override;
+    procedure TextOut      (X,Y: Integer; const Text: String);                                                           override;
+    procedure TextRect     (ARect: TRect; X, Y: integer; const Text: string;const Style: TTextStyle);                    override;
+
+    procedure PolyBezier(Points: PPoint; NumPts: Integer; Filled : boolean = False;Continuous: boolean = False);         override;
+    procedure Polygon   (Points: PPoint; NumPts: Integer; Winding: boolean = False);                                     override;
+    procedure Polyline  (Points: PPoint; NumPts: Integer);                                                               override;
+  public
+    constructor Create;
+    procedure SetTransformation(XScale, YScale, DX, DY : Double); virtual;
+    procedure ClearTransformation; virtual;
+  public
+    property OffsetX : Double  read FOffsetX write SetOffsetX;
+    property OffsetY : Double  read FOffsetY write SetOffsetY;
+    property ScaleX  : Double  read FScaleX  write SetScaleX;
+    property ScaleY  : Double  read FScaleY  write SetScaleY;
+  end;
+
+
   { TEvsGraphCanvas }
 
   TEvsGraphCanvas = class(TControlCanvas) //add extra functionality  to existing canvas and use different renderers as well eg(GDI+)
   private
-    FOffsetX : Integer;
-    FOffsetY : Integer;
+    FOffsetX : Double;
+    FOffsetY : Double;
     FScaleX  : Double;
     FScaleY  : Double;
-    procedure SetOffsetX(aValue : Integer);
-    procedure SetOffsetY(aValue : Integer);
+    procedure SetOffsetX(aValue : Double);
+    procedure SetOffsetY(aValue : Double);
     procedure SetScaleX (aValue : Double);
     procedure SetScaleY (aValue : Double);
   protected
@@ -434,8 +508,8 @@ type
     procedure Polygon   (Points: PPoint; NumPts: Integer; Winding: boolean = False);                                     override;
     procedure Polyline  (Points: PPoint; NumPts: Integer);                                                               override;
   public
-    property OffsetX : Integer read FOffsetX write SetOffsetX;
-    property OffsetY : Integer read FOffsetY write SetOffsetY;
+    property OffsetX : Double  read FOffsetX write SetOffsetX;
+    property OffsetY : Double  read FOffsetY write SetOffsetY;
     property ScaleX  : Double  read FScaleX  write SetScaleX;
     property ScaleY  : Double  read FScaleY  write SetScaleY;
   end;
@@ -1249,7 +1323,7 @@ type
     function DrawTextBiDiModeFlags(aFlags:longint):LongInt;
     procedure SuspendQueryEvents;inline;                                        //JKOZ : SO WE CAN CALL THEM FROM OTHER UNITS
     Procedure ResumeQueryEvents;                                                //JKOZ : SO WE CAN CALL THEM FROM OTHER UNITS
-    procedure AdjustDC(aDC: HDC; aOrg: PPoint = nil); virtual;                    //WORKS - HEAVY
+    //procedure AdjustDC(aDC: HDC; aOrg: PPoint = nil); virtual;                    //WORKS - HEAVY
     procedure CalcAutoRange; virtual;                                           //CLEAN
     function CreateUniqueID(aGraphObject: TEvsGraphObject): DWORD; virtual;         //CLEAN
 
@@ -1861,65 +1935,65 @@ begin
   end;
 end;
 
-procedure CopyParentImage(Control: TControl; DC: HDC; X, Y: integer);
-var
-  I, SaveIndex: integer;
-  SelfR, CtlR: TRect;
-  NextControl: TControl;
-begin
-  if (Control = nil) or (Control.Parent = nil) then
-    Exit;
-  with Control.Parent do
-    ControlState := ControlState + [csPaintCopy];
-  try
-    SelfR := Control.BoundsRect;
-    Inc(X, SelfR.Left);
-    Inc(Y, SelfR.Top);
-    SaveIndex := SaveDC(DC);
-    try
-      SetViewportOrgEx(DC, -X, -Y, nil);
-      with TParentControl(Control.Parent) do
-      begin
-        with ClientRect do
-          IntersectClipRect(DC, Left, Top, Right, Bottom);
-        TParentControl(Control.Parent).Perform(LM_ERASEBKGND, DC, 0);
-        PaintWindow(DC);
-      end;
-    finally
-      RestoreDC(DC, SaveIndex);
-    end;
-    for I := 0 to Control.Parent.ControlCount - 1 do
-    begin
-      NextControl := Control.Parent.Controls[I];
-      if NextControl = Control then
-        Break
-      else if (NextControl <> nil) and (NextControl is TGraphicControl) then
-      begin
-        with TGraphicControl(NextControl) do
-        begin
-          CtlR := BoundsRect;
-          if Visible and OverlappedRect(SelfR, CtlR) then
-          begin
-            ControlState := ControlState + [csPaintCopy];
-            SaveIndex := SaveDC(DC);
-            try
-              LCLIntf.SetViewPortOrgEx(DC, Left - X, Top - Y, nil);
-              IntersectClipRect(DC, 0, 0, Width, Height);
-              Perform(LM_ERASEBKGND, DC, 0);
-              Perform(LM_PAINT, DC, 0);
-            finally
-              RestoreDC(DC, SaveIndex);
-              ControlState := ControlState - [csPaintCopy];
-            end;
-          end;
-        end;
-      end;
-    end;
-  finally
-    with Control.Parent do
-      ControlState := ControlState - [csPaintCopy];
-  end;
-end;
+//procedure CopyParentImage(Control: TControl; DC: HDC; X, Y: integer);
+//var
+//  I, SaveIndex: integer;
+//  SelfR, CtlR: TRect;
+//  NextControl: TControl;
+//begin
+//  if (Control = nil) or (Control.Parent = nil) then
+//    Exit;
+//  with Control.Parent do
+//    ControlState := ControlState + [csPaintCopy];
+//  try
+//    SelfR := Control.BoundsRect;
+//    Inc(X, SelfR.Left);
+//    Inc(Y, SelfR.Top);
+//    SaveIndex := SaveDC(DC);
+//    try
+//      SetViewportOrgEx(DC, -X, -Y, nil);
+//      with TParentControl(Control.Parent) do
+//      begin
+//        with ClientRect do
+//          IntersectClipRect(DC, Left, Top, Right, Bottom);
+//        TParentControl(Control.Parent).Perform(LM_ERASEBKGND, DC, 0);
+//        PaintWindow(DC);
+//      end;
+//    finally
+//      RestoreDC(DC, SaveIndex);
+//    end;
+//    for I := 0 to Control.Parent.ControlCount - 1 do
+//    begin
+//      NextControl := Control.Parent.Controls[I];
+//      if NextControl = Control then
+//        Break
+//      else if (NextControl <> nil) and (NextControl is TGraphicControl) then
+//      begin
+//        with TGraphicControl(NextControl) do
+//        begin
+//          CtlR := BoundsRect;
+//          if Visible and OverlappedRect(SelfR, CtlR) then
+//          begin
+//            ControlState := ControlState + [csPaintCopy];
+//            SaveIndex := SaveDC(DC);
+//            try
+//              LCLIntf.SetViewPortOrgEx(DC, Left - X, Top - Y, nil);
+//              IntersectClipRect(DC, 0, 0, Width, Height);
+//              Perform(LM_ERASEBKGND, DC, 0);
+//              Perform(LM_PAINT, DC, 0);
+//            finally
+//              RestoreDC(DC, SaveIndex);
+//              ControlState := ControlState - [csPaintCopy];
+//            end;
+//          end;
+//        end;
+//      end;
+//    end;
+//  finally
+//    with Control.Parent do
+//      ControlState := ControlState - [csPaintCopy];
+//  end;
+//end;
 
 function TransformRgn(Rgn: HRGN; const XForm: TXForm): HRGN;
 {$IFDEF WIN_TRANSFORM}
@@ -3781,16 +3855,16 @@ begin
   Dec(FSuspendQueryEvents);
 end;
 
-procedure TEvsSimpleGraph.AdjustDC(aDC: HDC; aOrg: PPoint);
-begin
-  if Assigned(aOrg) then
-    LCLIntf.SetViewPortOrgEx(aDC, -(aOrg^.X + HorzScrollBar.Position), -(aOrg^.Y + VertScrollBar.Position), nil)
-  else
-    LCLIntf.SetViewPortOrgEx(aDC, -HorzScrollBar.Position, -VertScrollBar.Position, nil);
-  LCLIntf.SetMapMode(aDC, MM_ANISOTROPIC);
-  LCLIntf.SetWindowExtEx(aDC, 100, 100, nil);
-  LCLIntf.SetViewPortExtEx(aDC, Zoom, Zoom, nil);
-end;
+//procedure TEvsSimpleGraph.AdjustDC(aDC: HDC; aOrg: PPoint);
+//begin
+//  if Assigned(aOrg) then
+//    LCLIntf.SetViewPortOrgEx(aDC, -(aOrg^.X + HorzScrollBar.Position), -(aOrg^.Y + VertScrollBar.Position), nil)
+//  else
+//    LCLIntf.SetViewPortOrgEx(aDC, -HorzScrollBar.Position, -VertScrollBar.Position, nil);
+//  LCLIntf.SetMapMode(aDC, MM_ANISOTROPIC);
+//  LCLIntf.SetWindowExtEx(aDC, 100, 100, nil);
+//  LCLIntf.SetViewPortExtEx(aDC, Zoom, Zoom, nil);
+//end;
 
 function TEvsSimpleGraph.CreateUniqueID(aGraphObject: TEvsGraphObject): DWORD;
 var
@@ -4188,12 +4262,10 @@ var
 begin
   DoBeforeDraw(aCanvas);
   CanvasRecall.Reference := aCanvas;
-  {$IFDEF EVS_CANVAS}
   if aCanvas is TEvsGraphCanvas then begin
     TEvsGraphCanvas(aCanvas).OffsetX := -fHorzScrollBar.Position;
     TEvsGraphCanvas(aCanvas).OffsetY := -fVertScrollBar.Position;
   end;
-  {$ENDIF}
   try
     case DrawOrder of
       doNodesOnTop:
@@ -4280,15 +4352,29 @@ begin
     aCanvas.Pen.Style := psDot;
     aCanvas.Pen.Width := 0;
     vR := MarkedArea;
-    {$IFNDEF EVS_CANVAS}
-    GPToCP(vR,2);
-    {$ENDIF}
     ACanvas.Rectangle(vR)
   end;
 end;
 
 
 procedure TEvsSimpleGraph.Paint;
+
+procedure InitCanvas(aCnv:TCanvas);
+begin
+  if aCnv is TEvsGraphCanvas then begin
+    TEvsGraphCanvas(aCnv).OffsetX := -fHorzScrollBar.Position;
+    TEvsGraphCanvas(aCnv).OffsetY := -fVertScrollBar.Position;
+  end;
+end;
+
+procedure RestoreCanvas(aCnv:TCanvas);
+begin
+  if aCnv is TEvsGraphCanvas then begin
+    TEvsGraphCanvas(aCnv).OffsetX := 0;
+    TEvsGraphCanvas(aCnv).OffsetY := 0;
+  end;
+end;
+
 var
   vTmp : TCanvas;
 begin
@@ -4300,16 +4386,10 @@ begin
   vTmp.Lock;
   try
     if ShowGrid then DrawGrid(vTmp);
-    if vTmp is TEvsGraphCanvas then begin
-      TEvsGraphCanvas(vTmp).OffsetX := -fHorzScrollBar.Position;
-      TEvsGraphCanvas(vTmp).OffsetY := -fVertScrollBar.Position;
-    end;
+    InitCanvas(vTmp);
     DrawObjects(vTmp, Objects);
     DrawEditStates(vTmp);
-    if vTmp is TEvsGraphCanvas then begin
-      TEvsGraphCanvas(vTmp).OffsetX := 0;
-      TEvsGraphCanvas(vTmp).OffsetY := 0;
-    end;
+    RestoreCanvas(vTmp);
     if csDesigning in ComponentState then
     begin
       vTmp.Brush.Style := bsClear;
@@ -4787,54 +4867,54 @@ end;
 procedure TEvsSimpleGraph.GPToCP(var aPoints; aCount: Integer);
 Type PPPoint = ^PPOINT;
 var
-{$IFDEF LCLWIN32}
-  vMemDC: HDC;
-{$ELSE}
+//{$IFDEF LCLWIN32}
+//  vMemDC: HDC;
+//{$ELSE}
   vTmp  : PPoint;
   vCntr : Integer;
-{$ENDIF}
+//{$ENDIF}
 begin
-  {$IFDEF LCLWIN32}
-  vMemDC := CreateCompatibleDC(0);
-  try
-    AdjustDC(vMemDC);
-    LPtoDP(vMemDC, aPoints, aCount);
-  finally
-    DeleteDC(vMemDC);
-  end;
-  {$ELSE}
+  //{$IFDEF LCLWIN32}
+  //vMemDC := CreateCompatibleDC(0);
+  //try
+  //  AdjustDC(vMemDC);
+  //  LPtoDP(vMemDC, aPoints, aCount);
+  //finally
+  //  DeleteDC(vMemDC);
+  //end;
+  //{$ELSE}
   vTmp := @aPoints;
   for vCntr := 0 to aCount -1 do begin
     vTmp[vCntr].x := vTmp[vCntr].x - fHorzScrollBar.Position;
     vTmp[vCntr].y := vTmp[vCntr].y - fVertScrollBar.Position;
   end;
-  {$ENDIF}
+  //{$ENDIF}
 end;
 
 procedure TEvsSimpleGraph.CPToGP(var aPoints; aCount: Integer);
 var
-{$IFDEF LCLWIN32}
-  vMemDC: HDC;
-{$ELSE}
+//{$IFDEF LCLWIN32}
+//  vMemDC: HDC;
+//{$ELSE}
   vTmp : PPoint;
   vCntr : Integer;
-{$ENDIF}
+//{$ENDIF}
 begin
-  {$IFDEF LCLWIN32}
-  vMemDC := CreateCompatibleDC(0);
-  try
-    AdjustDC(vMemDC);   //JKOZ Remove AdjustDC
-    DPtoLP(vMemDC, aPoints, aCount);
-  finally
-    DeleteDC(vMemDC);
-  end;
-  {$ELSE}
+  //{$IFDEF LCLWIN32}
+  //vMemDC := CreateCompatibleDC(0);
+  //try
+  //  AdjustDC(vMemDC);   //JKOZ Remove AdjustDC
+  //  DPtoLP(vMemDC, aPoints, aCount);
+  //finally
+  //  DeleteDC(vMemDC);
+  //end;
+  //{$ELSE}
   vTmp := @aPoints;
   for vCntr := 0 to aCount -1 do begin
     vTmp[vCntr].x := vTmp[vCntr].x + fHorzScrollBar.Position;
     vTmp[vCntr].y := vTmp[vCntr].y + fVertScrollBar.Position;
   end;
-  {$ENDIF}
+  //{$ENDIF}
 end;
 
 function TEvsSimpleGraph.GetAsBitmap(aObjectList: TEvsGraphObjectList): Graphics.TBitmap;
@@ -5144,17 +5224,12 @@ constructor TEvsSimpleGraph.Create(aOwner: TComponent);
 begin
   inherited Create(aOwner);
 
-  {$IFDEF EVS_CANVAS}
   Canvas.Free;
   Canvas := TEvsGraphCanvas.Create;
   TControlCanvas(Canvas).Control := Self;
-  {$ENDIF}
 
   Canvas.AntialiasingMode:=amOn;
-  //TControlCanvas(Canvas).Control := Self;
-  ControlStyle              := [csCaptureMouse, csClickEvents, csDoubleClicks, csOpaque, csAcceptsControls];
-  //ControlStyle              := [csAcceptsControls, csClickEvents, csDoubleClicks, csOpaque,
-  //                              csAutoSizeKeepChildLeft, csAutoSizeKeepChildTop];
+  ControlStyle              := [csCaptureMouse, csClickEvents, csDoubleClicks, csOpaque];
 
   FCustomCanvas             := Nil;
 
@@ -7501,9 +7576,6 @@ var
   R: TRect;
 begin
   R := MakeSquare(aPoint, Owner.MarkerSize);
-  {$IFNDEF EVS_CANVAS}
-  Owner.GPToCP(R,2);
-  {$ENDIF}
   aCanvas.Rectangle(R.Left, R.Top, R.Right, R.Bottom);
   if not Enabled then
   begin
@@ -7867,13 +7939,7 @@ begin
       Pts[2] := NextPointOfLine(Angle + Pi / 9, Pt, Size);
       Pts[3] := NextPointOfLine(Angle, Pt, MulDiv(Size, 6, 10));
       Pts[4] := NextPointOfLine(Angle - Pi / 9, Pt, Size);
-      {$IFNDEF EVS_CANVAS}
-      owner.GPtoCL(Pts);
-      {$ENDIF}
       aCanvas.Polygon(Pts);
-      {$IFNDEF EVS_CANVAS}
-      Owner.CLtoGP(Pts);
-      {$ENDIF}
       Result := Pts[3];
     end;
     lsArrowSimple:
@@ -7881,22 +7947,12 @@ begin
       Pts[1] := NextPointOfLine(Angle + Pi / 6, Pt, Size);
       Pts[2] := Pt;
       Pts[3] := NextPointOfLine(Angle - Pi / 6, Pt, Size);
-      {$IFNDEF EVS_CANVAS}
-      Owner.GPtoCL(Pts);
-      {$ENDIF}
       aCanvas.Polyline(Slice(Pts, 3));
-      {$IFNDEF EVS_CANVAS}
-      Owner.CLtoGP(Pts);
-      {$ENDIF}
       Result := Pt;
     end;
     lsCircle:
     begin
       Pts[1] := Pt;
-      {$IFNDEF EVS_CANVAS}
-      Owner.GPtoCL(Pts);
-      Size := round(Size * ParentZoomFactor);
-      {$ENDIF}
       aCanvas.Ellipse(Pts[1].X - Size, Pts[1].Y - Size, Pts[1].X + Size, Pts[1].Y + Size);
       Result := NextPointOfLine(Angle, Pt, Size);
     end;
@@ -7906,13 +7962,7 @@ begin
       Pts[2] := NextPointOfLine(Angle + Pi / 2, Pt, Size);
       Pts[3] := NextPointOfLine(Angle, Pt, -Size);
       Pts[4] := NextPointOfLine(Angle - Pi / 2, Pt, Size);
-      {$IFNDEF EVS_CANVAS}
-      Owner.GPtoCL(Pts);
-      {$ENDIF}
       aCanvas.Polygon(Pts);
-      {$IFNDEF EVS_CANVAS}
-      Owner.CLtoGP(Pts);
-      {$ENDIF}
       Result := Pts[1];
     end;
     else
@@ -7952,17 +8002,11 @@ begin
 
       vTmp := Copy(Polyline, vFirst, vLast - vFirst + 1);
     end else vTmp := Copy(Polyline);
-    {$IFNDEF EVS_CANVAS}
-    Owner.GPtoCL(vTmp);
-    {$ENDIF}
     aCanvas.Polyline(vTmp);
   end
   else if PointCount = 1 then
   begin
     vPtRect := MakeSquare(Points[0], aCanvas.Pen.Width);
-    {$IFNDEF EVS_CANVAS}
-    Owner.GPToCP(vPtRect,2);
-    {$ENDIF}
     aCanvas.Ellipse(vPtRect.Left, vPtRect.Top, vPtRect.Right, vPtRect.Bottom);
   end;
 end;
@@ -8001,9 +8045,6 @@ begin
         aCanvas.Font.Orientation := Round(-1800 * TextAngle / Pi);
         RotatePoints(vPt, TextAngle, TextCenter);
       end;
-      {$IFNDEF EVS_CANVAS}
-      Owner.GPToCl(vPt);
-      {$ENDIF}
       aCanvas.TextStyle := vTextStyle;
       aCanvas.TextOut(vPt.x,vPt.y,fTextToShow);
    finally
@@ -8033,9 +8074,6 @@ begin
   if PointCount = 1 then
   begin
     PtRect := MakeSquare(Points[0], Pen.Width div 2);
-    {$IFNDEF EVS_CANVAS}
-    OffsetRect(PtRect, -Owner.fHorzScrollBar.Position, -Owner.fVertScrollBar.Position);
-    {$ENDIF}
     while not IsRectEmpty(PtRect) do
     begin
       Canvas.Ellipse(PtRect.Left, PtRect.Top, PtRect.Right, PtRect.Bottom);
@@ -8074,9 +8112,6 @@ begin
     try
       Canvas.Brush.Style := bsClear;
       if ModifiedPolyline <> nil then begin
-        {$IFNDEF EVS_CANVAS}
-        Owner.GPtoCL(ModifiedPolyline);
-        {$ENDIF}
         Canvas.Polyline(ModifiedPolyline);
       end else
         Canvas.Polyline(Polyline);
@@ -9848,9 +9883,6 @@ begin
     vTextStyle.SystemFont  := False;
     vTextStyle.EndEllipsis := False;
     vTextStyle.SingleLine  := False;
-    {$IFNDEF EVS_CANVAS}
-    Owner.GPToCP(Rect,2);
-    {$ENDIF}
     aCanvas.TextRect(Rect, Rect.Left, Rect.Top, TextToShow, vTextStyle);
   end;
 end;
@@ -9869,9 +9901,6 @@ begin
     ImageRect.Top := Top + MulDiv(Height, BackgroundMargins.Top, 100);
     ImageRect.Right := Left + Width - MulDiv(Width, BackgroundMargins.Right, 100);
     ImageRect.Bottom := Top + Height - MulDiv(Height, BackgroundMargins.Bottom, 100);
-    {$IFNDEF EVS_CANVAS}
-    Owner.GPToCP(ImageRect, 2); {$MESSAGE WARN 'GPTOCP CHANGE'}
-    {$ENDIF}
     ClipRgn := CreateClipRgn(aCanvas);
     try
       SelectClipRgn(aCanvas.Handle, ClipRgn);
@@ -10244,9 +10273,6 @@ var
   VBrush : TBrush;
 begin
   Tmp := Copy(Vertices,0,Length(Vertices));
-  {$IFNDEF EVS_CANVAS}
-  OffsetPoints(tmp,-owner.fHorzScrollBar.Position, -Owner.fVertScrollBar.Position);
-  {$ENDIF}
   vPen := aCanvas.Pen;
   VBrush := aCanvas.Brush;
   aCanvas.Polygon(Tmp);
@@ -10285,17 +10311,9 @@ var
   S: integer;
   LP,TP:integer;
 begin
-  if Width > Height then
-    S := Width div 4
-  else
-    S := Height div 4;
-  {$IFNDEF EVS_CANVAS}
-  LP := Left-Owner.fHorzScrollBar.Position;
-  TP := Top-Owner.fVertScrollBar.Position;
-  {$ELSE}
-  LP := Left;
-  TP := Top;
-  {$ENDIF}
+  if Width > Height then S := Width div 4
+  else S := Height div 4;
+  LP := Left; TP := Top;
   Canvas.RoundRect(LP, TP, LP + Width, TP + Height, S, S);
 end;
 
@@ -10318,10 +10336,7 @@ procedure TEvsEllipticNode.DrawBorder(Canvas: TCanvas);
 var
   TP,LP:Integer;
 begin
-  {$IFNDEF EVS_CANVAS}
-  TP := Top  - Owner.fVertScrollBar.Position;
-  LP := Left - Owner.fHorzScrollBar.Position;
-  {$ENDIF}
+  TP := Top; LP := Left;
   Canvas.Ellipse(LP, TP, LP + Width, TP + Height);
 end;
 {$ENDREGION}
@@ -10582,16 +10597,14 @@ begin
       try
         if BeginStyle <> lsNone then
         begin
-          if vModifiedPolyline = nil then
-            vModifiedPolyline := Copy(Polyline, 0, PointCount);
+          if vModifiedPolyline = nil then vModifiedPolyline := Copy(Polyline, 0, PointCount);
           vAngle := LineSlopeAngle(Points[1], Points[0]);
           vModifiedPolyline[0] := DrawPointStyle(aCanvas, Points[0],
             vAngle, BeginStyle, BeginSize);
         end;
         if EndStyle <> lsNone then
         begin
-          if vModifiedPolyline = nil then
-            vModifiedPolyline := Copy(Polyline, 0, PointCount);
+          if vModifiedPolyline = nil then vModifiedPolyline := Copy(Polyline, 0, PointCount);
           vAngle := LineSlopeAngle(Points[PointCount - 2], Points[PointCount - 1]);
           vModifiedPolyline[PointCount - 1] := DrawPointStyle(aCanvas, Points[PointCount - 1],
             vAngle, EndStyle, EndSize);;
@@ -10612,15 +10625,9 @@ begin
           aCanvas.Pen.Style := psDash;
           vPtRect.TopLeft := Points[0];
           vPtRect.BottomRight := Points[1];
-          {$IFNDEF EVS_CANVAS}
-          Owner.GPToCP(vPtRect,2);
-          {$ENDIF}
           aCanvas.Line(vPtRect.TopLeft, vPtRect.BottomRight);
           vPtRect.TopLeft := Points[PointCount -2];
           vPtRect.BottomRight := Points[PointCount -1];
-          {$IFNDEF EVS_CANVAS}
-          Owner.GPToCP(vPtRect,2);
-          {$ENDIF}
           aCanvas.Line(vPtRect.TopLeft, vPtRect.BottomRight);
           vCntr := 2;
           while vCntr < PointCount - 3 do
@@ -10634,18 +10641,9 @@ begin
         end;
       end;
       if vModifiedPolyline <> nil then begin
-        {$IFNDEF EVS_CANVAS}
-        Owner.GPtoCL(vModifiedPolyline);
-        {$ENDIF}
         aCanvas.PolyBezier(vModifiedPolyline);
       end else begin
-        {$IFNDEF EVS_CANVAS}
-        Owner.GPtoCL(Polyline);
-        {$ENDIF}
         aCanvas.PolyBezier(Polyline);
-        {$IFNDEF EVS_CANVAS}
-        Owner.CLtoGP(Polyline);
-        {$ENDIF}
       end;
     finally
       aCanvas.Brush.Style := vOldBrushStyle;
@@ -10914,13 +10912,13 @@ end;
 
 {$REGION ' TEvsGraphCanvas '}
 
-procedure TEvsGraphCanvas.SetOffsetX(aValue : Integer);
+procedure TEvsGraphCanvas.SetOffsetX(aValue : Double);
 begin
   if FOffsetX = aValue then Exit;
   FOffsetX := aValue;
 end;
 
-procedure TEvsGraphCanvas.SetOffsetY(aValue : Integer);
+procedure TEvsGraphCanvas.SetOffsetY(aValue : Double);
 begin
   if FOffsetY = aValue then Exit;
   FOffsetY := aValue;
@@ -10942,10 +10940,11 @@ procedure TEvsGraphCanvas.TranslateCoordinates(var InCoords : Array of TPOINT);
 var
   vCntr : Integer;
 begin
-  for vCntr := Low(InCoords) to High(InCoords) do begin
-    InCoords[vCntr].x := InCoords[vCntr].x + FOffsetX;
-    InCoords[vCntr].y := InCoords[vCntr].y + FOffsetY;
-  end;
+  if (FOffsetX <> 0) or (FOffsetY <> 0) then
+    for vCntr := Low(InCoords) to High(InCoords) do begin
+      InCoords[vCntr].x := round(InCoords[vCntr].x + FOffsetX);
+      InCoords[vCntr].y := round(InCoords[vCntr].y + FOffsetY);
+    end;
 end;
 
 procedure TEvsGraphCanvas.TranslateCoordinates(var InCoords : PPOINT;
@@ -10954,8 +10953,8 @@ var
   vCntr : Integer;
 begin
   for vCntr := 0 to NumPoints -1 do begin
-    InCoords[vCntr].X := InCoords[vCntr].X + FOffsetX;
-    InCoords[vCntr].Y := InCoords[vCntr].Y + FOffsetY;
+    InCoords[vCntr].X := round(InCoords[vCntr].X + FOffsetX);
+    InCoords[vCntr].Y := round(InCoords[vCntr].Y + FOffsetY);
   end;
 end;
 
@@ -11063,7 +11062,7 @@ begin
   vCoords[0].x := x1; vCoords[0].y := y1;
   vCoords[1].x := x2; vCoords[1].y := y2;
   TranslateCoordinates(vCoords);
-  inherited Ellipse(x1, y1, x2, y2);
+  inherited Ellipse(vCoords[0].x, vCoords[0].y, vCoords[1].x, vCoords[1].y);
 end;
 
 procedure TEvsGraphCanvas.FillRect(const ARect : TRect);
@@ -11143,7 +11142,7 @@ begin
   vCoords[2].x := StartX;    vCoords[2].y := StartY;
   vCoords[3].x := EndX;      vCoords[2].y := EndY;
   TranslateCoordinates(vCoords);
-  inherited Pie(EllipseX1, EllipseY1, EllipseX2, EllipseY2, StartX, StartY, EndX, EndY);
+  inherited Pie(vCoords[0].x, vCoords[0].y, vCoords[1].x, vCoords[1].y, vCoords[2].x, vCoords[2].y, vCoords[3].x, vCoords[2].y);
 end;
 
 procedure TEvsGraphCanvas.PolyBezier(Points : PPoint; NumPts : Integer;
@@ -11223,6 +11222,484 @@ end;
 
 {$ENDREGION}
 
+
+{$REGION ' TEvsCustomCanvas '}
+
+procedure TEvsCustomCanvas.SetOffsetX(aValue : Double);
+begin
+  if FOffsetX = aValue then Exit;
+  FOffsetX := aValue;
+end;
+
+procedure TEvsCustomCanvas.SetOffsetY(aValue : Double);
+begin
+  if FOffsetY = aValue then Exit;
+  FOffsetY := aValue;
+end;
+
+procedure TEvsCustomCanvas.SetScaleX(aValue : Double);
+begin
+  if FScaleX = aValue then Exit;
+  FScaleX := aValue;
+end;
+
+procedure TEvsCustomCanvas.SetScaleY(aValue : Double);
+begin
+  if FScaleY = aValue then Exit;
+  FScaleY := aValue;
+end;
+
+procedure TEvsCustomCanvas.DoArc(ALeft, ATop, ARight, ABottom, Angle16Deg,
+  Angle16DegLength : Integer);
+begin
+  inherited Arc(ALeft, ATop, ARight, ABottom, Angle16Deg, Angle16DegLength)
+end;
+
+procedure TEvsCustomCanvas.DoArc(ALeft, ATop, ARight, ABottom, SX, SY, EX,
+  EY : Integer);
+begin
+  inherited Arc(ALeft,ATop, ARight, ABottom, SX, SY, EX, EY);
+end;
+
+procedure TEvsCustomCanvas.DoBrushCopy(ADestRect : TRect;
+  ABitmap : Graphics.TBitmap; ASourceRect : TRect; ATransparentColor : TColor);
+begin
+  inherited BrushCopy(ADestRect, ABitmap, ASourceRect, ATransparentColor);
+end;
+
+procedure TEvsCustomCanvas.DoChord(X1, Y1, X2, Y2, Angle16Deg,
+  Angle16DegLength : Integer);
+begin
+  inherited Chord(X1, Y1, X2, Y2, Angle16Deg, Angle16DegLength);
+end;
+
+procedure TEvsCustomCanvas.DoChord(X1, Y1, X2, Y2, SX, SY, EX, EY : Integer);
+begin
+  inherited Chord(X1, Y1, X2, Y2, SX, SY, EX, EY)
+end;
+
+procedure TEvsCustomCanvas.DoCopyRect(const Dest : TRect; SrcCanvas : TCanvas;
+  const Source : TRect);
+begin
+  inherited CopyRect(Dest, SrcCanvas, Source);
+end;
+
+procedure TEvsCustomCanvas.DoDraw(X, Y : Integer; SrcGraphic : TGraphic);
+begin
+  inherited Draw(X, Y, SrcGraphic);
+end;
+
+procedure TEvsCustomCanvas.DoDrawFocusRect(const ARect : TRect);
+begin
+  inherited DrawFocusRect(ARect);
+end;
+
+procedure TEvsCustomCanvas.DoStretchDraw(const DestRect : TRect;
+  SrcGraphic : TGraphic);
+begin
+  inherited StretchDraw(DestRect, SrcGraphic)
+end;
+
+procedure TEvsCustomCanvas.DoEllipse(x1, y1, x2, y2 : Integer);
+begin
+  inherited Ellipse(x1, y1, x2, y2);
+end;
+
+procedure TEvsCustomCanvas.DoFillRect(const ARect : TRect);
+begin
+  inherited FillRect(ARect);
+end;
+
+procedure TEvsCustomCanvas.DoFloodFill(X, Y : Integer; FillColor : TColor;
+  FillStyle : TFillStyle);
+begin
+  inherited FloodFill(X, Y, FillColor, FillStyle);
+end;
+
+procedure TEvsCustomCanvas.DoFrame3d(var ARect : TRect;
+  const FrameWidth : integer; const Style : TGraphicsBevelCut);
+begin
+  inherited Frame3d(ARect, FrameWidth, Style)
+end;
+
+procedure TEvsCustomCanvas.DoFrame(const ARect : TRect);
+begin
+  inherited Frame(ARect)
+end;
+
+procedure TEvsCustomCanvas.DoFrameRect(const ARect : TRect);
+begin
+  inherited FrameRect(ARect);
+end;
+
+procedure TEvsCustomCanvas.DoGradientFill(ARect : TRect; AStart,
+  AStop : TColor; ADirection : TGradientDirection);
+begin
+  inherited GradientFill(aRect, AStart, AStop, ADirection);
+end;
+
+procedure TEvsCustomCanvas.DoRadialPie(X1, Y1, X2, Y2, StartAngle16Deg,
+  Angle16DegLength : Integer);
+begin
+  inherited RadialPie(X1, Y1, X2, Y2, StartAngle16Deg, Angle16DegLength);
+end;
+
+procedure TEvsCustomCanvas.DoPie(EllipseX1, EllipseY1, EllipseX2, EllipseY2,
+  StartX, StartY, EndX, EndY : Integer);
+begin
+  inherited Pie(EllipseX1, EllipseY1, EllipseX2, EllipseY2, StartX, StartY, EndX, EndY);
+end;
+
+procedure TEvsCustomCanvas.DoRectangle(X1, Y1, X2, Y2 : Integer);
+begin
+  inherited Rectangle(X1, Y1, X2, Y2);
+end;
+
+procedure TEvsCustomCanvas.DoRoundRect(X1, Y1, X2, Y2 : Integer; RX,
+  RY : Integer);
+begin
+  inherited RoundRect(X1, Y1, X2, Y2, RX, RY);
+end;
+
+procedure TEvsCustomCanvas.DoTextOut(X, Y : Integer; const Text : String);
+begin
+  inherited TextOut(X, Y, Text);
+end;
+
+procedure TEvsCustomCanvas.DoTextRect(ARect : TRect; X, Y : integer;
+  const Text : string; const Style : TTextStyle);
+begin
+  inherited TextRect(ARect, X, Y, Text, Style);
+end;
+
+procedure TEvsCustomCanvas.DoPolyBezier(Points : PPoint; NumPts : Integer;
+  Filled : boolean; Continuous : boolean);
+begin
+  inherited PolyBezier(Points, NumPts, Filled, Continuous);
+end;
+
+procedure TEvsCustomCanvas.DoPolygon(Points : PPoint; NumPts : Integer;
+  Winding : boolean);
+begin
+  inherited Polygon(Points, NumPts, Winding);
+end;
+
+procedure TEvsCustomCanvas.DoPolyline(Points : PPoint; NumPts : Integer);
+begin
+  inherited Polyline(Points, NumPts);
+end;
+
+procedure TEvsCustomCanvas.TranslateCoordinates(var InCoords : Array of TPOINT);
+var
+  vCntr : Integer;
+begin
+  for vCntr := Low(InCoords) to High(InCoords) do begin
+    if (FScaleX <> 0)  then InCoords[vCntr].x := round(InCoords[vCntr].x * FScaleX);
+    if (FScaleY <> 0)  then InCoords[vCntr].y := round(InCoords[vCntr].y * FScaleY);
+    if (FOffsetX <> 0) then InCoords[vCntr].x := round(InCoords[vCntr].x + FOffsetX);
+    if (FOffsetY <> 0) then InCoords[vCntr].y := round(InCoords[vCntr].y + FOffsetY);
+  end;
+end;
+
+procedure TEvsCustomCanvas.TranslateCoordinates(var InCoords : PPOINT;
+  NumPoints : Integer);
+var
+  vCntr : Integer;
+begin
+  for vCntr := 0 to NumPoints -1 do begin
+    InCoords[vCntr].X := round(InCoords[vCntr].X + FOffsetX);
+    InCoords[vCntr].Y := round(InCoords[vCntr].Y + FOffsetY);
+  end;
+end;
+
+procedure TEvsCustomCanvas.Arc(ALeft, ATop, ARight, ABottom, Angle16Deg,
+  Angle16DegLength : Integer);
+var
+  vCoords : array[0..1] of TPOINT;
+begin
+  vCoords[0].x := ALeft;      vCoords[0].y := ATop;
+  vCoords[1].x := ARight;     vCoords[1].y := ABottom;
+  //vCoords[2].x := Angle16Deg; vCoords[2].y := Angle16DegLength;
+  TranslateCoordinates(vCoords);
+  DoArc(vCoords[0].x, vCoords[0].y, vCoords[1].x, vCoords[1].y, Angle16Deg, Angle16DegLength);
+end;
+
+procedure TEvsCustomCanvas.Arc(ALeft, ATop, ARight, ABottom, SX, SY, EX,
+  EY : Integer);
+var
+  vCoords : array[0..3] of TPOINT;
+begin
+  vCoords[0].x := ALeft;      vCoords[0].y := ATop;
+  vCoords[1].x := ARight;     vCoords[1].y := ABottom;
+  vCoords[2].x := SX;         vCoords[2].y := SY;
+  vCoords[3].x := EX;         vCoords[2].y := EY;
+  TranslateCoordinates(vCoords);
+  DoArc(vCoords[0].x, vCoords[0].y, vCoords[1].x, vCoords[1].y, vCoords[2].x, vCoords[2].x, vCoords[3].x, vCoords[3].x);
+end;
+
+procedure TEvsCustomCanvas.BrushCopy(ADestRect : TRect; ABitmap : Graphics.TBitmap;
+  ASourceRect : TRect; ATransparentColor : TColor);
+var
+  vCoords : array[0..2] of TPOINT;
+begin
+  PRECT(@vCoords[0])^ := ADestRect;
+  //PRECT(@vCoords[2])^ := ASourceRect;
+  TranslateCoordinates(vCoords);
+  DoBrushCopy(PRECT(@vCoords[0])^, ABitmap, ASourceRect, ATransparentColor);
+end;
+
+procedure TEvsCustomCanvas.Chord(x1, y1, x2, y2, Angle16Deg,
+  Angle16DegLength : Integer);
+var
+  vCoords : array[0..1] of TPOINT;
+begin
+  vCoords[0].x := x1;        vCoords[0].y := y1;
+  vCoords[1].x := x2;        vCoords[1].y := y2;
+  TranslateCoordinates(vCoords);
+  DoChord(vCoords[0].x, vCoords[0].y, vCoords[1].x, vCoords[1].y, Angle16Deg, Angle16DegLength);
+end;
+
+procedure TEvsCustomCanvas.Chord(x1, y1, x2, y2, SX, SY, EX, EY : Integer);
+var
+  vCoords : array[0..3] of TPOINT;
+begin
+  vCoords[0].x := x1; vCoords[0].y := y1;
+  vCoords[1].x := x2; vCoords[1].y := y2;
+  vCoords[2].x := SX; vCoords[2].y := SY;
+  vCoords[3].x := EX; vCoords[2].y := EY;
+  TranslateCoordinates(vCoords);
+  DoChord(vCoords[0].x, vCoords[0].y, vCoords[1].x, vCoords[1].y, vCoords[2].X, vCoords[2].Y, vCoords[3].X, vCoords[3].Y);
+end;
+
+procedure TEvsCustomCanvas.CopyRect(const Dest : TRect; SrcCanvas : TCanvas;
+  const Source : TRect);
+var
+  vCoords : array[0..1] of TPOINT;
+begin
+  pRect(@vCoords[0])^ := Dest;
+  TranslateCoordinates(vCoords);
+  DoCopyRect(pRect(@vCoords[0])^, SrcCanvas, Source);
+end;
+
+procedure TEvsCustomCanvas.Draw(X, Y : Integer; SrcGraphic : TGraphic);
+var
+  vCoords : TPOINT;
+begin
+  vCoords.x := X; vCoords.y := Y;
+  TranslateCoordinates(vCoords);
+  DoDraw(vCoords.X, vCoords.Y, SrcGraphic);
+end;
+
+procedure TEvsCustomCanvas.DrawFocusRect(const ARect : TRect);
+var
+  vCoords : array[0..1] of TPOINT;
+begin
+  pRect(@vCoords[0])^ := ARect;
+  TranslateCoordinates(vCoords);
+  DoDrawFocusRect(pRect(@vCoords[0])^);
+end;
+
+procedure TEvsCustomCanvas.StretchDraw(const DestRect : TRect;
+  SrcGraphic : TGraphic);
+var
+  vCoords : array[0..1] of TPOINT;
+begin
+  pRect(@vCoords[0])^ := DestRect;
+  TranslateCoordinates(vCoords);
+  DoStretchDraw(pRect(@vCoords[0])^, SrcGraphic);
+end;
+
+procedure TEvsCustomCanvas.Ellipse(x1, y1, x2, y2 : Integer);
+var
+  vCoords : array[0..1] of TPOINT;
+begin
+  vCoords[0].x := x1; vCoords[0].y := y1;
+  vCoords[1].x := x2; vCoords[1].y := y2;
+  TranslateCoordinates(vCoords);
+  DoEllipse(vCoords[0].x, vCoords[0].y, vCoords[1].x, vCoords[1].y);
+end;
+
+procedure TEvsCustomCanvas.FillRect(const ARect : TRect);
+var
+  vCoords : array[0..1] of TPOINT;
+begin
+  pRect(@vCoords[0])^ := ARect;
+  TranslateCoordinates(vCoords);
+  DoFillRect(pRect(@vCoords[0])^);
+end;
+
+procedure TEvsCustomCanvas.FloodFill(X, Y : Integer; FillColor : TColor;
+  FillStyle : TFillStyle);
+var
+  vCoords : TPOINT;
+begin
+  vCoords.x := X; vCoords.y := Y;
+  TranslateCoordinates(vCoords);
+  DoFloodFill(vCoords.X, vCoords.Y, FillColor, FillStyle);
+end;
+
+procedure TEvsCustomCanvas.Frame3d(var ARect : TRect;
+  const FrameWidth : integer; const Style : TGraphicsBevelCut);
+var
+  vCoords : array[0..1] of TPOINT;
+begin
+  pRect(@vCoords[0])^ := ARect;
+  TranslateCoordinates(vCoords);
+  DoFrame3d(pRect(@vCoords[0])^, FrameWidth, Style);
+end;
+
+procedure TEvsCustomCanvas.Frame(const ARect : TRect);
+var
+  vCoords : array[0..1] of TPOINT;
+begin
+  pRect(@vCoords[0])^ := ARect;
+  TranslateCoordinates(vCoords);
+  DoFrame(pRect(@vCoords[0])^);
+end;
+
+procedure TEvsCustomCanvas.FrameRect(const ARect : TRect);
+var
+  vCoords : array[0..1] of TPOINT;
+begin
+  pRect(@vCoords[0])^ := ARect;
+  TranslateCoordinates(vCoords);
+  DoFrameRect(pRect(@vCoords[0])^);
+end;
+
+procedure TEvsCustomCanvas.GradientFill(ARect : TRect; AStart, AStop : TColor; ADirection : TGradientDirection);
+var
+  vCoords : array[0..1] of TPOINT;
+begin
+  pRect(@vCoords[0])^ := ARect;
+  TranslateCoordinates(vCoords);
+  DoGradientFill(pRect(@vCoords[0])^,AStart, AStop, ADirection);
+end;
+
+procedure TEvsCustomCanvas.RadialPie(x1, y1, x2, y2, StartAngle16Deg,
+  Angle16DegLength : Integer);
+var
+  vCoords : array[0..1] of TPOINT;
+begin
+  vCoords[0].x := x1;        vCoords[0].y := y1;
+  vCoords[1].x := x2;        vCoords[1].y := y2;
+  TranslateCoordinates(vCoords);
+  DoRadialPie(vCoords[0].x, vCoords[0].y, vCoords[1].x, vCoords[1].y, StartAngle16Deg, Angle16DegLength);
+end;
+
+procedure TEvsCustomCanvas.Pie(EllipseX1, EllipseY1, EllipseX2, EllipseY2,
+  StartX, StartY, EndX, EndY : Integer);
+var
+  vCoords : array[0..3] of TPOINT;
+begin
+  vCoords[0].x := EllipseX1; vCoords[0].y := EllipseY1;
+  vCoords[1].x := EllipseX2; vCoords[1].y := EllipseY2;
+  vCoords[2].x := StartX;    vCoords[2].y := StartY;
+  vCoords[3].x := EndX;      vCoords[2].y := EndY;
+  TranslateCoordinates(vCoords);
+  DoPie(vCoords[0].x, vCoords[0].y, vCoords[1].x, vCoords[1].y, vCoords[2].x, vCoords[2].y, vCoords[3].x, vCoords[2].y);
+end;
+
+procedure TEvsCustomCanvas.PolyBezier(Points : PPoint; NumPts : Integer;
+  Filled : boolean; Continuous : boolean);
+var
+  vTmp : PPOINT;
+begin
+  GetMem(vTmp, SizeOf(TPOINT) * NumPts);
+  try
+    Move(Points^,vTmp^,sizeof(Tpoint)*NumPts);
+    TranslateCoordinates(vTmp, NumPts);
+    DoPolyBezier(vTmp, NumPts, Filled, Continuous);
+  finally
+    Freemem(vTmp)
+  end;
+end;
+
+procedure TEvsCustomCanvas.Polygon(Points : PPoint; NumPts : Integer;
+  Winding : boolean);
+var
+  vTmp : PPOINT;
+begin
+  GetMem(vTmp,SizeOf(TPOINT) * NumPts);
+  try
+    Move(Points^,vTmp^,sizeof(Tpoint)*NumPts);
+    TranslateCoordinates(vTmp, NumPts);
+    DoPolygon(vTmp, NumPts, Winding);
+  finally
+    Freemem(vTmp)
+  end;
+end;
+
+procedure TEvsCustomCanvas.Polyline(Points : PPoint; NumPts : Integer);
+var
+  vTmp : PPOINT;
+begin
+  GetMem(vTmp,SizeOf(TPOINT) * NumPts);
+  try
+    Move(Points^,vTmp^,sizeof(Tpoint)*NumPts);
+    TranslateCoordinates(vTmp, NumPts);
+    DoPolyline(vTmp, NumPts);
+  finally
+    Freemem(vTmp)
+  end;
+end;
+
+constructor TEvsCustomCanvas.Create;
+begin
+  inherited Create;
+  FOffsetX := 0.0; FOffsetY := 0.0; FScaleX := 0.0; FScaleY := 0.0;
+end;
+
+procedure TEvsCustomCanvas.SetTransformation(XScale, YScale, DX, DY : Double);
+begin
+  FScaleX := XScale; FScaleY := YScale; FOffsetX := DX; FOffsetY := DY;
+end;
+
+procedure TEvsCustomCanvas.ClearTransformation;
+begin
+  SetTransformation(0.0,0.0,0.0,0.0);
+end;
+
+procedure TEvsCustomCanvas.Rectangle(X1, Y1, X2, Y2 : Integer);
+var
+  vCoords : array[0..1] of TPOINT;
+begin
+  vCoords[0].x := x1;        vCoords[0].y := y1;
+  vCoords[1].x := x2;        vCoords[1].y := y2;
+  TranslateCoordinates(vCoords);
+  DoRectangle(vCoords[0].X, vCoords[0].Y, vCoords[1].X, vCoords[1].Y);
+end;
+
+procedure TEvsCustomCanvas.RoundRect(X1, Y1, X2, Y2 : Integer; RX, RY : Integer);
+var
+  vCoords : array[0..1] of TPOINT;
+begin
+  vCoords[0].x := x1;        vCoords[0].y := y1;
+  vCoords[1].x := x2;        vCoords[1].y := y2;
+  TranslateCoordinates(vCoords);
+  DoRoundRect(vCoords[0].X, vCoords[0].Y, vCoords[1].X, vCoords[1].Y, RX, RY);
+end;
+
+procedure TEvsCustomCanvas.TextOut(X, Y : Integer; const Text : String);
+var
+  vCoords : TPOINT;
+begin
+  vCoords.x := X; vCoords.y := Y;
+  TranslateCoordinates(vCoords);
+  DoTextOut(vCoords.X, vCoords.Y, Text);
+end;
+
+procedure TEvsCustomCanvas.TextRect(ARect : TRect; X, Y : integer;
+  const Text : string; const Style : TTextStyle);
+var
+  vCoords : array[0..2] of TPOINT;
+begin
+  pRect(@vCoords[0])^ := ARect;
+  vCoords[2].x := X; vCoords[2].y := y;
+  TranslateCoordinates(vCoords);
+  DoTextRect(pRect(@vCoords[0])^, vCoords[2].X, vCoords[2].Y, Text, Style);
+end;
+
+{$ENDREGION}
 
 procedure _RegisterClasses;
 begin
