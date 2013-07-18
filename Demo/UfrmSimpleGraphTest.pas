@@ -190,6 +190,7 @@ procedure SaveScreenShot(const aFilename:string);
 var
   ScreenDC   : HDC;
   SaveBitmap : TBitmap;
+  vTmp       : TCustomLabel;
 begin
   SaveBitmap := TBitmap.Create;
   try
