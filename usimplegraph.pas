@@ -2017,6 +2017,7 @@ end;
 {$ELSE WIN_TRANSFORM}
 begin
   Result := CreateRegionCopy(Rgn);
+
   OffsetRgn(Result, round(XForm.eDx), round(XForm.eDy));
 end;
 {$ENDIF WIN_TRANSFORM}
@@ -11392,12 +11393,18 @@ end;
 procedure TEvsCustomCanvas.TranslateCoordinates(var InCoords : Array of TPOINT);
 var
   vCntr : Integer;
+  vX,vY   : double;
 begin
   for vCntr := Low(InCoords) to High(InCoords) do begin
-    if (FScaleX <> 0)  then InCoords[vCntr].x := round(InCoords[vCntr].x * FScaleX);
-    if (FScaleY <> 0)  then InCoords[vCntr].y := round(InCoords[vCntr].y * FScaleY);
-    if (FOffsetX <> 0) then InCoords[vCntr].x := round(InCoords[vCntr].x + FOffsetX);
-    if (FOffsetY <> 0) then InCoords[vCntr].y := round(InCoords[vCntr].y + FOffsetY);
+    vX := InCoords[vCntr].X; vY := InCoords[vCntr].Y;
+    if (FScaleX <> 0)  then vX := vX * FScaleX;
+    if (FScaleY <> 0)  then vY := vY * FScaleY;
+    if (FOffsetX <> 0) then vX := vX + FOffsetX;
+    if (FOffsetY <> 0) then vY := vY + FOffsetY;
+    //if (FScaleX <> 0) or (FOffsetX <> 0) then InCoords[vCntr].X := round(vX);
+    //if (FScaleY <> 0) or (FOffsetY <> 0) then InCoords[vCntr].Y := round(vY);
+    InCoords[vCntr].X := round(vX);
+    InCoords[vCntr].Y := round(vY);
   end;
 end;
 
