@@ -131,9 +131,10 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="UfrmSimpleGraphTest"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="0"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="1"/>
+        <TopLine Value="16"/>
         <CursorPos X="26" Y="13"/>
         <UsageCount Value="208"/>
         <Loaded Value="True"/>
@@ -308,12 +309,10 @@
       </Unit19>
       <Unit20>
         <Filename Value="C:\lazarus.1.0\fpc\2.6.2\Source\rtl\win\wininc\func.inc"/>
-        <EditorIndex Value="2"/>
         <WindowIndex Value="0"/>
         <TopLine Value="688"/>
         <CursorPos X="10" Y="705"/>
         <UsageCount Value="21"/>
-        <Loaded Value="True"/>
       </Unit20>
       <Unit21>
         <Filename Value="C:\lazarus.1.0\fpc\2.6.2\Source\rtl\win\wininc\struct.inc"/>
@@ -360,12 +359,10 @@
       <Unit26>
         <Filename Value="C:\lazarus.1.0\lcl\graphics.pp"/>
         <UnitName Value="Graphics"/>
-        <EditorIndex Value="4"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="1095"/>
-        <CursorPos X="15" Y="1112"/>
+        <TopLine Value="1036"/>
+        <CursorPos X="16" Y="1081"/>
         <UsageCount Value="73"/>
-        <Loaded Value="True"/>
       </Unit26>
       <Unit27>
         <Filename Value="C:\lazarus.1.0\fpc\2.6.2\Source\rtl\objpas\classes\classesh.inc"/>
@@ -376,21 +373,17 @@
       </Unit27>
       <Unit28>
         <Filename Value="C:\lazarus.1.0\lcl\include\canvas.inc"/>
-        <EditorIndex Value="5"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="673"/>
-        <CursorPos X="3" Y="688"/>
+        <TopLine Value="804"/>
+        <CursorPos X="26" Y="821"/>
         <UsageCount Value="53"/>
-        <Loaded Value="True"/>
       </Unit28>
       <Unit29>
         <Filename Value="C:\lazarus.1.0\lcl\include\lclintfh.inc"/>
-        <EditorIndex Value="6"/>
         <WindowIndex Value="0"/>
         <TopLine Value="85"/>
         <CursorPos X="10" Y="102"/>
         <UsageCount Value="35"/>
-        <Loaded Value="True"/>
       </Unit29>
       <Unit30>
         <Filename Value="C:\lazarus.1.0\lcl\include\intfbasewinapi.inc"/>
@@ -478,12 +471,10 @@
       <Unit41>
         <Filename Value="C:\lazarus.1.0\fpc\2.6.2\Source\packages\fcl-image\src\fpcanvas.pp"/>
         <UnitName Value="FPCanvas"/>
-        <EditorIndex Value="3"/>
         <WindowIndex Value="0"/>
         <TopLine Value="263"/>
         <CursorPos X="15" Y="280"/>
         <UsageCount Value="24"/>
-        <Loaded Value="True"/>
       </Unit41>
       <Unit42>
         <Filename Value="C:\lazarus.1.0\fpc\2.6.2\Source\packages\fcl-image\src\fpcanvas.inc"/>
@@ -517,7 +508,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="1" Y="1"/>
-        <UsageCount Value="71"/>
+        <UsageCount Value="72"/>
       </Unit45>
       <Unit46>
         <Filename Value="C:\lazarus.1.0\lcl\interfaces\qt\qtint.pp"/>
@@ -559,23 +550,20 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="1" Y="1"/>
-        <UsageCount Value="104"/>
+        <UsageCount Value="105"/>
       </Unit50>
       <Unit51>
         <Filename Value="..\usimplegraph.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="usimplegraph"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="1"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="1608"/>
-        <CursorPos X="3" Y="2020"/>
-        <FoldState Value=" T7oHLF423 pjIoAY9222]B9sAME116 TMnwF0f TJi-R2J]dkDke2#iE p0lwA2~v T3_10\0383316]z1tI0K019 piXjb0Q3[95O0.01233[u4_W0Be"/>
-        <UsageCount Value="71"/>
+        <TopLine Value="11390"/>
+        <CursorPos X="23" Y="11424"/>
+        <FoldState Value=" T7oHLF423 T3_90\0383316X"/>
+        <UsageCount Value="72"/>
         <Bookmarks Count="1">
           <Item0 X="14" Y="10341" ID="0"/>
         </Bookmarks>
-        <Loaded Value="True"/>
       </Unit51>
       <Unit52>
         <Filename Value="C:\lazarus.1.0\lcl\stdctrls.pp"/>
@@ -602,146 +590,21 @@
       </Unit54>
       <Unit55>
         <Filename Value="C:\lazarus.1.0\lcl\include\intfbaselcl.inc"/>
-        <EditorIndex Value="7"/>
         <WindowIndex Value="0"/>
         <TopLine Value="557"/>
         <CursorPos X="3" Y="574"/>
         <UsageCount Value="13"/>
-        <Loaded Value="True"/>
       </Unit55>
       <Unit56>
         <Filename Value="C:\lazarus.1.0\lcl\graphmath.pp"/>
         <UnitName Value="GraphMath"/>
-        <EditorIndex Value="8"/>
         <WindowIndex Value="0"/>
         <TopLine Value="49"/>
         <CursorPos X="11" Y="66"/>
         <UsageCount Value="13"/>
-        <Loaded Value="True"/>
       </Unit56>
     </Units>
-    <JumpHistory Count="30" HistoryIndex="29">
-      <Position1>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="410" Column="15" TopLine="394"/>
-      </Position1>
-      <Position2>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="411" Column="15" TopLine="395"/>
-      </Position2>
-      <Position3>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="412" Column="15" TopLine="396"/>
-      </Position3>
-      <Position4>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="413" Column="15" TopLine="397"/>
-      </Position4>
-      <Position5>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="414" Column="15" TopLine="398"/>
-      </Position5>
-      <Position6>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="415" Column="15" TopLine="399"/>
-      </Position6>
-      <Position7>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="416" Column="47" TopLine="411"/>
-      </Position7>
-      <Position8>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="11332" Column="13" TopLine="11327"/>
-      </Position8>
-      <Position9>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="11249" Column="13" TopLine="11231"/>
-      </Position9>
-      <Position10>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="11332" Column="15" TopLine="11327"/>
-      </Position10>
-      <Position11>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="416" Column="121" TopLine="401"/>
-      </Position11>
-      <Position12>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="11249" Column="3" TopLine="11233"/>
-      </Position12>
-      <Position13>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="417" Column="15" TopLine="402"/>
-      </Position13>
-      <Position14>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="418" Column="15" TopLine="403"/>
-      </Position14>
-      <Position15>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="419" Column="15" TopLine="404"/>
-      </Position15>
-      <Position16>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="420" Column="15" TopLine="405"/>
-      </Position16>
-      <Position17>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="421" Column="17" TopLine="410"/>
-      </Position17>
-      <Position18>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="422" Column="15" TopLine="407"/>
-      </Position18>
-      <Position19>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="423" Column="15" TopLine="408"/>
-      </Position19>
-      <Position20>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="11385" Column="19" TopLine="11365"/>
-      </Position20>
-      <Position21>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="455" Column="33" TopLine="433"/>
-      </Position21>
-      <Position22>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="11640" Column="15" TopLine="11636"/>
-      </Position22>
-      <Position23>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="456" Column="15" TopLine="438"/>
-      </Position23>
-      <Position24>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="457" Column="35" TopLine="439"/>
-      </Position24>
-      <Position25>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="11652" Column="38" TopLine="11649"/>
-      </Position25>
-      <Position26>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="419" Column="121" TopLine="404"/>
-      </Position26>
-      <Position27>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="11403" Column="32" TopLine="11382"/>
-      </Position27>
-      <Position28>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="1" Column="1" TopLine="1"/>
-      </Position28>
-      <Position29>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="28" Column="15" TopLine="1"/>
-      </Position29>
-      <Position30>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="2020" Column="3" TopLine="1921"/>
-      </Position30>
-    </JumpHistory>
+    <JumpHistory Count="0" HistoryIndex="-1"/>
   </ProjectOptions>
   <CompilerOptions>
     <Version Value="11"/>

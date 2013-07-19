@@ -397,6 +397,12 @@ type
     procedure SetScaleX (aValue : Double);
     procedure SetScaleY (aValue : Double);
   protected
+    // Those two procedures do not get the translated coordinates if overriden
+    // must be translated before doing any drawing.
+    procedure DoMoveTo(x, y : integer);                                                                                 override;
+    procedure DoLine(x1, y1, x2, y2 : integer);                                                                         override;
+
+
     procedure DoArc(ALeft, ATop, ARight, ABottom, Angle16Deg, Angle16DegLength: Integer);                               virtual;
     procedure DoArc(ALeft, ATop, ARight, ABottom, SX, SY, EX, EY: Integer);                                             virtual;
     procedure DoBrushCopy (ADestRect: TRect; ABitmap: Graphics.TBitmap; ASourceRect: TRect; ATransparentColor: TColor); virtual;
@@ -479,6 +485,8 @@ type
   protected
     procedure TranslateCoordinates(var InCoords : Array of TPOINT);           virtual; overload;
     procedure TranslateCoordinates(var InCoords : PPOINT; NumPoints:Integer); virtual; overload;
+    procedure DoMoveTo(x, y : integer); override;
+    procedure DoLineTo(x, y : integer); override;
   public
 
     procedure Arc          (ALeft, ATop, ARight, ABottom, Angle16Deg, Angle16DegLength: Integer);                        override;
@@ -10959,6 +10967,24 @@ begin
   end;
 end;
 
+procedure TEvsGraphCanvas.DoMoveTo(x, y : integer);
+var
+  vPt : TPoint;
+begin
+  vPt := classes.Point(x,y);
+  TranslateCoordinates(vPt);
+  inherited DoMoveTo(vPt.x, vPt.y);
+end;
+
+procedure TEvsGraphCanvas.DoLineTo(x, y : integer);
+var
+  vPt : TPoint;
+begin
+  vPt := classes.Point(x,y);
+  TranslateCoordinates(vPt);
+  inherited DoLineTo(vPt.x, vPt.y);
+end;
+
 procedure TEvsGraphCanvas.Arc(ALeft, ATop, ARight, ABottom, Angle16Deg,
   Angle16DegLength : Integer);
 var
@@ -11248,6 +11274,25 @@ procedure TEvsCustomCanvas.SetScaleY(aValue : Double);
 begin
   if FScaleY = aValue then Exit;
   FScaleY := aValue;
+end;
+
+procedure TEvsCustomCanvas.DoMoveTo(x, y : integer);
+var
+  vPts : TPoint;
+begin
+  vPts := classes.Point(x,y);
+  TranslateCoordinates(vPt);
+  inherited DoMoveTo(x, y);
+end;
+
+procedure TEvsCustomCanvas.DoLine(x1, y1, x2, y2 : integer);
+var
+  vPts : array[0..1] of TPoint;
+begin
+  vPts[0] := classes.Point(x1,y1);
+  vPts[1] := classes.Point(x2,y2);
+  TranslateCoordinates(vPts);
+  inherited DoLine(vPts[0].x, vPts[0].y, vPts[1].x, vPts[1].y);
 end;
 
 procedure TEvsCustomCanvas.DoArc(ALeft, ATop, ARight, ABottom, Angle16Deg,
