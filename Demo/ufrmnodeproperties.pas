@@ -5,7 +5,7 @@ unit ufrmnodeproperties;
 interface
 
 uses
-  LCLIntf, LCLType, LMessages, Messages, SysUtils, Classes, Graphics, Controls, Forms,
+  LCLIntf, LCLType, SysUtils, Classes, Graphics, Controls, Forms,
   Dialogs, usimplegraph, ExtCtrls, StdCtrls, ComCtrls, ExtDlgs, CheckLst;
 
 type

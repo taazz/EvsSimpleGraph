@@ -114,7 +114,7 @@
         <PackageName Value="LCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="57">
+    <Units Count="62">
       <Unit0>
         <Filename Value="SimpleGraphBuilder.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -131,11 +131,10 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="UfrmSimpleGraphTest"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="0"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="16"/>
-        <CursorPos X="26" Y="13"/>
+        <TopLine Value="4"/>
+        <CursorPos X="18" Y="19"/>
         <UsageCount Value="208"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -505,10 +504,13 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="ufrmnodeproperties"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="1"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
-        <CursorPos X="1" Y="1"/>
-        <UsageCount Value="72"/>
+        <CursorPos X="21" Y="8"/>
+        <UsageCount Value="73"/>
+        <Loaded Value="True"/>
       </Unit45>
       <Unit46>
         <Filename Value="C:\lazarus.1.0\lcl\interfaces\qt\qtint.pp"/>
@@ -550,15 +552,14 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="1" Y="1"/>
-        <UsageCount Value="105"/>
+        <UsageCount Value="106"/>
       </Unit50>
       <Unit51>
         <Filename Value="..\usimplegraph.pas"/>
-        <IsPartOfProject Value="True"/>
         <UnitName Value="usimplegraph"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="11390"/>
-        <CursorPos X="23" Y="11424"/>
+        <TopLine Value="11267"/>
+        <CursorPos X="28" Y="11284"/>
         <FoldState Value=" T7oHLF423 T3_90\0383316X"/>
         <UsageCount Value="72"/>
         <Bookmarks Count="1">
@@ -603,8 +604,52 @@
         <CursorPos X="11" Y="66"/>
         <UsageCount Value="13"/>
       </Unit56>
+      <Unit57>
+        <Filename Value="..\Package\ureg.pas"/>
+        <UnitName Value="uReg"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="19" Y="19"/>
+        <UsageCount Value="20"/>
+      </Unit57>
+      <Unit58>
+        <Filename Value="..\..\..\Evosi\Components\Controls\uEvsControlReg.pas"/>
+        <UnitName Value="uEvsControlReg"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="23" Y="34"/>
+        <UsageCount Value="10"/>
+      </Unit58>
+      <Unit59>
+        <Filename Value="..\uevssimplegraph.pas"/>
+        <UnitName Value="uEvsSimpleGraph"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="2082"/>
+        <CursorPos X="32" Y="2099"/>
+        <UsageCount Value="10"/>
+      </Unit59>
+      <Unit60>
+        <Filename Value="..\usgactions.pas"/>
+        <UnitName Value="usgactions"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="33" Y="8"/>
+        <UsageCount Value="10"/>
+      </Unit60>
+      <Unit61>
+        <Filename Value="..\Package\SG.lrs"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="17" Y="1"/>
+        <UsageCount Value="10"/>
+      </Unit61>
     </Units>
-    <JumpHistory Count="0" HistoryIndex="-1"/>
+    <JumpHistory Count="1" HistoryIndex="0">
+      <Position1>
+        <Filename Value="ufrmnodeproperties.pas"/>
+        <Caret Line="1" Column="1" TopLine="1"/>
+      </Position1>
+    </JumpHistory>
   </ProjectOptions>
   <CompilerOptions>
     <Version Value="11"/>
@@ -614,7 +659,6 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value=".."/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <CodeGeneration>

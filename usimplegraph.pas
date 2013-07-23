@@ -11281,7 +11281,7 @@ var
   vPts : TPoint;
 begin
   vPts := classes.Point(x,y);
-  TranslateCoordinates(vPt);
+  TranslateCoordinates(vPts);
   inherited DoMoveTo(x, y);
 end;
 

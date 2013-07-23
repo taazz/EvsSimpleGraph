@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<CONFIG>
+  <Package Version="4">
+    <PathDelim Value="\"/>
+    <Name Value="uGraphRTM"/>
+    <Author Value="Evosi"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <PathDelim Value="\"/>
+      <SearchPaths>
+        <OtherUnitFiles Value=".."/>
+        <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+      <Other>
+        <CompilerMessages>
+          <MsgFileName Value=""/>
+        </CompilerMessages>
+        <CompilerPath Value="$(CompPath)"/>
+      </Other>
+    </CompilerOptions>
+    <Description Value="SimpleGraph Component and helpers converted to Lazarus"/>
+    <License Value="  TSimpleGraph v2.80
+  by Kambiz R. Khojasteh
+
+  kambiz@delphiarea.com
+  http://www.delphiarea.com
+"/>
+    <Version Minor="1"/>
+    <Files Count="2">
+      <Item1>
+        <Filename Value="..\usgactions.pas"/>
+        <UnitName Value="usgactions"/>
+      </Item1>
+      <Item2>
+        <Filename Value="..\usimplegraph.pas"/>
+        <UnitName Value="usimplegraph"/>
+      </Item2>
+    </Files>
+    <Type Value="RunAndDesignTime"/>
+    <RequiredPkgs Count="2">
+      <Item1>
+        <PackageName Value="lcl"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="FCL"/>
+      </Item2>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>
