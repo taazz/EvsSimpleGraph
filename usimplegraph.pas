@@ -3652,11 +3652,15 @@ begin
       if cfBitmap in ClipboardFormats then
       begin
         vBitmap := GetAsBitmap(vObjectList);
+        vStream := TMemoryStream.Create;
         try
           vBitmap.HandleType := bmDDB;
-          Clipboard.Assign(vBitmap);
+          //vBitmap.SaveToStream(vStream);
+          //vStream.Position := 0;
+          Clipboard.Assign(vBitmap);//AddFormat(CF_Bitmap, vStream);
         finally
           vBitmap.Free;
+          vStream.Free;
         end;
       end;
       if cfNative in ClipboardFormats then

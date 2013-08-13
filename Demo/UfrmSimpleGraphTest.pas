@@ -9,7 +9,7 @@ uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, LCLType,
   LCLIntf, StdCtrls, ComCtrls, ActnList, Menus, Clipbrd,
 
-  {$IFDEF GDIPLUS} uEvsGDIPlusCanvas, {$ENDIF} usimplegraph, ExtCtrls;
+  {$IFDEF GDIPLUS} uEvsGDIPlusCanvas, {$ENDIF} usimplegraph, ExtCtrls, sqldb;
 const
   {$IFDEF  LCLWIN32}
     EvsActiveWidgetSet = 'Win32';
@@ -63,7 +63,6 @@ type
     actRectNode : TAction;
     ActionList: TActionList;
     ImageList : TImageList;
-    ImageList1: TImageList;
     dlgOpen : TOpenDialog;
     dlgSave : TSaveDialog;
     Panel1 : TPanel;
@@ -85,6 +84,7 @@ type
     ToolButton13 : TToolButton;
     ToolButton14 : TToolButton;
     tbtnSelection : TToolButton;
+    ToolButton15 : TToolButton;
     ToolButton16 : TToolButton;
     ToolButton17 : TToolButton;
     ToolButton18 : TToolButton;

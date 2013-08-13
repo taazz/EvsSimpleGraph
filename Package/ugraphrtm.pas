@@ -7,14 +7,8 @@ unit uGraphRTM;
 interface
 
 uses
-  usgactions, usimplegraph, LazarusPackageIntf;
+  usgactions, usimplegraph;
 
 implementation
 
-procedure Register;
-begin
-end;
-
-initialization
-  RegisterPackage('uGraphRTM', @Register);
 end.
