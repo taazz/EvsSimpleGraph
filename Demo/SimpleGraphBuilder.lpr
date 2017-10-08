@@ -8,7 +8,7 @@ uses
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
   Forms, UfrmSimpleGraphTest, uFrmDebug, ufrmnodeproperties,
-  UFrmlinkprop;
+  UFrmlinkprop, usimplegraph;
 
 {$R *.res}
 

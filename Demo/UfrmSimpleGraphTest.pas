@@ -9,7 +9,7 @@ uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, LCLType,
   LCLIntf, StdCtrls, ComCtrls, ActnList, Menus, Clipbrd,
 
-  {$IFDEF GDIPLUS} uEvsGDIPlusCanvas, {$ENDIF} usimplegraph, ExtCtrls, sqldb;
+  {$IFDEF GDIPLUS} uEvsGDIPlusSGCanvas, {$ENDIF} usimplegraph, ExtCtrls, sqldb;
 const
   {$IFDEF  LCLWIN32}
     EvsActiveWidgetSet = 'Win32';
@@ -600,7 +600,10 @@ begin
   Test.OnObjectDblClick := @goDblClick;
   Test.OnDblClick := @sgDblClick;
     {$IFDEF GDIPLUS}
-    Test.CustomCanvas := TEvsGdiPlusCanvas;
+    Test.CustomCanvas := TEvsGdiPlusControlCanvas;
+    //Test.Canvas.Free;
+    //Test.Canvas := TEvsGdiPlusControlCanvas.Create;
+    //TControlCanvas(Test.Canvas).Control := Test;
     {$ENDIF}
   {$ENDIF}
   Test.FixedScrollBars := True;

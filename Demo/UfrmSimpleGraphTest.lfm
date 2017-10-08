@@ -1,22 +1,23 @@
 object EvsMain: TEvsMain
-  Left = 289
-  Height = 357
-  Top = 158
-  Width = 671
+  Left = 442
+  Height = 410
+  Top = 163
+  Width = 719
   Caption = 'EvsMain'
-  ClientHeight = 357
-  ClientWidth = 671
-  LCLVersion = '1.0.10.0'
+  ClientHeight = 410
+  ClientWidth = 719
+  LCLVersion = '1.6.4.0'
   object ToolBar1: TToolBar
     Left = 0
     Height = 26
     Top = 0
-    Width = 671
+    Width = 719
     Caption = 'ToolBar1'
     Images = ImageList
     TabOrder = 0
     object ToolButton5: TToolButton
       Left = 116
+      Height = 22
       Top = 2
       Width = 10
       Caption = 'ToolButton5'
@@ -39,6 +40,7 @@ object EvsMain: TEvsMain
     end
     object ToolButton1: TToolButton
       Left = 241
+      Height = 22
       Top = 2
       Width = 10
       Caption = 'ToolButton1'
@@ -71,6 +73,7 @@ object EvsMain: TEvsMain
     end
     object ToolButton12: TToolButton
       Left = 320
+      Height = 22
       Top = 2
       Width = 10
       Caption = 'ToolButton12'
@@ -116,7 +119,7 @@ object EvsMain: TEvsMain
     Left = 0
     Height = 26
     Top = 26
-    Width = 671
+    Width = 719
     Caption = 'ToolBar2'
     Images = ImageList
     TabOrder = 1
@@ -176,6 +179,7 @@ object EvsMain: TEvsMain
     end
     object ToolButton17: TToolButton
       Left = 208
+      Height = 22
       Top = 2
       Width = 5
       Caption = 'ToolButton17'
@@ -193,6 +197,7 @@ object EvsMain: TEvsMain
     end
     object ToolButton3: TToolButton
       Left = 259
+      Height = 22
       Top = 2
       Width = 10
       Caption = 'ToolButton3'
@@ -207,13 +212,12 @@ object EvsMain: TEvsMain
   object Panel1: TPanel
     Left = 0
     Height = 16
-    Top = 341
-    Width = 671
+    Top = 394
+    Width = 719
     Align = alBottom
     BevelOuter = bvNone
-    Caption = 'Panel1'
     ClientHeight = 16
-    ClientWidth = 671
+    ClientWidth = 719
     TabOrder = 2
     object StaticText1: TStaticText
       Left = 0
@@ -239,14 +243,14 @@ object EvsMain: TEvsMain
       Left = 360
       Height = 16
       Top = 0
-      Width = 242
+      Width = 290
       Align = alClient
       Alignment = taCenter
       BorderStyle = sbsSunken
       TabOrder = 2
     end
     object StaticText4: TStaticText
-      Left = 602
+      Left = 650
       Height = 16
       Top = 0
       Width = 69
