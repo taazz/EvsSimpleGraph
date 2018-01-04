@@ -7,8 +7,8 @@ uses
   cthreads,
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, UfrmSimpleGraphTest, uFrmDebug, ufrmnodeproperties,
-  UFrmlinkprop, usimplegraph;
+  Forms, memdslaz, UfrmSimpleGraphTest, uFrmDebug, ufrmnodeproperties,
+  UFrmlinkprop, usimplegraph, uevsIDChecks, uEvsObjectList;
 
 {$R *.res}
 

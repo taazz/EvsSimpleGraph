@@ -104,6 +104,8 @@
 unit usimplegraph;
 {$mode objfpc}
 {.$MODE DELPHI}
+{$RangeChecks off}
+{$DEFINE DEBUG}
 {$H+}
 
 interface
@@ -116,14 +118,10 @@ interface
 {$ENDIF}
 
 
-{$DEFINE CANVAS_TEXTDRAW} //replace the api calls with canvas only calls
+{.$DEFINE CANVAS_TEXTDRAW} //replace the api calls with canvas only calls
 
 {$DEFINE SUBCLASS} // required for the scroll bars to work correctly.
 
-
-{.$DEFINE DBGFRM} // replace with fpc debug units and remove dependency.
-{$IFDEF DBGFRM}
-{$ENDIF}
 
 {$IFDEF WIN}
   {.$DEFINE METAFILE_SUPPORT}
@@ -131,10 +129,10 @@ interface
 {$ENDIF}
 
 uses
-  Classes, SysUtils, Types, Controls, Forms, Menus, LMessages,
-  LCLIntf, LCLType, LCLProc, GraphType, Graphics
-  {$IFDEF WIN        } ,Windows   {$ENDIF}
-  {$IFDEF DBGFRM     } ,UFrmDebug {$ENDIF}
+  Classes,   SysUtils, Types,   Controls, Forms,     Menus,
+  LMessages, LCLIntf,  LCLType, LCLProc,  GraphType, Graphics
+  {$IFDEF WIN    } ,Windows   {$ENDIF}
+  {$IFDEF DBGFRM } ,UFrmDebug {$ENDIF}
   ;
 
 {%REGION Const}
@@ -191,6 +189,7 @@ type
   EEvsGraphStreamError      = class(EStreamError);
   EEvsGraphInvalidOperation = class(EInvalidOperation);
   EEvsPointListError        = class(EListError);
+  EEvsSimpleGraphException  = class(Exception);
 
   TGridSize   = 4..128;
   TMarkerSize = 3..9;
@@ -236,28 +235,52 @@ type
   PXFORM = ^XFORM;
 {$ENDIF}
 
-  TEvsGraphObjectState = (osCreating, osDestroying, osLoading, osReading, osWriting,
-    osUpdating, osDragging, osDragDisabled, osConverting);
+  TRotationAngle = -36000..36000;
+
+  { IEvsTransformable }
+
+  IEvsTransformable = interface
+    ['{A74B6CBE-CF84-49F6-8096-009E241795C1}']
+    //function  GetAngle   :TAngle;
+    Function  GetOffsetX :Single;
+    Function  GetOffsetY :Single;
+    Function  GetScaleX  :Single;
+    Function  GetScaleY  :Single;
+    function GetXForm :TXForm;
+    //procedure SetAngle   (aValue :TAngle);
+    Procedure SetOffsetX(aValue :Single);
+    Procedure SetOffsetY(aValue :Single);
+    Procedure SetScaleX (aValue :Single);
+    Procedure SetScaleY (aValue :Single);
+
+    Function DPToLP(const aPoint:TPoint) :TPoint;
+    Function LPToDP(const aPoint:TPoint) :TPoint;
+    procedure SetXForm(aValue :TXForm);
+
+    Property OffsetX :Single read GetOffsetX write SetOffsetX;
+    Property OffsetY :Single read GetOffsetY write SetOffsetY;
+    Property ScaleX  :Single read GetScaleX  write SetScaleX;
+    Property ScaleY  :Single read GetScaleY  write SetScaleY;
+    property XForm   :TXForm read GetXForm   write SetXForm;
+    //Property  Ange    :TAngle read GetAngle   write SetAngle; // in degrees (-360.00..360.00).
+  end;
+
+  TEvsGraphObjectState  =(osCreating, osDestroying, osLoading, osReading, osWriting, osUpdating, osDragging,   osDragDisabled, osConverting );
   TEvsGraphObjectStates = set of TEvsGraphObjectState;
 
-  TEvsGraphChangeFlag = (gcView, gcData, gcText, gcPlacement, gcDependency);
+  TEvsGraphChangeFlag  = (gcView, gcData, gcText, gcPlacement, gcDependency);
   TEvsGraphChangeFlags = set of TEvsGraphChangeFlag;
-
   TEvsGraphDependencyChangeFlag = (gdcChanged, gdcRemoved);
 
-  TEvsGraphObjectOption = (goLinkable, goSelectable, goShowCaption);
+  TEvsGraphObjectOption  = (goLinkable, goSelectable, goShowCaption);
   TEvsGraphObjectOptions = set of TEvsGraphObjectOption;
 
-  TEvsGraphLinkOption = (gloFixedStartPoint, gloFixedEndPoint, gloFixedBreakPoints,
-    gloFixedAnchorStartPoint, gloFixedAnchorEndPoint);
-  TEvsGraphLinkOptions = set of TEvsGraphLinkOption;
+  TEvsGraphLinkOption    = (gloFixedStartPoint, gloFixedEndPoint, gloFixedBreakPoints, gloFixedAnchorStartPoint, gloFixedAnchorEndPoint);
+  TEvsGraphLinkOptions   = set of TEvsGraphLinkOption;
 
-  TEvsLinkBeginEndStyle = (lsNone, lsArrow, lsArrowSimple, lsCircle, lsDiamond);
-
+  TEvsLinkBeginEndStyle    = (lsNone, lsArrow, lsArrowSimple, lsCircle, lsDiamond);
   TEvsLinkNormalizeOptions = set of (lnoDeleteSamePoint, lnoDeleteSameAngle);
-
-  TEvsLinkChangeMode = (lcmNone, lcmInsertPoint, lcmRemovePoint, lcmMovePoint,
-    lcmMovePolyline);
+  TEvsLinkChangeMode = (lcmNone, lcmInsertPoint, lcmRemovePoint, lcmMovePoint, lcmMovePolyline);
 
   TEvsGraphNodeOption = (gnoMovable, gnoResizable, gnoShowBackground);
   TEvsGraphNodeOptions = set of TEvsGraphNodeOption;
@@ -279,10 +302,8 @@ type
   TEvsResizeOption = (roNoChange, roSmallest, roLargest);
 
   TEvsGraphNotifyEvent       = procedure(Graph: TEvsSimpleGraph; GraphObject: TEvsGraphObject) of object;
-  TEvsGraphContextPopupEvent = procedure(Graph: TEvsSimpleGraph;
-                                         GraphObject: TEvsGraphObject;
-                                         const MousePos: TPoint;
-                                         var Handled: boolean) of object;
+  TEvsGraphContextPopupEvent = procedure(Graph: TEvsSimpleGraph; GraphObject: TEvsGraphObject;
+                                         const MousePos: TPoint; var Handled: boolean) of object;
   TEvsGraphDrawEvent         = procedure(Graph: TEvsSimpleGraph; Canvas: TCanvas) of object;
   TEvsGraphObjectDrawEvent   = procedure(Graph: TEvsSimpleGraph; GraphObject: TEvsGraphObject;
                                          Canvas: TCanvas) of object;
@@ -306,7 +327,6 @@ type
                                          HT: DWORD; Cancelled: boolean) of object;
   TEvsGraphStreamEvent       = procedure(Graph: TEvsSimpleGraph; GraphObject: TEvsGraphObject;
                                          Stream: TStream) of object;
-
   TEvsGraphForEachMethod     = function(GraphObject: TEvsGraphObject;
                                         UserData: integer): boolean of object;
 
@@ -316,20 +336,20 @@ type
   TEvsGraphLayerClass  = class of TEvsGraphLayer;
   TEvsGraphCanvasClass = class of TEvsGraphCanvas;
 
-  TEvsCanvasRecall = class(TObject)          // TEST DIF BETWEEN TEXTSTYLE AND TEXTFLAG.
+  TEvsCanvasRecall = class(TObject)
   private
-    fPen: TPen;
-    fFont: TFont;
-    fBrush: TBrush;
-    fCopyMode: TCopyMode;
-    fTextFlags: TTextStyle;// integer;
-    fReference: TCanvas;
+    FPen       :TPen;
+    FFont      :TFont;
+    FBrush     :TBrush;
+    FCopyMode  :TCopyMode;
+    FTextFlags :TTextStyle;
+    FReference :TCanvas;
     procedure SetReference(Value: TCanvas);
   public
     constructor Create(AReference: TCanvas);
-    destructor Destroy; override;
-    procedure Store;
-    procedure Retrieve;
+    destructor  Destroy; override;
+    procedure   Store;
+    procedure   Retrieve;
     property Reference: TCanvas read fReference write SetReference;
   end;
 
@@ -362,19 +382,17 @@ type
   end;
 
   { TEvsCompatibleCanvas }
-  TEvsCompatibleCanvas = class(TCanvas)               //WORKS
-   public
-     constructor Create;                            //CreateCompatibleDC -- MAPS TO LCLINTF
-     destructor Destroy; override;
-   end;
+  TEvsCompatibleCanvas = class(TCanvas)
+  public
+    constructor Create;
+    destructor  Destroy; override;
+  end;
 
-
-
-  TEvsGraphStreamableObject = class(TComponent)       //CLEAN
+  TEvsGraphStreamableObject = class(TComponent)
   private
-    fID: DWORD;
-    fG: TEvsGraphObject;
-    fDummy: integer;
+    FID: DWORD;
+    FG: TEvsGraphObject;
+    FDummy: integer;
   published
     property ID: DWORD read fID write fID;
     property G: TEvsGraphObject read fG write fG stored True;
@@ -458,8 +476,11 @@ type
     procedure PolyBezier(Points: PPoint; NumPts: Integer; Filled : boolean = False;Continuous: boolean = False);         override;
     procedure Polygon   (Points: PPoint; NumPts: Integer; Winding: boolean = False);                                     override;
     procedure Polyline  (Points: PPoint; NumPts: Integer);                                                               override;
+    function DPToLP     (const aPoint:TPoint):TPoint;                                                                    virtual;
+    function LPToDP     (const aPoint :TPoint):TPoint;                                                                   virtual;
   public
     constructor Create;
+    procedure Assign(Source :TPersistent);                                                                               override;
     procedure SetTransformation(XScale, YScale, DX, DY : Double); virtual;
     procedure ClearTransformation; virtual;
   public
@@ -538,6 +559,7 @@ type
   private
     FBottom,
     FTop      : Integer;
+    FTitle :string;
     FName     : String;
     FID       : Integer;
     FLocked   : Boolean;
@@ -547,6 +569,7 @@ type
     procedure SetID(AValue: Integer);
     procedure SetLocked(AValue: Boolean);
     procedure SetPrintable(AValue: Boolean);
+    procedure SetTitle(aValue :string);
     procedure SetVisible(AValue: Boolean);
   protected
     function CanAdd(const aObject:TEvsGraphObject):Boolean;
@@ -560,10 +583,11 @@ type
     property Count : Integer read GetCount;
     property Name  : String  read FName    write FName;
   public
-    property ID        : Integer read FID write SetID;
-    property Locked    : Boolean read FLocked write SetLocked;
+    property ID        : Integer read FID        write SetID;
+    Property Title     : string  read FTitle     write SetTitle;
+    property Locked    : Boolean read FLocked    write SetLocked;
     Property Printable : Boolean read FPrintable write SetPrintable;
-    Property Visible   : Boolean read FVisible write SetVisible;
+    Property Visible   : Boolean read FVisible   write SetVisible;
   end;
 
   { TEvsGraphLayerList }
@@ -584,9 +608,9 @@ type
     destructor Destroy; override;
     function New : TEvsGraphLayer;
     function Delete(Index :integer):Boolean;overload;
-    function Delete(Layer:TEvsGraphLayer):Boolean;overload;
+    function Delete(Layer :TEvsGraphLayer):Boolean;overload;
     property Count:Integer Read GetCount;
-    property Layers[Index:Integer]:TEvsGraphLayer read GetLayer;
+    property Layers[Index :Integer]:TEvsGraphLayer read GetLayer;
   end;
 
   TEvsGraphScrollBar = class(TPersistent)                    //NEEDS WORK ON 3 METHODS
@@ -640,52 +664,52 @@ type
     property Range: integer read fRange;
     property Owner: TEvsSimpleGraph read fOwner;
   published
-    property Position: Integer read fPosition write SetPosition default 0;
-    property Margin: Word read fMargin write fMargin default 0;
-    property ButtonSize: integer read fButtonSize write SetButtonSize default 0;
-    property Color: TColor read fColor write SetColor default clBtnHighlight;
-    property Increment: TScrollBarInc
-      read fIncrement write fIncrement stored IsIncrementStored default 8;
-    property ParentColor: boolean read fParentColor write SetParentColor default True;
-    property Smooth: boolean read fSmooth write fSmooth default False; //JKOZ SMOOTH
-    property Size: integer read fSize write SetSize default 0;
-    property Style: TScrollBarStyle read fStyle write SetStyle default ssRegular;
-    property ThumbSize: integer read fThumbSize write SetThumbSize default 0;
-    property Tracking: boolean read fTracking write fTracking default False;
-    property Visible: boolean read fVisible write SetVisible default True;
+    property Position    :Integer         read fPosition    write SetPosition   default 0;
+    property Margin      :Word            read fMargin      write fMargin       default 0;
+    property ButtonSize  :integer         read fButtonSize  write SetButtonSize default 0;
+    property Color       :TColor          read fColor       write SetColor      default clBtnHighlight;
+    property Increment   :TScrollBarInc   read fIncrement   write fIncrement stored IsIncrementStored default 8;
+    property ParentColor :boolean         read fParentColor write SetParentColor default True;
+    property Smooth      :boolean         read fSmooth      write fSmooth        default False; //JKOZ SMOOTH
+    property Size        :integer         read fSize        write SetSize        default 0;
+    property Style       :TScrollBarStyle read fStyle       write SetStyle       default ssRegular;
+    property ThumbSize   :integer         read fThumbSize   write SetThumbSize   default 0;
+    property Tracking    :boolean         read fTracking    write fTracking      default False;
+    property Visible     :boolean         read fVisible     write SetVisible     default True;
   end;
 
+  { TEvsGraphObjectListEnumerator }
+  // jkoz: Internal ID generator to be used to
   TEvsGraphObjectListEnumerator = class
   private
-    FGraphList : TEvsGraphObjectList;
-    FPosition  : Integer;
+    FGraphList :TEvsGraphObjectList;
+    FBaseClass :TEvsGraphObjectClass;
+    FPosition  :Integer;
+    FReverse   :Boolean;
+  protected
+    procedure Reset;
   public
     constructor Create(aList: TEvsGraphObjectList);
-    function GetCurrent: TEvsGraphObject;
-    function MoveNext: Boolean;
-    property Current: TEvsGraphObject read GetCurrent;
+    function Filter(const aBaseClass:TEvsGraphObjectClass):TEvsGraphObjectListEnumerator;
+    function GetCurrent    :TEvsGraphObject;
+    function MoveNext      :Boolean;
+    function GetEnumerator :TEvsGraphObjectListEnumerator;
+    function Reverse       :TEvsGraphObjectListEnumerator;
+    property Current       :TEvsGraphObject read GetCurrent;
   end;
 
-  TEvsGraphObjectListReverseEnumerator = class
+{$DEFINE SUPPORT_Stack}
+  TEvsGraphObjectList = class(TPersistent)
   private
-    FGraphList : TEvsGraphObjectList;
-    FPosition  : Integer;
-  public
-    constructor Create(aList: TEvsGraphObjectList);
-    function GetCurrent: TEvsGraphObject;
-    function MoveNext: Boolean;
-    property Current: TEvsGraphObject read GetCurrent;
-  end;
-
-  TEvsGraphObjectList = class(TPersistent)         //CLEAN
-  private
-    fItems: array of TEvsGraphObject;
-    fCount: integer;
-    fCapacity: integer;
-    fOnChange: TEvsGraphObjectListEvent;
-    Enum: TListEnumState;
-    EnumStack: array of TListEnumState;
-    EnumStackPos: integer;
+    FItems        :array of TEvsGraphObject;
+    FCount        :Integer;
+    FCapacity     :Integer;
+    FOnChange     :TEvsGraphObjectListEvent;
+    {$IFDEF SUPPORT_Stack}
+    FEnum         :TListEnumState;
+    FEnumStack    :array of TListEnumState;
+    FEnumStackPos :Integer;
+    {$ENDIF}
     procedure SetCapacity(Value: integer);
     function GetItems(Index: integer): TEvsGraphObject;
   protected
@@ -697,20 +721,22 @@ type
     destructor Destroy; override;
     procedure Clear;
     function GetEnumerator: TEvsGraphObjectListEnumerator;
-    function GetReverseEnumerator: TEvsGraphObjectListReverseEnumerator;
+    function GetReverseEnumerator: TEvsGraphObjectListEnumerator;
     procedure Assign(Source: TPersistent); override;
-    function Add(Item: TEvsGraphObject): integer;
+    function  Add(Item: TEvsGraphObject): integer;
     procedure Insert(Index: integer; Item: TEvsGraphObject);
     procedure Delete(Index: integer);
-    function Remove(Item: TEvsGraphObject): integer;
+    function  Remove(Item: TEvsGraphObject): integer;
     procedure Move(CurIndex, NewIndex: integer);
-    function IndexOf(Item: TEvsGraphObject): integer;
-    function First: TEvsGraphObject;
-    function Prior: TEvsGraphObject;
-    function Next: TEvsGraphObject;
-    function Last: TEvsGraphObject;
-    function Push: boolean;
-    function Pop: boolean;
+    function  IndexOf(Item: TEvsGraphObject): integer;
+    {$IFDEF SUPPORT_Stack}
+    function First:TEvsGraphObject;
+    function Prior:TEvsGraphObject;
+    function Next :TEvsGraphObject;
+    function Last :TEvsGraphObject;
+    function Push :Boolean;
+    function Pop  :Boolean;
+    {$ENDIF}
     property Count: integer read fCount;
     property Capacity: integer read fCapacity write SetCapacity;
     property Items[Index: integer]: TEvsGraphObject read GetItems; default;
@@ -719,58 +745,58 @@ type
 
   { TEvsGraphObject }
 
-  TEvsGraphObject = class(TPersistent)   //TESTING
+  TEvsGraphObject = class(TPersistent)
   private
-    fID              : DWORD;
-    fOwner           : TEvsSimpleGraph;
-    fBrush           : TBrush;
-    fPen             : TPen;
-    fText            : string;
-    fHint            : string;
-    fFont            : TFont;
-    fParentFont      : boolean;
-    fOptions         : TEvsGraphObjectOptions;
-    fVisible         : boolean;
-    fSelected        : boolean;
-    fStates          : TEvsGraphObjectStates;
-    fDependentList   : TEvsGraphObjectList;
-    fLinkInputList   : TEvsGraphObjectList;
-    fLinkOutputList  : TEvsGraphObjectList;
-    fTextToShow      : string;
-    fTag             : integer;
-    fData            : Pointer;
-    fHasCustomData   : boolean;
-    fVisualRect      : TRect;
-    fVisualRectFlags : TEvsGraphChangeFlags;
-    UpdateCount      : integer;
-    PendingChanges   : TEvsGraphChangeFlags;
-    DragDisableCount : integer;
-    function GetLayer :TEvsGraphLayer;
+    FID              :DWord;
+    FOwner           :TEvsSimpleGraph;
+    FBrush           :TBrush;
+    FPen             :TPen;
+    FText            :String;
+    FHint            :String;
+    FFont            :TFont;
+    FParentFont      :Boolean;
+    FOptions         :TEvsGraphObjectOptions;
+    FVisible         :Boolean;
+    FSelected        :Boolean;
+    FStates          :TEvsGraphObjectStates;
+    FDependentList   :TEvsGraphObjectList;
+    FLinkInputList   :TEvsGraphObjectList;
+    FLinkOutputList  :TEvsGraphObjectList;
+    FTextToShow      :String;
+    FTag             :Integer;
+    FData            :Pointer;
+    FHasCustomData   :Boolean;
+    FVisualRect      :TRect;
+    FVisualRectFlags :TEvsGraphChangeFlags;
+    UpdateCount      :Integer;
+    PendingChanges   :TEvsGraphChangeFlags;
+    DragDisableCount :Integer;
+    function  GetLayer :TEvsGraphLayer;
     function  GetOwnerZoomFactor : Double;
     procedure SetBrush(Value: TBrush);
     procedure SetLayer(aValue :TEvsGraphLayer);
-    procedure SetPen(Value: TPen);
-    procedure SetText(const Value: string);
-    procedure SetHint(const Value: string);
-    procedure SetFont(Value: TFont);
+    procedure SetPen  (Value: TPen);
+    procedure SetText (const Value: string);
+    procedure SetHint (const Value: string);
+    procedure SetFont (Value: TFont);
     procedure SetParentFont(Value: boolean);
-    procedure SetVisible(Value: boolean);
-    procedure SetSelected(Value: boolean);
-    function  GetZOrder: integer;
-    procedure SetZOrder(Value: integer);
+    procedure SetVisible   (Value: boolean);
+    procedure SetSelected  (Value: boolean);
+    function  GetZOrder: Integer;
+    procedure SetZOrder (Value: integer);
     procedure SetOptions(Value: TEvsGraphObjectOptions);
-    procedure SetHasCustomData(Value: boolean);
-    function  GetShowing: boolean;
-    function  GetDragging: boolean;
-    function  GetDependents(Index: integer): TEvsGraphObject;
-    function  GetDependentCount: integer;
-    function  GetLinkInputs(Index: integer): TEvsGraphLink;
-    function  GetLinkInputCount: integer;
-    function  GetLinkOutputs(Index: integer): TEvsGraphLink;
-    function  GetLinkOutputCount: integer;
-    function  IsFontStored: boolean;
-    procedure ListChanged(Sender: TObject; GraphObject: TEvsGraphObject; Action: TEvsGraphObjectListAction);
-    procedure ReadCustomData(Stream: TStream);
+    procedure SetHasCustomData(Value: Boolean);
+    function  GetShowing  :Boolean;
+    function  GetDragging :Boolean;
+    function  GetDependents (Index: integer): TEvsGraphObject;
+    function  GetLinkInputs (Index: Integer): TEvsGraphLink;
+    function  GetLinkOutputs(Index: Integer): TEvsGraphLink;
+    function  GetDependentCount  : Integer;
+    function  GetLinkInputCount  :Integer;
+    function  GetLinkOutputCount :Integer;
+    function  IsFontStored       :Boolean;
+    procedure ListChanged    (Sender: TObject; GraphObject: TEvsGraphObject; Action: TEvsGraphObjectListAction);
+    procedure ReadCustomData (Stream: TStream);
     procedure WriteCustomData(Stream: TStream);
   protected
     constructor CreateAsReplacement(AGraphObject: TEvsGraphObject);                                 virtual;
@@ -779,23 +805,29 @@ type
     procedure DefineProperties(Filer: TFiler);                                                      override;
     procedure Initialize;                                                                           virtual;
     procedure Loaded;                                                                               virtual;
-    procedure ReplaceID(OldID, NewID: DWORD);                                                       virtual;
+    {$IFDEF DEBUG}
+  Public
+    {$ENDIF}
+    procedure ReplaceID(OldID, NewID: DWORD; const aStart:Integer =0);                              virtual;
+    {$IFDEF DEBUG}
+  protected
+    {$ENDIF}
     procedure ReplaceObject(OldObject, NewObject: TEvsGraphObject);                                 virtual;
     procedure NotifyDependents(Flag: TEvsGraphDependencyChangeFlag);                                virtual;
     procedure LookupDependencies;                                                                   virtual;
     procedure UpdateDependencies;                                                                   virtual;
     procedure UpdateDependencyTo(GraphObject: TEvsGraphObject;Flag: TEvsGraphDependencyChangeFlag); virtual;
-    function UpdateTextPlacement(Recalc: boolean; dX, dY: integer): boolean;                        virtual;
+    function  UpdateTextPlacement(Recalc: boolean; dX, dY: integer): boolean;                       virtual;
     procedure Changed(Flags: TEvsGraphChangeFlags);                                                 virtual;
     procedure BoundsChanged(dX, dY, dCX, dCY: integer);                                             virtual;
     procedure DependentChanged(GraphObject: TEvsGraphObject;Action: TEvsGraphObjectListAction);     virtual;
     procedure LinkInputChanged(GraphObject: TEvsGraphObject;Action: TEvsGraphObjectListAction);     virtual;
     procedure LinkOutputChanged(GraphObject: TEvsGraphObject;Action: TEvsGraphObjectListAction);    virtual;
     procedure ParentFontChanged;                                                                    virtual;
-    function IsUpdateLocked: boolean;                                                               virtual;
-    function NeighborhoodRadius: integer;                                                           virtual;
-    function FixHookAnchor: TPoint;                                                                 virtual; abstract;
-    function RelativeHookAnchor(RefPt: TPoint): TPoint;                                             virtual; abstract;
+    function  IsUpdateLocked: boolean;                                                              virtual;
+    function  NeighborhoodRadius: integer;                                                          virtual;
+    function  FixHookAnchor: TPoint;                                                                virtual; abstract;
+    function  RelativeHookAnchor(RefPt: TPoint): TPoint;                                            virtual; abstract;
     procedure DrawControlPoint(aCanvas: TCanvas; const aPoint: TPoint;Enabled: boolean);            virtual;
     procedure DrawControlPoints(aCanvas: TCanvas);                                                  virtual; abstract;
     procedure DrawHighlight(aCanvas: TCanvas);                                                      virtual; abstract;
@@ -824,13 +856,13 @@ type
     function GetBoundsRect: TRect;                                                                  virtual; abstract;
     function GetSelectedVisualRect: TRect;                                                          virtual;
   protected
-    property TextToShow      : string               read fTextToShow          write fTextToShow;
-    property DependentList   : TEvsGraphObjectList  read fDependentList;
-    property LinkInputList   : TEvsGraphObjectList  read fLinkInputList;
-    property LinkOutputList  : TEvsGraphObjectList  read fLinkOutputList;
-    property VisualRectFlags : TEvsGraphChangeFlags read fVisualRectFlags     write fVisualRectFlags;
-    property ParentZoomFactor: Double               read GetOwnerZoomFactor;
-    property Layer           : TEvsGraphLayer       read GetLayer write SetLayer;
+    property TextToShow       :string               read FTextToShow          write fTextToShow;
+    property DependentList    :TEvsGraphObjectList  read FDependentList;
+    property LinkInputList    :TEvsGraphObjectList  read FLinkInputList;
+    property LinkOutputList   :TEvsGraphObjectList  read FLinkOutputList;
+    property VisualRectFlags  :TEvsGraphChangeFlags read FVisualRectFlags     write fVisualRectFlags;
+    property ParentZoomFactor :Double               read GetOwnerZoomFactor;
+    property Layer            :TEvsGraphLayer       read GetLayer             write SetLayer;
   public
     constructor Create(AOwner: TEvsSimpleGraph); virtual;
     destructor Destroy; override;
@@ -839,130 +871,126 @@ type
     procedure Assign(Source: TPersistent); override;
     procedure AssignTo(Dest: TPersistent); override;
     function ConvertTo(AnotherClass: TEvsGraphObjectClass): TEvsGraphObject; virtual;
-    procedure LoadFromStream(Stream: TStream); virtual;
-    procedure SaveToStream(Stream: TStream); virtual;
-    procedure BeginUpdate; virtual;
-    procedure EndUpdate; virtual;
-    procedure Invalidate; virtual;
-    procedure BringToFront; virtual;
-    procedure SendToBack; virtual;
-    class function IsLink: boolean; virtual;
-    class function IsNode: boolean; virtual;
-    function IsLocked: boolean; virtual;
-    function Delete: boolean; virtual;
-    function CanDelete: boolean; virtual;
-    function HitTest(const Pt: TPoint): DWORD; virtual;
-    function ContainsPoint(X, Y: integer): boolean; virtual;
-    function ContainsRect(const Rect: TRect): boolean; virtual;
-    function BeginDrag(const Pt: TPoint; HT: DWORD = $FFFFFFFF): boolean; virtual;
-    function DragTo(const Pt: TPoint; SnapToGrid: boolean): boolean; virtual;
-    function DragBy(dX, dY: integer; SnapToGrid: boolean): boolean; virtual;
-    function EndDrag(Accept: boolean): boolean; virtual;
-    property States  : TEvsGraphObjectStates read fStates;
-    property Dragging: boolean read GetDragging;
-    property Showing : boolean read GetShowing;
-    property Owner   : TEvsSimpleGraph read fOwner;
-    property ZOrder  : integer read GetZOrder write SetZOrder;
-    property Selected: boolean read fSelected write SetSelected;
-    property BoundsRect: TRect read GetBoundsRect write SetBoundsRect;
-    property VisualRect: TRect read fVisualRect;
-    property SelectedVisualRect: TRect read GetSelectedVisualRect;
-    property Dependents[Index: integer]: TEvsGraphObject read GetDependents;
-    property DependentCount: integer read GetDependentCount;
-    property LinkInputs[Index: integer]: TEvsGraphLink read GetLinkInputs;
-    property LinkInputCount: integer read GetLinkInputCount;
-    property LinkOutputs[Index: integer]: TEvsGraphLink read GetLinkOutputs;
-    property LinkOutputCount: integer read GetLinkOutputCount;
-    property Data: Pointer read fData write fData;
-    property ID: DWORD read fID;
+    procedure LoadFromStream(Stream: TStream);                               virtual;
+    procedure SaveToStream(Stream: TStream);                                 virtual;
+    procedure BeginUpdate;                                                   virtual;
+    procedure EndUpdate;                                                     virtual;
+    procedure Invalidate;                                                    virtual;
+    procedure BringToFront;                                                  virtual;
+    procedure SendToBack;                                                    virtual;
+    class function IsLink: Boolean;                                          virtual;
+    class function IsNode: Boolean;                                          virtual;
+    function IsLocked: Boolean;                                              virtual;
+    function Delete: Boolean;                                                virtual;
+    function CanDelete: Boolean;                                             virtual;
+    function HitTest(const Pt: TPoint): DWORD;                               virtual;
+    function ContainsPoint(X, Y: integer): Boolean;                          virtual;
+    function ContainsRect(const Rect: TRect): Boolean;                       virtual;
+    function BeginDrag   (const Pt: TPoint; HT: DWORD = $FFFFFFFF): Boolean; virtual;
+    function DragTo      (const Pt: TPoint; SnapToGrid: Boolean): Boolean;   virtual;
+    function DragBy      (dX, dY: integer; SnapToGrid: Boolean): Boolean;    virtual;
+    function EndDrag     (Accept: boolean): Boolean;                         virtual;
+    property Dragging   :Boolean read GetDragging;
+    property Showing    :Boolean read GetShowing;
+    property ZOrder     :Integer read GetZOrder     write SetZOrder;
+    property Selected   :Boolean read FSelected     write SetSelected;
+    property BoundsRect :TRect   read GetBoundsRect write SetBoundsRect;
+    property VisualRect :TRect   read FVisualRect;
+    property States     :TEvsGraphObjectStates read FStates;
+    property Owner      :TEvsSimpleGraph       read fOwner;
+    property SelectedVisualRect :TRect         read GetSelectedVisualRect;
+    property DependentCount     :Integer       read GetDependentCount;
+    property LinkInputCount     :Integer       read GetLinkInputCount;
+    property LinkOutputCount    :Integer       read GetLinkOutputCount;
+    property Data               :Pointer       read FData               write fData;
+    property ID                 :DWORD         read FID;
+    property LinkInputs [Index: integer]:TEvsGraphLink   read GetLinkInputs;
+    property Dependents [Index: integer]:TEvsGraphObject read GetDependents;
+    property LinkOutputs[Index: integer]:TEvsGraphLink   read GetLinkOutputs;
   published
-    property Text: string read fText write SetText;
-    property Hint: string read fHint write SetHint;
-    property Brush: TBrush read fBrush write SetBrush;
-    property Pen: TPen read fPen write SetPen;
-    property Font: TFont read fFont write SetFont stored IsFontStored;
-    property ParentFont: boolean read fParentFont write SetParentFont default True;
-    property Options: TEvsGraphObjectOptions
-      read fOptions write SetOptions default [goLinkable, goSelectable, goShowCaption];
-    property Visible: boolean read fVisible write SetVisible default True;
-    property Tag: integer read fTag write fTag default 0;
-    property HasCustomData: boolean
-      read fHasCustomData write SetHasCustomData default False;
+    property Text          :String                 read FText          write SetText;
+    property Hint          :String                 read FHint          write SetHint;
+    property Brush         :TBrush                 read FBrush         write SetBrush;
+    property Pen           :TPen                   read FPen           write SetPen;
+    property Font          :TFont                  read FFont          write SetFont  stored IsFontStored;
+    property ParentFont    :Boolean                read FParentFont    write SetParentFont    default True;
+    property Options       :TEvsGraphObjectOptions read fOptions       write SetOptions       default [goLinkable, goSelectable, goShowCaption];
+    property Visible       :Boolean                read fVisible       write SetVisible       default True;
+    property Tag           :Integer                read fTag           write FTag             default 0;
+    property HasCustomData :Boolean                read fHasCustomData write SetHasCustomData default False;
   end;
 
   { TEvsGraphLink }
 
-  TEvsGraphLink = class(TEvsGraphObject)
+  TEvsGraphLink   = class(TEvsGraphObject)
   private
-    fPoints           : TPoints;
-    fPointCount       : integer;
-    fSource           : TEvsGraphObject;
-    fTarget           : TEvsGraphObject;
-    fTextPosition     : integer;
-    fTextSpacing      : integer;
-    fBeginStyle       : TEvsLinkBeginEndStyle;
-    fBeginSize        : byte;
-    fEndStyle         : TEvsLinkBeginEndStyle;
-    fEndSize          : byte;
-    fLinkOptions      : TEvsGraphLinkOptions;
-    fTextRegion       : HRGN;
-    fTextAngle        : double;
-    fTextCenter       : TPoint;
-    fTextLine         : integer;
-    fChangeMode       : TEvsLinkChangeMode;
-    fAcceptingHook    : boolean;
-    fHookingObject    : TEvsGraphObject;
-    fMovingPoint      : integer;
-    SourceID          : DWORD;
-    TargetID          : DWORD;
-    UpdatingEndPoints : boolean;
-    CheckingLink      : boolean;
+    FPoints            :TPoints;
+    FPointCount        :Integer;
+    FSource            :TEvsGraphObject;
+    FTarget            :TEvsGraphObject;
+    FTextPosition      :Integer;
+    FTextSpacing       :Integer;
+    FBeginStyle        :TEvsLinkBeginEndStyle;
+    FBeginSize         :Byte;
+    FEndStyle          :TEvsLinkBeginEndStyle;
+    FEndSize           :Byte;
+    FLinkOptions       :TEvsGraphLinkOptions;
+    FTextRegion        :HRGN;
+    FTextAngle         :Double;
+    FTextCenter        :TPoint;
+    FTextLine          :Integer;
+    FChangeMode        :TEvsLinkChangeMode;
+    FAcceptingHook     :Boolean;
+    FHookingObject     :TEvsGraphObject;
+    FMovingPoint       :Integer;
+    FSourceID          :DWORD;
+    FTargetID          :DWORD;
+    FUpdatingEndPoints :Boolean;
+    FCheckingLink      :Boolean;
 
-    procedure ReadArrowSize(Reader : TReader);
-    procedure ReadFromNode(Reader : TReader);
-    procedure ReadKind(Reader : TReader);
-    procedure ReadToNode(Reader : TReader);
+    procedure ReadArrowSize(Reader :TReader);
+    procedure ReadFromNode (Reader :TReader);
+    procedure ReadKind     (Reader :TReader);
+    procedure ReadToNode   (Reader :TReader);
 
-    procedure SetSource(Value: TEvsGraphObject);
-    procedure SetTarget(Value: TEvsGraphObject);
-    procedure SetLinkOptions(Value: TEvsGraphLinkOptions);
-    procedure SetTextPosition(Value: integer);
-    procedure SetTextSpacing(Value: integer);                                   //DONE SPACING SUPPORT ON OTHER PLATFORMS??
-    procedure SetBeginStyle(Value: TEvsLinkBeginEndStyle);
-    procedure SetBeginSize(Value: byte);
-    procedure SetEndStyle(Value: TEvsLinkBeginEndStyle);
-    procedure SetEndSize(Value: byte);
-    function GetPoints(Index: integer): TPoint;
-    procedure SetPoints(Index: integer; const Value: TPoint);
-    procedure SetPolyline(const Value: TPoints);
-    procedure ReadSource(Reader: TReader);
-    procedure WriteSource(Writer: TWriter);
-    procedure ReadTarget(Reader: TReader);
-    procedure WriteTarget(Writer: TWriter);
-    procedure ReadPoints(Stream: TStream);
-    procedure WritePoints(Stream: TStream);
+    procedure SetSource      (Value :TEvsGraphObject);
+    procedure SetTarget      (Value :TEvsGraphObject);
+    procedure SetLinkOptions (Value :TEvsGraphLinkOptions);
+    procedure SetTextPosition(Value :Integer);
+    procedure SetTextSpacing (Value :Integer);                                   //DONE SPACING SUPPORT ON OTHER PLATFORMS??
+    procedure SetBeginStyle  (Value :TEvsLinkBeginEndStyle);
+    procedure SetBeginSize   (Value :Byte);
+    procedure SetEndStyle    (Value :TEvsLinkBeginEndStyle);
+    procedure SetEndSize     (Value :Byte);
+    function GetPoints       (Index :Integer): TPoint;
+    procedure SetPoints      (Index :Integer; const Value :TPoint);
+    procedure SetPolyline    (const Value: TPoints);
+    procedure ReadSource     (Reader :TReader);
+    procedure WriteSource    (Writer :TWriter);
+    procedure ReadTarget     (Reader :TReader);
+    procedure WriteTarget    (Writer :TWriter);
+    procedure ReadPoints     (Stream :TStream);
+    procedure WritePoints    (Stream :TStream);
   protected
     procedure DefineProperties(Filer: TFiler); override;
-    procedure Loaded; override;
-    function FixHookAnchor: TPoint; override;
-    function RelativeHookAnchor(RefPt: TPoint): TPoint; override;
-    procedure ReplaceID(OldID, NewID: DWORD); override;
-    procedure ReplaceObject(OldObject, NewObject: TEvsGraphObject); override;
-    procedure NotifyDependents(Flag: TEvsGraphDependencyChangeFlag); override;
-    procedure UpdateDependencyTo(GraphObject: TEvsGraphObject;
-      Flag: TEvsGraphDependencyChangeFlag); override;
+    procedure Loaded;                          override;
+    function  FixHookAnchor: TPoint;           override;
+    function  RelativeHookAnchor(RefPt: TPoint): TPoint;               override;
+    procedure ReplaceID(OldID, NewID :DWORD; const aStart :Integer=0); override;
+    procedure ReplaceObject(OldObject, NewObject: TEvsGraphObject);    override;
+    procedure NotifyDependents(Flag: TEvsGraphDependencyChangeFlag);   override;
+    procedure UpdateDependencyTo(GraphObject: TEvsGraphObject; Flag: TEvsGraphDependencyChangeFlag); override;
     procedure UpdateDependencies; override;
     procedure LookupDependencies; override;
-    function UpdateTextPlacement(Recalc: boolean; dX, dY: integer               //WIN32ONLY
-      ): boolean; override;
-    function CreateTextRegion: HRGN; virtual;                                   //WIN32 OLNLY
-    function IndexOfLongestLine: integer; virtual;                              //DONE
-    function IndexOfNearestLine(const Pt: TPoint; Neighborhood: integer         //DONE
+    function UpdateTextPlacement(Recalc: boolean; dX, dY: Integer): Boolean; override;  //WIN32ONLY
+    function CreateTextRegion: HRGN; virtual;                                           //WIN32 OLNLY
+    function IndexOfLongestLine: integer; virtual;                                      //DONE
+    function IndexOfNearestLine(const Pt: TPoint; Neighborhood: integer                 //DONE
       ): integer; virtual;
     procedure QueryVisualRect(out Rect: TRect); override;                       {$MESSAGE HINT 'REGION ALTERNATIVE'}
     function QueryHitTest(const Pt: TPoint): DWORD; override;                   {$MESSAGE WARN 'REGION ALTERNATIVE'}
     function QueryCursor(HT: DWORD): TCursor; override;                         //DONE
-    function QueryMobility(HT: DWORD): TEvsObjectSides; override;                  //DONE
+    function QueryMobility(HT: DWORD): TEvsObjectSides; override;               //DONE
     function OffsetHitTest(HT: DWORD; dX, dY: integer): boolean; override;      //DONE
     procedure SnapHitTestOffset(HT: DWORD; var dX, dY: integer); override;      //DONE
     function BeginFollowDrag(HT: DWORD): boolean; override;                     //DONE
@@ -973,24 +1001,24 @@ type
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState;                 //DONE
       const Pt: TPoint); override;                                              //DONE
     procedure UpdateChangeMode(HT: DWORD; Shift: TShiftState); virtual;         //DONE
-    function PointStyleOffset(Style: TEvsLinkBeginEndStyle; Size: integer): integer; //DONE
+    function PointStyleOffset(Style: TEvsLinkBeginEndStyle; Size: integer): Integer; //DONE
       virtual;                                                                  //DONE
     function PointStyleRect(const Pt: TPoint; const Angle: double;              //DONE
-      Style: TEvsLinkBeginEndStyle; Size: integer): TRect; virtual;                //DONE
-    function DrawPointStyle(aCanvas: TCanvas; const Pt: TPoint;                  //DONE
-      const Angle: double; Style: TEvsLinkBeginEndStyle; Size: integer): TPoint; virtual;//DONE
-    procedure DrawControlPoints(aCanvas: TCanvas); override;                     //DONE
-    procedure DrawHighlight(aCanvas: TCanvas); override;                         //DONE
-    procedure DrawText(aCanvas: TCanvas); override;                              //IMPLEMENTATION REQUIRED
-    procedure DrawBody(Canvas: TCanvas); override;                              //DONE
-    procedure SetBoundsRect(const Rect: TRect); override;                       //DONE
+      Style: TEvsLinkBeginEndStyle; Size: integer): TRect; virtual;             //DONE
+    function DrawPointStyle(aCanvas: TCanvas; const Pt: TPoint;                 //DONE
+      const Angle: Double; Style: TEvsLinkBeginEndStyle; Size: Integer): TPoint; virtual;//DONE
+    procedure DrawControlPoints(aCanvas: TCanvas); override;                    //DONE
+    procedure DrawHighlight    (aCanvas: TCanvas); override;                    //DONE
+    procedure DrawText         (aCanvas: TCanvas); override;                    //IMPLEMENTATION REQUIRED
+    procedure DrawBody         (Canvas: TCanvas);  override;                    //DONE
+    procedure SetBoundsRect    (const Rect: TRect);override;                    //DONE
     function GetBoundsRect: TRect; override;                                    //DONE
   protected
     property TextRegion: HRGN read fTextRegion;                                 {$MESSAGE WARN 'REGION ALTERNATIVE'}
     property TextAngle: double read fTextAngle;                                 //CLEAN
     property TextCenter: TPoint read fTextCenter;                               //CLEAN
     property TextLine: integer read fTextLine;                                  //CLEAN
-    property ChangeMode: TEvsLinkChangeMode read fChangeMode write fChangeMode;    //CLEAN
+    property ChangeMode: TEvsLinkChangeMode read fChangeMode write FChangeMode; //CLEAN
     property AcceptingHook: boolean read fAcceptingHook;                        //CLEAN
     property HookingObject: TEvsGraphObject read fHookingObject;                //CLEAN
     property MovingPoint: integer read fMovingPoint;                            //CLEAN
@@ -1005,49 +1033,45 @@ type
     function AddPoint(const Pt: TPoint): integer; virtual;                      //CLEAN
     procedure InsertPoint(AIndex: integer; const APt: TPoint); virtual;         //CLEAN
     procedure RemovePoint(AIndex: integer); virtual;                            //CLEAN
-    function IndexOfPoint(const Pt: TPoint; Neighborhood: integer = 0): integer; virtual; //CLEAN
-    function AddBreakPoint(const Pt: TPoint): integer; virtual;                 //CLEAN
-    function NormalizeBreakPoints(AOptions: TEvsLinkNormalizeOptions): boolean; virtual;//CLEAN
-    function IsFixedPoint(AIndex: integer; AHookedPointsAsFixed: boolean): boolean; //CLEAN
-      virtual;
-    function IsHookedPoint(AIndex: integer): boolean; virtual;                  //CLEAN
-    function HookedObjectOf(AIndex: integer): TEvsGraphObject; virtual;         //CLEAN
-    function HookedIndexOf(AGraphObject: TEvsGraphObject): integer; virtual;    //CLEAN
-    function HookedPointCount: integer; virtual;                                //CLEAN
-    function CanHook(AIndex: integer; AGraphObject: TEvsGraphObject): boolean; virtual; //CLEAN
-    function Hook(AIndex: integer; AGraphObject: TEvsGraphObject): boolean; virtual;  //CLEAN
-    function Unhook(AGraphObject: TEvsGraphObject): integer; overload; virtual;       //CLEAN
-    function Unhook(AIndex: integer): boolean; overload; virtual;                     //CLEAN
-    function CanLink(ASource, ATarget: TEvsGraphObject): boolean; virtual;            //CLEAN
-    function Link(ASource, ATarget: TEvsGraphObject): boolean; virtual;               //CLEAN
-    function Rotate(const AAngle: double; const AOrigin: TPoint): boolean; virtual;   //CLEAN
-    function Scale(const AFactor: double): boolean; virtual;                          //CLEAN
-    procedure Reverse; virtual;                                                       //CLEAN
-    class function IsLink: boolean; override;                                         //CLEAN
-    property Source: TEvsGraphObject read fSource write SetSource;                    //DONE
-    property Target: TEvsGraphObject read fTarget write SetTarget;                    //CLEAN
-    property Points[Index: integer]: TPoint read GetPoints write SetPoints;           //CLEAN
-    property PointCount: integer read fPointCount;                                    //CLEAN
-    property Polyline: TPoints read fPoints write SetPolyline;                        //CLEAN
+    function IndexOfPoint(const Pt: TPoint; Neighborhood: integer = 0): integer;    virtual;     //CLEAN
+    function AddBreakPoint(const Pt: TPoint): integer;                              virtual;     //CLEAN
+    function NormalizeBreakPoints(AOptions: TEvsLinkNormalizeOptions): boolean;     virtual;     //CLEAN
+    function IsFixedPoint(AIndex: integer; AHookedPointsAsFixed: boolean): boolean; virtual;     //CLEAN
+    function IsHookedPoint(AIndex: integer): boolean;                               virtual;     //CLEAN
+    function HookedObjectOf(AIndex: integer): TEvsGraphObject;                      virtual;     //CLEAN
+    function HookedIndexOf(AGraphObject: TEvsGraphObject): integer;                 virtual;     //CLEAN
+    function HookedPointCount: integer;                                             virtual;     //CLEAN
+    function CanHook(AIndex: integer; AGraphObject: TEvsGraphObject): boolean;      virtual;     //CLEAN
+    function Hook(AIndex: integer; AGraphObject: TEvsGraphObject): boolean;         virtual;     //CLEAN
+    function Unhook(AGraphObject: TEvsGraphObject): integer; overload;              virtual;     //CLEAN
+    function Unhook(AIndex: integer): boolean; overload;                            virtual;     //CLEAN
+    function CanLink(ASource, ATarget: TEvsGraphObject): boolean;                   virtual;     //CLEAN
+    function Link(ASource, ATarget: TEvsGraphObject): boolean;                      virtual;     //CLEAN
+    function Rotate(const AAngle: double; const AOrigin: TPoint): boolean;          virtual;     //CLEAN
+    function Scale(const AFactor: double): boolean;                                 virtual;     //CLEAN
+    procedure Reverse;                                                              virtual;     //CLEAN
+    class function IsLink: Boolean;                                      override;               //CLEAN
+    property Source     :TEvsGraphObject read fSource write SetSource;                           //DONE
+    property Target     :TEvsGraphObject read fTarget write SetTarget;                           //CLEAN
+    property PointCount :Integer read fPointCount;                                               //CLEAN
+    property Polyline   :TPoints read fPoints write SetPolyline;                                 //CLEAN
+    property Points[Index: Integer]: TPoint read GetPoints write SetPoints;                      //CLEAN
   published
-    property BeginStyle: TEvsLinkBeginEndStyle
-      read fBeginStyle write SetBeginStyle default lsNone;
-    property BeginSize: byte read fBeginSize write SetBeginSize default 6;
-    property EndStyle: TEvsLinkBeginEndStyle
-      read fEndStyle write SetEndStyle default lsArrow;
-    property EndSize: byte read fEndSize write SetEndSize default 6;
-    property LinkOptions: TEvsGraphLinkOptions
-      read fLinkOptions write SetLinkOptions default [];
-    property TextPosition: integer read fTextPosition write SetTextPosition default -1;
-    property TextSpacing: integer read fTextSpacing write SetTextSpacing default 0;
+    property BeginStyle   :TEvsLinkBeginEndStyle read FBeginStyle   write SetBeginStyle   default lsNone;
+    property BeginSize    :byte                  read FBeginSize    write SetBeginSize    default 6;
+    property EndStyle     :TEvsLinkBeginEndStyle read FEndStyle     write SetEndStyle     default lsArrow;
+    property EndSize      :byte                  read FEndSize      write SetEndSize      default 6;
+    property LinkOptions  :TEvsGraphLinkOptions  read FLinkOptions  write SetLinkOptions  default [];
+    property TextPosition :integer               read FTextPosition write SetTextPosition default -1;
+    property TextSpacing  :integer               read FTextSpacing  write SetTextSpacing  default 0;
   end;
 
   { TEVSBezierLink }
 
-  TEVSBezierLink = class(TEVSGraphLink)
+  TEVSBezierLink  = class(TEVSGraphLink)
   protected
-    FPolyline      : TPoints;
-    FCreateByMouse : Boolean;
+    FPolyline      :TPoints;
+    FCreateByMouse :Boolean;
     function IndexOfNearestLine (const Pt: TPoint; Neighborhood: integer): integer;             override;
     function RelativeHookAnchor (RefPt: TPoint): TPoint;                                        override;
     procedure MouseUp           (aButton: TMouseButton; aShift: TShiftState; const aPt: TPoint);override;
@@ -1059,104 +1083,103 @@ type
     procedure UpdateChangeMode  (aHT: DWORD; aShift: TShiftState);                              override;
   end;
 
-  TEvsGraphNode = class(TEvsGraphObject)                                              //DrawText replacement required.  Region alternative
+  TEvsGraphNode   = class(TEvsGraphObject) //DrawText replacement required.  Region alternative
   private
-    fLeft              : integer;
-    fTop               : integer;
-    fWidth             : integer;
-    fHeight            : integer;
-    fAlignment         : TAlignment;
-    fLayout            : TTextLayout;
-    fMargin            : integer;
-    fBackground        : TPicture;
-    fBackgroundMargins : TRect;
-    fNodeOptions       : TEvsGraphNodeOptions;
-    fRegion            : HRGN;
-    fTextRect          : TRect;
-    procedure SetLeft               (Value: integer);
-    procedure SetTop                (Value: integer);
-    procedure SetWidth              (Value: integer);
-    procedure SetHeight             (Value: integer);
-    procedure SetAlignment          (Value: TAlignment);
-    procedure SetLayout             (Value: TTextLayout);
-    procedure SetMargin             (Value: integer);
-    procedure SetNodeOptions        (Value: TEvsGraphNodeOptions);
-    procedure SetBackground         (Value: TPicture);
+    FLeft              :Integer;
+    FTop               :Integer;
+    FWidth             :Integer;
+    FHeight            :Integer;
+    FAlignment         :TAlignment;
+    FLayout            :TTextLayout;
+    FMargin            :Integer;
+    FBackground        :TPicture;
+    FBackgroundMargins :TRect;
+    FNodeOptions       :TEvsGraphNodeOptions;
+    FRegion            :HRGN;
+    FTextRect          :TRect;
+    procedure SetLeft               (Value :integer);
+    procedure SetTop                (Value :integer);
+    procedure SetWidth              (Value :integer);
+    procedure SetHeight             (Value :integer);
+    procedure SetAlignment          (Value :TAlignment);
+    procedure SetLayout             (Value :TTextLayout);
+    procedure SetMargin             (Value :integer);
+    procedure SetNodeOptions        (Value :TEvsGraphNodeOptions);
+    procedure SetBackground         (Value :TPicture);
     procedure SetBackgroundMargins  (const Value: TRect);
-    procedure BackgroundChanged     (Sender: TObject);
-    procedure ReadBackgroundMargins (Reader: TReader);
-    procedure WriteBackgroundMargins(Writer: TWriter);
+    procedure BackgroundChanged     (Sender :TObject);
+    procedure ReadBackgroundMargins (Reader :TReader);
+    procedure WriteBackgroundMargins(Writer :TWriter);
   protected
     procedure DefineProperties(Filer: TFiler);                                      override;
     procedure Initialize;                                                           override;
-    function FixHookAnchor: TPoint;                                                 override;
-    function RelativeHookAnchor(RefPt: TPoint): TPoint;                             override;
-    function LinkIntersect(const LinkPt: TPoint; const LinkAngle: double): TPoints; virtual; abstract;
+    function  FixHookAnchor: TPoint;                                                override;
+    function  RelativeHookAnchor(RefPt: TPoint): TPoint;                            override;
+    function  LinkIntersect(const LinkPt: TPoint; const LinkAngle: double): TPoints; virtual;   abstract;
     procedure BoundsChanged(dX, dY, dCX, dCY: integer);                             override;
-    function UpdateTextPlacement(Recalc: boolean; dX, dY: integer): boolean;        override;
+    function  UpdateTextPlacement(Recalc: boolean; dX, dY: integer): boolean;       override;
     procedure QueryMaxTextRect(out Rect: TRect);                                    virtual;
     procedure QueryTextRect(out Rect: TRect);                                       virtual;
-    function CreateRegion: HRGN;                                                    virtual; abstract;
-    function CreateClipRgn(ACanvas: TCanvas): HRGN;                                 virtual;
+    function  CreateRegion: HRGN;                                                   virtual;   abstract;
+    function  CreateClipRgn(ACanvas: TCanvas): HRGN;                                virtual;
     procedure QueryVisualRect(out Rect: TRect);                                     override;
-    function QueryHitTest(const Pt: TPoint): DWORD;                                 override;
-    function QueryCursor(HT: DWORD): TCursor;                                       override;
-    function QueryMobility(HT: DWORD): TEvsObjectSides;                             override;
-    function OffsetHitTest(HT: DWORD; dX, dY: integer): boolean;                    override;
+    function  QueryHitTest(const Pt: TPoint): DWORD;                                override;
+    function  QueryCursor(HT: DWORD): TCursor;                                      override;
+    function  QueryMobility(HT: DWORD): TEvsObjectSides;                            override;
+    function  OffsetHitTest(HT: DWORD; dX, dY: integer): boolean;                   override;
     procedure SnapHitTestOffset(HT: DWORD; var dX, dY: integer);                    override;
-    function BeginFollowDrag(HT: DWORD): boolean;                                   override;
+    function  BeginFollowDrag(HT: DWORD): boolean;                                  override;
     procedure MoveBy(dX, dY: integer);                                              override;
     procedure DrawControlPoints(aCanvas: TCanvas);                                  override;
     procedure DrawHighlight(aCanvas: TCanvas);                                      override;
     procedure DrawText(aCanvas: TCanvas);                                           override;
     procedure DrawBackground(aCanvas: TCanvas);                                     virtual;
-    procedure DrawBorder(aCanvas: TCanvas);                                         virtual; abstract;
+    procedure DrawBorder(aCanvas: TCanvas);                                         virtual;   abstract;
     procedure DrawBody(aCanvas: TCanvas);                                           override;
     procedure SetBoundsRect(const aRect: TRect);                                    override;
-    function GetBoundsRect: TRect;                                                  override;
-    function GetCenter: TPoint;                                                     virtual;
+    function  GetBoundsRect: TRect;                                                 override;
+    function  GetCenter: TPoint;                                                    virtual;
   protected
     property Region: HRGN read fRegion;
     property TextRect: TRect read fTextRect;
   public
-    constructor Create(AOwner: TEvsSimpleGraph); override;
-    constructor CreateNew(AOwner: TEvsSimpleGraph; const Bounds: TRect); virtual;
-    destructor Destroy; override;
-    procedure Assign(Source: TPersistent); override;
-    function ContainsRect(const Rect: TRect): boolean; override;
+    constructor Create(AOwner: TEvsSimpleGraph);                                    override;
+    constructor CreateNew(AOwner: TEvsSimpleGraph; const Bounds: TRect);            virtual;
+    destructor Destroy;                                                             override;
+    procedure Assign(Source: TPersistent);                                          override;
+    function ContainsRect(const Rect: TRect): boolean;                              override;
     procedure CanMoveResize(var NewLeft, NewTop, NewWidth, NewHeight: integer;
-      out CanMove, CanResize: boolean); virtual;
-    procedure SetBounds(aLeft, aTop, aWidth, aHeight: integer); virtual;
-    property Center: TPoint read GetCenter;
-    property BackgroundMargins: TRect read fBackgroundMargins write SetBackgroundMargins;
+                            out CanMove, CanResize: boolean);                       virtual;
+    procedure SetBounds(aLeft, aTop, aWidth, aHeight: integer);                     virtual;
+
+    property Center            :TPoint read GetCenter;
+    property BackgroundMargins :TRect  read fBackgroundMargins write SetBackgroundMargins;
   published
-    property Left: integer read fLeft write SetLeft;
-    property Top: integer read fTop write SetTop;
-    property Width: integer read fWidth write SetWidth;
-    property Height: integer read fHeight write SetHeight;
-    property Alignment: TAlignment read fAlignment write SetAlignment default taCenter;
-    property Layout: TTextLayout read fLayout write SetLayout default tlCenter;
-    property Margin: integer read fMargin write SetMargin default 8;
-    property Background: TPicture read fBackground write SetBackground;
-    property NodeOptions: TEvsGraphNodeOptions
-      read fNodeOptions write SetNodeOptions default
-      [gnoMovable, gnoResizable, gnoShowBackground];
+    property Left        :Integer              read FLeft        write SetLeft;
+    property Top         :Integer              read FTop         write SetTop;
+    property Width       :Integer              read FWidth       write SetWidth;
+    property Height      :Integer              read FHeight      write SetHeight;
+    property Alignment   :TAlignment           read FAlignment   write SetAlignment   default taCenter;
+    property Layout      :TTextLayout          read FLayout      write SetLayout      default tlCenter;
+    property Margin      :Integer              read FMargin      write SetMargin      default 8;
+    property Background  :TPicture             read FBackground  write SetBackground;
+    property NodeOptions :TEvsGraphNodeOptions read FNodeOptions write SetNodeOptions default [gnoMovable, gnoResizable, gnoShowBackground];
   end;
 
   TEvsPolygonalNode = class(TEvsGraphNode)
    private
      fVertices: TPoints;
    protected
-     function GetCenter    : TPoint;                                                  override;
-     function CreateRegion : HRGN;                                                    override;
-     procedure Initialize;                                                            override;
-     procedure BoundsChanged(dX, dY, dCX, dCY: integer);                              override;
-     procedure DrawBorder   (aCanvas: TCanvas);                                       override;
-     function LinkIntersect (const LinkPt: TPoint; const LinkAngle: double): TPoints; override;
-     procedure DefineVertices(const ARect: TRect; var Points: TPoints);               virtual; abstract;
+     function GetCenter    : TPoint;                                                   override;
+     function CreateRegion : HRGN;                                                     override;
+     procedure Initialize;                                                             override;
+     procedure BoundsChanged (dX, dY, dCX, dCY :integer);                              override;
+     procedure DrawBorder    (aCanvas :TCanvas);                                       override;
+     function LinkIntersect  (const LinkPt: TPoint; const LinkAngle: double): TPoints; override;
+     procedure DefineVertices(const aRect: TRect; var Points: TPoints);                virtual; abstract;
    public
-     destructor Destroy; override;
-     property Vertices: TPoints read fVertices;
+     destructor Destroy;                                                               override;
+     property Vertices: TPoints read FVertices;
    end;
 
   TEvsRoundRectangularNode = class(TEvsGraphNode)
@@ -1166,14 +1189,14 @@ type
     function LinkIntersect(const LinkPt: TPoint; const LinkAngle: double): TPoints; override;
   end;
 
-  TEvsEllipticNode = class(TEvsGraphNode)
+  TEvsEllipticNode    = class(TEvsGraphNode)
   protected
     function CreateRegion: HRGN;                                                    override;
     procedure DrawBorder  (Canvas: TCanvas);                                        override;
     function LinkIntersect(const LinkPt: TPoint; const LinkAngle: double): TPoints; override;
   end;
 
-  TEvsTriangularNode = class(TEvsPolygonalNode)
+  TEvsTriangularNode  = class(TEvsPolygonalNode)
   protected
     procedure QueryMaxTextRect(out Rect: TRect);                         override;
     procedure DefineVertices  (const ARect: TRect; var Points: TPoints); override;
@@ -1186,25 +1209,25 @@ type
     procedure DefineVertices(const ARect: TRect; var Points: TPoints); override;
   end;
 
-  TEvsRhomboidalNode = class(TEvsPolygonalNode)
+  TEvsRhomboidalNode  = class(TEvsPolygonalNode)
   protected
     procedure QueryMaxTextRect(out Rect: TRect);                         override;
     procedure DefineVertices  (const ARect: TRect; var Points: TPoints); override;
   end;
 
-  TEvsPentagonalNode = class(TEvsPolygonalNode)
+  TEvsPentagonalNode  = class(TEvsPolygonalNode)
   protected
     procedure QueryMaxTextRect(out Rect: TRect);                         override;
     procedure DefineVertices  (const ARect: TRect; var Points: TPoints); override;
   end;
 
-  TEvsHexagonalNode = class(TEvsPolygonalNode)
+  TEvsHexagonalNode   = class(TEvsPolygonalNode)
   protected
     procedure QueryMaxTextRect(out Rect: TRect);                         override;
     procedure DefineVertices  (const ARect: TRect; var Points: TPoints); override;
   end;
 
-  TEvsGraphConstraints = class(TPersistent)              //DONE
+  TEvsGraphConstraints = class(TPersistent)
   private
     fOwner      : TEvsSimpleGraph;
     fBoundsRect : TRect;
@@ -1251,124 +1274,141 @@ type
     property Graph:TEvsSimpleGraph read FGraph write SetGraph;
   end;
 
+  { TEvsAutoNumberGenerator }
+
+  TEvsAutoNumberGenerator = class
+  private
+    FNo   : Int64;
+    FStep : SmallInt;
+  public
+    constructor Create;
+    function Next:Int64;
+    function Peek:Int64;
+    procedure Reset(const aStartValue:Int64 =-1; const aStep : SmallInt = 1);
+  end;
+
   { TEvsSimpleGraph }
 
   TEvsSimpleGraph = class(TCustomControl)
   private
-    FActiveLayer :TEvsGraphLayer;
+    FActiveLayer          : TEvsGraphLayer;
     FCanvasInit           : TInitEvent;
-    FCustomCanvas         : TCanvasClass;
-    fHorzScrollBar        : TEvsGraphScrollBar;
-    fVertScrollBar        : TEvsGraphScrollBar;
-    fZoom                 : TZoom;
+    FCustomCanvas         : TCanvasClass;        //jkoz: make a class/static variable.
+    FHorzScrollBar        : TEvsGraphScrollBar;
+    FVertScrollBar        : TEvsGraphScrollBar;
+    FZoom                 : TZoom;
     FZoomFactor           : Double;
-    fGridSize             : TGridSize;
-    fGridColor            : TColor;
-    fShowGrid             : Boolean;
-    fSnapToGrid           : Boolean;
-    fShowHiddenObjects    : Boolean;
-    fHideSelection        : Boolean;
-    fLockNodes            : Boolean;
-    fLockLinks            : Boolean;
-    fMarkerColor          : TColor;
-    fMarkerSize           : TMarkerSize;
-    fObjects              : TEvsGraphObjectList;
-    fSelectedObjects      : TEvsGraphObjectList;
-    fDraggingObjects      : TEvsGraphObjectList;
-    fDefaultKeyMap        : Boolean;
-    fObjectPopupMenu      : TPopupMenu;
-    fDefaultNodeClass     : TEvsGraphNodeClass;
-    fDefaultLinkClass     : TEvsGraphLinkClass;
-    fModified             : Boolean;
-    fCommandMode          : TEvsGraphCommandMode;
-    fGraphConstraints     : TEvsGraphConstraints;
-    fMinNodeSize          : Word;
-    fDrawOrder            : TEvsGraphDrawOrder;
-    fFixedScrollBars      : Boolean;
-    fValidMarkedArea      : Boolean;
-    fMarkedArea           : TRect;
-    fDragSource           : TEvsGraphObject;
-    fDragHitTest          : DWORD;
-    fDragSourcePt         : TPoint;
-    fDragTargetPt         : TPoint;
-    fDragModified         : Boolean;
-    fCanvasRecall         : TEvsCanvasRecall;
-    fClipboardFormats     : TEvsGraphClipboardFormats;
-    fObjectAtCursor       : TEvsGraphObject;
-    fOnObjectInitInstance : TEvsGraphNotifyEvent;
-    fOnObjectInsert       : TEvsGraphNotifyEvent;
-    fOnObjectRemove       : TEvsGraphNotifyEvent;
-    fOnObjectChange       : TEvsGraphNotifyEvent;
-    fOnObjectSelect       : TEvsGraphNotifyEvent;
-    fOnObjectClick        : TEvsGraphNotifyEvent;
-    fOnObjectDblClick     : TEvsGraphNotifyEvent;
+    FGridSize             : TGridSize;
+    FGridColor            : TColor;
+    FShowGrid             : Boolean;
+    FSnapToGrid           : Boolean;
+    FShowHiddenObjects    : Boolean;
+    FHideSelection        : Boolean;
+    FLockNodes            : Boolean;
+    FLockLinks            : Boolean;
+    FMarkerColor          : TColor;
+    FMarkerSize           : TMarkerSize;
+    FObjects              : TEvsGraphObjectList;
+    FSelectedObjects      : TEvsGraphObjectList;
+    FDraggingObjects      : TEvsGraphObjectList;
+    FDefaultKeyMap        : Boolean;
+    FObjectPopupMenu      : TPopupMenu;
+    FDefaultNodeClass     : TEvsGraphNodeClass;
+    FDefaultLinkClass     : TEvsGraphLinkClass;
+    FModified             : Boolean;
+    FCommandMode          : TEvsGraphCommandMode;
+    FGraphConstraints     : TEvsGraphConstraints;
+    FMinNodeSize          : Word;
+    FDrawOrder            : TEvsGraphDrawOrder;
+    FFixedScrollBars      : Boolean;
+    FValidMarkedArea      : Boolean;
+    FMarkedArea           : TRect;
+    FDragSource           : TEvsGraphObject;
+    FDragHitTest          : DWORD;
+    FDragSourcePt         : TPoint;
+    FDragTargetPt         : TPoint;
+    FDragModified         : Boolean;
+    FCanvasRecall         : TEvsCanvasRecall;
+    FClipboardFormats     : TEvsGraphClipboardFormats;
+    FObjectAtCursor       : TEvsGraphObject;
 
-    fOnAfterDraw          : TEvsGraphDrawEvent;
-    fOnBeforeDraw         : TEvsGraphDrawEvent;
-    fOnCanHookLink        : TEvsGraphCanHookEvent;
-    fOnCanLinkObjects     : TEvsGraphCanLinkEvent;
-    fOnCanMoveResizeNode  : TEvsCanMoveResizeNodeEvent;
-    fOnCanRemoveObject    : TEvsGraphCanRemoveEvent;
-    fOnCommandModeChange  : TNotifyEvent;
-    fOnGraphChange        : TNotifyEvent;
-    fOnInfoTip            : TEvsGraphInfoTipEvent;
-    fOnNodeMoveResize     : TEvsGraphNodeResizeEvent;
-    fOnObjectAfterDraw    : TEvsGraphObjectDrawEvent;
-    fOnObjectBeforeDraw   : TEvsGraphObjectDrawEvent;
-    fOnObjectBeginDrag    : TEvsGraphBeginDragEvent;
-    fOnObjectContextPopup : TEvsGraphContextPopupEvent;
-    fOnObjectEndDrag      : TEvsGraphEndDragEvent;
-    fOnObjectHook         : TEvsGraphHookEvent;
-    fOnObjectMouseEnter   : TEvsGraphNotifyEvent;
-    fOnObjectMouseLeave   : TEvsGraphNotifyEvent;
-    fOnObjectRead         : TEvsGraphStreamEvent;
-    fOnObjectUnhook       : TEvsGraphHookEvent;
-    fOnObjectWrite        : TEvsGraphStreamEvent;
-    fOnZoomChange         : TNotifyEvent;
     FSuspendQueryEvents   : Integer;
-    SaveBounds            : array[TEvsGraphBoundsKind] of TRect;
-    SaveBoundsChange      : set of TEvsGraphBoundsKind;
-    SaveInvalidateRect    : TRect;
-    SaveModified          : Integer;
-    SaveRangeChange       : Boolean;
-    UndoStorage           : TMemoryStream;
-    UpdateCount           : Integer;
-    UpdatingScrollBars    : Boolean;  //for internal use only.
+    FSaveBounds           : array[TEvsGraphBoundsKind] of TRect;
+    FSaveBoundsChange     : set of TEvsGraphBoundsKind;
+    FSaveInvalidateRect   : TRect;
+    FSaveModified         : Integer;
+    FSaveRangeChange      : Boolean;
+    FUndoStorage          : TMemoryStream;
+    FUpdateCount          : Integer;
+    FUpdatingScrollBars   : Boolean;  //for internal use only.
     FPrinting             : Boolean;
     FLayers               : TEvsGraphLayerList; //layer support.
 
-    function GetLayer(Index :Integer) :TEvsGraphLayer;
+    FIDGenerator          : TEvsAutoNumberGenerator;
+
+    FOnObjectInitInstance : TEvsGraphNotifyEvent;
+    FOnObjectInsert       : TEvsGraphNotifyEvent;
+    FOnObjectRemove       : TEvsGraphNotifyEvent;
+    FOnObjectChange       : TEvsGraphNotifyEvent;
+    FOnObjectSelect       : TEvsGraphNotifyEvent;
+    FOnObjectClick        : TEvsGraphNotifyEvent;
+    FOnObjectDblClick     : TEvsGraphNotifyEvent;
+
+    FOnAfterDraw          : TEvsGraphDrawEvent;
+    FOnBeforeDraw         : TEvsGraphDrawEvent;
+    FOnCanHookLink        : TEvsGraphCanHookEvent;
+    FOnCanLinkObjects     : TEvsGraphCanLinkEvent;
+    FOnCanMoveResizeNode  : TEvsCanMoveResizeNodeEvent;
+    FOnCanRemoveObject    : TEvsGraphCanRemoveEvent;
+    FOnCommandModeChange  : TNotifyEvent;
+    FOnGraphChange        : TNotifyEvent;
+    FOnInfoTip            : TEvsGraphInfoTipEvent;
+    FOnNodeMoveResize     : TEvsGraphNodeResizeEvent;
+    FOnObjectAfterDraw    : TEvsGraphObjectDrawEvent;
+    FOnObjectBeforeDraw   : TEvsGraphObjectDrawEvent;
+    FOnObjectBeginDrag    : TEvsGraphBeginDragEvent;
+    FOnObjectContextPopup : TEvsGraphContextPopupEvent;
+    FOnObjectEndDrag      : TEvsGraphEndDragEvent;
+    FOnObjectHook         : TEvsGraphHookEvent;
+    FOnObjectMouseEnter   : TEvsGraphNotifyEvent;
+    FOnObjectMouseLeave   : TEvsGraphNotifyEvent;
+    FOnObjectRead         : TEvsGraphStreamEvent;
+    FOnObjectUnhook       : TEvsGraphHookEvent;
+    FOnObjectWrite        : TEvsGraphStreamEvent;
+    FOnZoomChange         : TNotifyEvent;
+
+    function GetLayer(aIndex :Integer) :TEvsGraphLayer;
     function GetMidPoint  : TPoint;
-    function GetBoundingRect(Kind: TEvsGraphBoundsKind): TRect;
+    function GetBoundingRect(aKind: TEvsGraphBoundsKind): TRect;
     function GetCursorPos : TPoint;
     function GetVisibleBounds: TRect;
-    function ReadGraphObject(Stream: TStream): TEvsGraphObject;
-    procedure ObjectChanged(GraphObject: TEvsGraphObject; Flags: TEvsGraphChangeFlags);
-    procedure ObjectListChanged(Sender: TObject; GraphObject: TEvsGraphObject;
-      AAction: TEvsGraphObjectListAction);
-    procedure SelectedListChanged(Sender: TObject; GraphObject: TEvsGraphObject;
-      AAction: TEvsGraphObjectListAction);
-    procedure SetCommandMode(AValue: TEvsGraphCommandMode);
-    procedure SetCursorPos(const Pt: TPoint);
-    procedure SetCustomCanvas(aValue :TCanvasClass);
-    procedure SetDrawOrder(Value: TEvsGraphDrawOrder);
-    procedure SetFixedScrollBars(AValue: Boolean);
-    procedure SetGraphConstraints(AValue: TEvsGraphConstraints);
-    procedure SetGridColor(AValue: TColor);
-    procedure SetGridSize(AValue: TGridSize);
-    procedure SetHideSelection(Value: boolean);
-    procedure SetHorzScrollBar(AValue: TEvsGraphScrollBar);
-    procedure SetLayer(Index :Integer; aValue :TEvsGraphLayer);
-    procedure SetLockLinks(Value: boolean);
-    procedure SetLockNodes(Value: boolean);
-    procedure SetMarkedArea(AValue: TRect);
-    procedure SetMarkerColor(Value: TColor);
-    procedure SetMarkerSize(Value: TMarkerSize);
-    procedure SetShowGrid(AValue: Boolean);
-    procedure SetShowHiddenObjects(Value: boolean);
-    procedure SetVertScrollBar(AValue: TEvsGraphScrollBar);
-    procedure SetZoom(AValue: TZoom);
-    procedure WriteGraphObject(Stream: TStream; GraphObject: TEvsGraphObject);
+    function ReadGraphObject(aStream: TStream): TEvsGraphObject;
+    procedure ObjectChanged(aGraphObject: TEvsGraphObject; aFlags: TEvsGraphChangeFlags);
+    procedure ObjectListChanged(aSender: TObject; aGraphObject: TEvsGraphObject;
+                                aAction: TEvsGraphObjectListAction);
+    procedure SelectedListChanged(aSender: TObject; aGraphObject: TEvsGraphObject;
+                                  aAction: TEvsGraphObjectListAction);
+    procedure SetCommandMode (aValue: TEvsGraphCommandMode);
+    procedure SetCursorPos    (const aPt: TPoint);
+    procedure SetCustomCanvas (aValue :TCanvasClass);
+    procedure SetDrawOrder    (aValue: TEvsGraphDrawOrder);
+    procedure SetFixedScrollBars  (aValue: Boolean);
+    procedure SetGraphConstraints (aValue: TEvsGraphConstraints);
+    procedure SetGridColor        (aValue: TColor);
+    procedure SetGridSize         (aValue: TGridSize);
+    procedure SetHideSelection    (aValue: boolean);
+    procedure SetHorzScrollBar    (aValue: TEvsGraphScrollBar);
+    procedure SetLayer            (aIndex :Integer; aValue :TEvsGraphLayer);
+    procedure SetLockLinks        (aValue: boolean);
+    procedure SetLockNodes        (aValue: boolean);
+    procedure SetMarkedArea       (aValue: TRect);
+    procedure SetMarkerColor      (aValue: TColor);
+    procedure SetMarkerSize       (aValue: TMarkerSize);
+    procedure SetShowGrid         (aValue: Boolean);
+    procedure SetShowHiddenObjects(aValue: boolean);
+    procedure SetVertScrollBar    (aValue: TEvsGraphScrollBar);
+    procedure SetZoom             (aValue: TZoom);
+    procedure WriteGraphObject    (Stream: TStream; GraphObject: TEvsGraphObject);
   protected
 
     class procedure WSRegisterClass; override;
@@ -1376,7 +1416,7 @@ type
     function DrawTextBiDiModeFlags(aFlags:longint):LongInt;
     procedure SuspendQueryEvents;inline;
     Procedure ResumeQueryEvents;
-    //procedure AdjustDC(aDC: HDC; aOrg: PPoint = nil); virtual;                    //WORKS - HEAVY
+
     procedure CalcAutoRange; virtual;
     function CreateUniqueID(aGraphObject: TEvsGraphObject): DWORD; virtual;
 
@@ -1384,65 +1424,59 @@ type
     {$IFDEF SUBCLASS_WMPRINT}
     procedure WMPrint(var Msg: TWMPrint); message WM_PRINT;                     //WORKS-???
     {$ENDIF}
-    procedure WMSize(var Msg: TLMSize); message LM_SIZE;
-    procedure WMHScroll(var Msg: TLMHScroll); message LM_HSCROLL;
-    procedure WMVScroll(var Msg: TLMVScroll); message LM_VSCROLL;
-    procedure CNKeyDown(var Msg: TLMKeyDown); message CN_KEYDOWN;
-    procedure CNKeyUp(var Msg: TLMKeyUp); message CN_KEYUP;
-    procedure CMFontChanged(var Msg: TLMessage); message CM_FONTCHANGED;
-    procedure CMBiDiModeChanged(var Msg: TLMessage); message CM_BIDIMODECHANGED;
-    procedure CMMouseLeave(var Msg: TLMessage); message CM_MOUSELEAVE;
-    procedure CMHintShow(var Msg: TCMHintShow); message CM_HINTSHOW;
+    procedure WMSize   (var Msg  :TLMSize);    message LM_SIZE;
+    procedure WMHScroll(var aMsg :TLMHScroll); message LM_HSCROLL;
+    procedure WMVScroll(var aMsg :TLMVScroll); message LM_VSCROLL;
+    procedure CNKeyDown(var aMsg :TLMKeyDown); message CN_KEYDOWN;
+    procedure CNKeyUp  (var aMsg :TLMKeyUp);   message CN_KEYUP;
+    procedure CMFontChanged    (var aMsg: TLMessage);   message CM_FONTCHANGED;
+    procedure CMBiDiModeChanged(var aMsg: TLMessage);   message CM_BIDIMODECHANGED;
+    procedure CMMouseLeave     (var aMsg: TLMessage);   message CM_MOUSELEAVE;
+    procedure CMHintShow       (var aMsg: TCMHintShow); message CM_HINTSHOW;
 
-    function BeginDragObject(aGraphObject: TEvsGraphObject; const aPt: TPoint;
-      aHT: DWORD): boolean; virtual;
-    procedure BackupObjects(aStream: TStream; aObjectList: TEvsGraphObjectList);virtual;
-    procedure DoAfterDraw(aCanvas: TCanvas); virtual;
-    procedure DoBeforeDraw(aCanvas: TCanvas); virtual;
-    procedure DoCanHookLink(aGraphObject: TEvsGraphObject; aLink: TEvsGraphLink;
-      aIndex: integer; var aCanHook: boolean); virtual;
-    procedure DoCanLinkObjects(aLink: TEvsGraphLink; aSource, aTarget: TEvsGraphObject;
-      var aCanLink: boolean); virtual;
-    procedure DoCanMoveResizeNode(aNode: TEvsGraphNode;var aLeft, aTop, aWidth,
-      aHeight: integer; var aCanMove, aCanResize: boolean);virtual;
-    procedure DoCanRemoveObject(aGraphObject: TEvsGraphObject;
-      var aCanRemove: boolean); virtual;
-    procedure DoCommandModeChange; virtual;
-    procedure DoGraphChange; virtual;
-    procedure DoNodeMoveResize(aNode: TEvsGraphNode); virtual;
-    procedure DoObjectAfterDraw(aCanvas: TCanvas; aGraphObject: TEvsGraphObject); virtual;
-    procedure DoObjectBeforeDraw(aCanvas: TCanvas; aGraphObject: TEvsGraphObject); virtual;
-    procedure DoObjectBeginDrag(aGraphObject: TEvsGraphObject; aHT: DWORD); virtual;
-    procedure DoObjectChange(aGraphObject: TEvsGraphObject); virtual;
-    procedure DoObjectClick(aGraphObject: TEvsGraphObject); virtual;
-    procedure DoObjectContextPopup(aGraphObject: TEvsGraphObject;
-      const aMousePos: TPoint; var aHandled: boolean); virtual;
-    procedure DoObjectDblClick(aGraphObject: TEvsGraphObject); virtual;
-    procedure DoObjectEndDrag(aGraphObject: TEvsGraphObject; aHT: DWORD;
-      aCancelled: boolean); virtual;
-    procedure DoObjectHook(aGraphObject: TEvsGraphObject; aLink: TEvsGraphLink;
-      aIndex: integer); virtual;
+    {$IFDEF EVS_ZOOM}
+    procedure WMPaint          (var aMsg :TLMPaint);    message LM_PAINT;
+    {$ENDIF}
+
+    function BeginDragObject     (aGraphObject: TEvsGraphObject; const aPt: TPoint; aHT: DWORD): Boolean; virtual;
+    procedure BackupObjects      (aStream: TStream; aObjectList: TEvsGraphObjectList);                    virtual;
+    procedure DoAfterDraw        (aCanvas: TCanvas);                                                      virtual;
+    procedure DoBeforeDraw       (aCanvas: TCanvas);                                                      virtual;
+    procedure DoCanHookLink      (aGraphObject: TEvsGraphObject; aLink: TEvsGraphLink; aIndex: Integer; var aCanHook: boolean);      virtual;
+      procedure DoCanLinkObjects   (aLink: TEvsGraphLink; aSource, aTarget: TEvsGraphObject; var aCanLink: boolean);                 virtual;
+    procedure DoCanMoveResizeNode(aNode: TEvsGraphNode;var aLeft, aTop, aWidth, aHeight: integer; var aCanMove, aCanResize: boolean);virtual;
+    procedure DoCanRemoveObject  (aGraphObject: TEvsGraphObject; var aCanRemove: boolean); virtual;
+    procedure DoCommandModeChange;                                                         virtual;
+    procedure DoGraphChange;                                                               virtual;
+    procedure DoNodeMoveResize  (aNode: TEvsGraphNode);                                    virtual;
+    procedure DoObjectAfterDraw (aCanvas: TCanvas; aGraphObject: TEvsGraphObject);         virtual;
+    procedure DoObjectBeforeDraw(aCanvas: TCanvas; aGraphObject: TEvsGraphObject);         virtual;
+    procedure DoObjectBeginDrag (aGraphObject: TEvsGraphObject; aHT: DWORD);               virtual;
+    procedure DoObjectChange    (aGraphObject: TEvsGraphObject);                           virtual;
+    procedure DoObjectClick     (aGraphObject: TEvsGraphObject);                           virtual;
+    procedure DoObjectContextPopup(aGraphObject: TEvsGraphObject; const aMousePos: TPoint; var aHandled: boolean); virtual;
+    procedure DoObjectDblClick    (aGraphObject: TEvsGraphObject);                                                 virtual;
+    procedure DoObjectEndDrag     (aGraphObject: TEvsGraphObject; aHT: DWORD; aCancelled: boolean);                virtual;
+    procedure DoObjectHook        (aGraphObject: TEvsGraphObject; aLink: TEvsGraphLink; aIndex: integer);          virtual;
     procedure DoObjectInitInstance(aGraphObject: TEvsGraphObject); virtual;
-    procedure DoObjectInsert(aGraphObject: TEvsGraphObject); virtual;
-    procedure DoObjectMouseEnter(aGraphObject: TEvsGraphObject); virtual;
-    procedure DoObjectMouseLeave(aGraphObject: TEvsGraphObject); virtual;
-    procedure DoObjectRead(aGraphObject: TEvsGraphObject; aStream: TStream); virtual;
-    procedure DoObjectRemove(aGraphObject: TEvsGraphObject); virtual;
-    procedure DoObjectSelect(aGraphObject: TEvsGraphObject); virtual;
-    procedure DoObjectUnhook(aGraphObject: TEvsGraphObject; aLink: TEvsGraphLink;
-      aIndex: integer); virtual;
-    procedure DoObjectWrite(aGraphObject: TEvsGraphObject; aStream: TStream); virtual;
-    procedure DoZoomChange; virtual;
-    procedure DraggingListChanged(Sender: TObject; aGraphObject: TEvsGraphObject;
-      aAction: TEvsGraphObjectListAction);
-    procedure DrawEditStates(aCanvas: TCanvas); virtual;
-    procedure DrawGrid(ACanvas: TCanvas); virtual;
-    procedure DrawObjects(aCanvas: TCanvas; AObjectList: TEvsGraphObjectList); virtual;
-    procedure EndDragObject(Accept: boolean); virtual;
-    procedure ReadObjects(aStream: TStream); virtual;
-    procedure RenewObjectAtCursor(aNewObjectAtCursor: TEvsGraphObject); virtual;
-    procedure RestoreObjects(aStream: TStream); virtual;
-    procedure WriteObjects(aStream: TStream; aObjectList: TEvsGraphObjectList); virtual;
+    procedure DoObjectInsert      (aGraphObject: TEvsGraphObject); virtual;
+    procedure DoObjectMouseEnter  (aGraphObject: TEvsGraphObject); virtual;
+    procedure DoObjectMouseLeave  (aGraphObject: TEvsGraphObject); virtual;
+    procedure DoObjectRead        (aGraphObject: TEvsGraphObject; aStream: TStream); virtual;
+    procedure DoObjectRemove      (aGraphObject: TEvsGraphObject); virtual;
+    procedure DoObjectSelect      (aGraphObject: TEvsGraphObject); virtual;
+    procedure DoObjectUnhook      (aGraphObject: TEvsGraphObject; aLink: TEvsGraphLink; aIndex: integer); virtual;
+    procedure DoObjectWrite       (aGraphObject: TEvsGraphObject; aStream: TStream);                      virtual;
+    procedure DoZoomChange;                                                                               virtual;
+    procedure DraggingListChanged (Sender: TObject; aGraphObject: TEvsGraphObject; aAction: TEvsGraphObjectListAction);
+    procedure DrawEditStates      (aCanvas: TCanvas); virtual;
+    procedure DrawGrid            (aCanvas: TCanvas); virtual;
+    procedure DrawObjects         (aCanvas: TCanvas; AObjectList: TEvsGraphObjectList); virtual;
+    procedure EndDragObject       (aAccept: Boolean);                                   virtual;
+    procedure ReadObjects         (aStream: TStream);                                   virtual;
+    procedure RenewObjectAtCursor (aNewObjectAtCursor: TEvsGraphObject);                virtual;
+    procedure RestoreObjects      (aStream: TStream);                                   virtual;
+    procedure WriteObjects        (aStream: TStream; aObjectList: TEvsGraphObjectList); virtual;
     {$IFDEF METAFILE_SUPPORT}
     function GetAsMetafile(RefDC: HDC; ObjectList: TGraphObjectList): TMetafile; virtual; //UNTESTED
     {$ENDIF}
@@ -1450,47 +1484,54 @@ type
 
     function GetObjectsBounds(aObjectList: TEvsGraphObjectList): TRect; virtual;
 
+    {$IFDEF EVS_ZOOM}
+    procedure AdjustDC(aDC: HDC; aOrg: PPoint = nil); virtual;
+    {$ENDIF}
     procedure GPToCP(var aPoints; aCount: Integer);
     procedure CPToGP(var aPoints; aCount: Integer);
 
-    function GetAsBitmap(aObjectList: TEvsGraphObjectList): Graphics.TBitmap; virtual;
+    function GetAsBitmap   (aObjectList: TEvsGraphObjectList): Graphics.TBitmap; virtual;
     procedure PerformDragBy(adX, adY: integer); virtual;
     procedure PerformInvalidate(aRect: PRect);
     procedure CheckObjectAtCursor(const aPt: TPoint); virtual;
-    function InsertObjectByMouse(var aPt: TPoint; aGraphObjectClass: TEvsGraphObjectClass;
-      aGridSnap: boolean): TEvsGraphObject;
+    function InsertObjectByMouse(var aPt: TPoint; aGraphObjectClass: TEvsGraphObjectClass; aGridSnap: Boolean): TEvsGraphObject;
 
-    function DefaultKeyHandler(var Key: word; Shift: TShiftState): boolean; virtual;
+    function DefaultKeyHandler(var aKey: word; aShift: TShiftState): Boolean; virtual;
 
     procedure CreateParams(var Params: TCreateParams); override;
     procedure CreateWnd; override;
-    procedure Paint; override;
+    procedure Paint;     override;
     procedure DrawBackGround(const aCanvas:TCanvas; const ClipRect:TRect);virtual;
-    procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: integer); override;
-    procedure MouseMove(Shift: TShiftState; X, Y: integer); override;
-    procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: integer); override;
-    procedure DoContextPopup(MousePos: TPoint; var Handled: boolean); override;
-    procedure Click; override;
+    procedure MouseDown     (aButton: TMouseButton; Shift: TShiftState; X, Y: integer); override;
+    procedure MouseMove     (aShift: TShiftState; X, Y: Integer); override;
+    procedure MouseUp       (aButton: TMouseButton; Shift: TShiftState; X, Y: integer); override;
+    procedure DoContextPopup(aMousePos: TPoint; var Handled: Boolean); override;
+    procedure Click;    override;
     procedure DblClick; override;
-    procedure DoEnter; override;
-    procedure DoExit; override;
+    procedure DoEnter;  override;
+    procedure DoExit;   override;
     function ZoomRect(const aRect: TRect): boolean;
     function ZoomObject(aGraphObject: TEvsGraphObject): boolean;
     function ZoomSelection: boolean;
     function ZoomGraph: boolean;
     function ChangeZoom(aNewZoom: integer; aOrigin: TEvsGraphZoomOrigin): boolean;
-    function ChangeZoomBy(aDelta: integer; aOrigin: TEvsGraphZoomOrigin): boolean;
+    //function ChangeZoomBy(aDelta: integer; aOrigin: TEvsGraphZoomOrigin): boolean;
     function LayerByOrder(const aOrder:integer):TEvsGraphLayer;
+  {$IFDEF EVS_ZOOM}
+  public
+  {$ENDIF}
+    property Zoom: TZoom read FZoom write SetZoom default 100;
+    function ChangeZoomBy(aDelta: integer; aOrigin: TEvsGraphZoomOrigin): boolean;
   protected
-    property CanvasRecall: TEvsCanvasRecall read fCanvasRecall;
-    property DragHitTest: DWORD read fDragHitTest write fDragHitTest;
-    property DragModified: boolean read fDragModified;
-    property DragSourcePt: TPoint read fDragSourcePt write fDragSourcePt;
-    property DragTargetPt: TPoint read fDragTargetPt write fDragTargetPt;
-    property MarkedArea: TRect read fMarkedArea write SetMarkedArea;
-    property ValidMarkedArea: boolean read fValidMarkedArea;
-    property Zoom: TZoom read fZoom write SetZoom default 100;
-    property Printing : Boolean read fPrinting;
+    property CanvasRecall    :TEvsCanvasRecall read FCanvasRecall;
+    property DragHitTest     :DWORD            read FDragHitTest      write FDragHitTest;
+    property DragModified    :Boolean          read FDragModified;
+    property DragSourcePt    :TPoint           read FDragSourcePt     write FDragSourcePt;
+    property DragTargetPt    :TPoint           read FDragTargetPt     write FDragTargetPt;
+    property MarkedArea      :TRect            read FMarkedArea       write SetMarkedArea;
+    property ValidMarkedArea :Boolean          read FValidMarkedArea;
+    property Printing        :Boolean          read FPrinting;
+
 
     property OnCanvasInit : TInitEvent read FCanvasInit write FCanvasInit;             //internal exclusive use.
     procedure OffsetObjects(const aList:TEvsGraphObjectList; aDX, aDY:Integer);
@@ -1513,12 +1554,13 @@ type
   public  //methods
     constructor Create(aOwner: TComponent); override;
     destructor Destroy; override;
+
     procedure BeginUpdate;
     procedure EndUpdate;
     procedure Invalidate; override;
     procedure InvalidateRect(const Rect: TRect);
     procedure DrawTo(aCanvas: TCanvas);
-    procedure Print(aCanvas: TCanvas; const Rect: TRect);
+    procedure Print (aCanvas: TCanvas; const Rect: TRect);
     procedure ScrollInView(aGraphObject: TEvsGraphObject); overload;
     procedure ScrollInView(const aRect: TRect); overload;
     procedure ScrollInView(const aPt: TPoint); overload;
@@ -1526,31 +1568,21 @@ type
     procedure ScrollCenter(const aRect: TRect); overload;
     procedure ScrollCenter(const aPt: TPoint); overload;
     procedure ScrollBy(aDeltaX, aDeltaY: integer);override;
-    procedure ToggleSelection(const aRect: TRect; aKeepOld: boolean;
-      aGraphObjectClass: TEvsGraphObjectClass = nil);
-    function FindObjectAt(aX, aY: integer;
-      aLookAfter: TEvsGraphObject = nil): TEvsGraphObject;
-    function FindObjectByID(aID: DWORD): TEvsGraphObject;
-    function InsertNode(const aBounds: TRect;
-      aNodeClass: TEvsGraphNodeClass = nil): TEvsGraphNode;
-    function InsertLink(aSource, aTarget: TEvsGraphObject;
-      aLinkClass: TEvsGraphLinkClass = nil): TEvsGraphLink; overload;
-    function InsertLink(aSource: TEvsGraphObject; const aPts: array of TPoint;
-      aLinkClass: TEvsGraphLinkClass = nil): TEvsGraphLink; overload;
-    function InsertLink(const aPts: array of TPoint; aTarget: TEvsGraphObject;
-      aLinkClass: TEvsGraphLinkClass = nil): TEvsGraphLink; overload;
-    function InsertLink(const aPts: array of TPoint;
-      aLinkClass: TEvsGraphLinkClass = nil): TEvsGraphLink; overload;
+    procedure ToggleSelection(const aRect: TRect; aKeepOld: Boolean; aGraphObjectClass: TEvsGraphObjectClass = nil);
+    function FindObjectAt(aX, aY: integer; aLookAfter: TEvsGraphObject = Nil): TEvsGraphObject;
+    function FindObjectByID(aID: DWORD; const aList:TEvsGraphObjectList = Nil): TEvsGraphObject;
+    function InsertNode(const aBounds: TRect; aNodeClass: TEvsGraphNodeClass = nil): TEvsGraphNode;
+    function InsertLink(aSource, aTarget: TEvsGraphObject; aLinkClass: TEvsGraphLinkClass = nil): TEvsGraphLink; overload;
+    function InsertLink(aSource: TEvsGraphObject; const aPts: array of TPoint; aLinkClass: TEvsGraphLinkClass = nil): TEvsGraphLink; overload;
+    function InsertLink(const aPts: array of TPoint; aTarget: TEvsGraphObject;aLinkClass: TEvsGraphLinkClass = nil): TEvsGraphLink; overload;
+    function InsertLink(const aPts: array of TPoint; aLinkClass: TEvsGraphLinkClass = nil): TEvsGraphLink; overload;
     // zoom moved to protected
-    function AlignSelection(aHorz: TEvsHAlignOption; aVert: TEvsVAlignOption): boolean;  virtual;
-    function ResizeSelection(aHorz: TEvsResizeOption; aVert: TEvsResizeOption): boolean; virtual;
-    function ForEachObject(aCallback: TEvsGraphForEachMethod; aUserData: integer;
-      aSelection: boolean = False): integer;
-    function FindNextObject(aStartIndex: integer; aInclusive, aBackward, aWrap: boolean;
-      aGraphObjectClass: TEvsGraphObjectClass = nil): TEvsGraphObject;
-    function SelectNextObject(aBackward: boolean;
-      aGraphObjectClass: TEvsGraphObjectClass = nil): boolean;
-    function ObjectsCount(aGraphObjectClass: TEvsGraphObjectClass = nil): integer;
+    function AlignSelection  (aHorz: TEvsHAlignOption; aVert: TEvsVAlignOption): Boolean;  virtual;
+    function ResizeSelection (aHorz: TEvsResizeOption; aVert: TEvsResizeOption): Boolean; virtual;
+    function ForEachObject   (aCallback: TEvsGraphForEachMethod; aUserData: integer; aSelection: boolean = False): integer;
+    function FindNextObject  (aStartIndex: integer; aInclusive, aBackward, aWrap: boolean; aGraphObjectClass: TEvsGraphObjectClass = nil): TEvsGraphObject;
+    function SelectNextObject(aBackward: boolean; aGraphObjectClass: TEvsGraphObjectClass = nil): boolean;
+    function ObjectsCount    (aGraphObjectClass: TEvsGraphObjectClass = nil): integer;
     function SelectedObjectsCount(aGraphObjectClass: TEvsGraphObjectClass = nil): integer;
     procedure ClearSelection;
     procedure Clear;
@@ -1565,74 +1597,72 @@ type
     function GraphToClient(aX, aY: integer): TPoint;
     function ScreenToGraph(aX, aY: integer): TPoint;
     function GraphToScreen(aX, aY: integer): TPoint;
-    procedure SnapOffset(const aPt: TPoint; var adX, adY: integer);
-    function SnapPoint(const aPt: TPoint): TPoint;
+    procedure SnapOffset (const aPt: TPoint; var adX, adY: integer);
+    function SnapPoint   (const aPt: TPoint): TPoint;
     {$IFDEF METAFILE_SUPPORT}
     procedure SaveAsMetafile(const Filename: string);                                      //NO METAFILE SUPPORT
     {$ENDIF}
     procedure SaveAsBitmap(const aFilename: string);
-    function PasteFromClipboard: boolean;                                                  //CONVERTED TO CLIPBRD STREAMS TEST IT.
+    function PasteFromClipboard: Boolean;                                                  //CONVERTED TO CLIPBRD STREAMS TEST IT.
     procedure CopyToClipboard(aSelection: Boolean = True);                                 //USING CLIPBRD METHODS TEST IT
   public  //properties
-    property ActiveLayer  : TEvsGraphLayer read FActiveLayer write FActiveLayer;
-    property CustomCanvas : TCanvasClass read FCustomCanvas write SetCustomCanvas;
-    property CommandMode: TEvsGraphCommandMode read fCommandMode write SetCommandMode;
-    property DraggingObjects: TEvsGraphObjectList read fDraggingObjects;
-    property DragSource: TEvsGraphObject read fDragSource;
-    property GraphBounds: TRect index bkGraph read GetBoundingRect;
-    property Modified: Boolean read fModified write fModified;
-    property Objects: TEvsGraphObjectList read fObjects;
-    property SelectedObjects: TEvsGraphObjectList read fSelectedObjects;
-    property ObjectAtCursor: TEvsGraphObject read fObjectAtCursor;
+    property ActiveLayer     :TEvsGraphLayer        read FActiveLayer      write FActiveLayer;
+    property CustomCanvas    :TCanvasClass          read FCustomCanvas     write SetCustomCanvas; //jkoz: make it a class/static variable.
+    property CommandMode     :TEvsGraphCommandMode  read fCommandMode      write SetCommandMode;
+    property DraggingObjects :TEvsGraphObjectList   read fDraggingObjects;
+    property DragSource      :TEvsGraphObject       read fDragSource;
+    property GraphBounds     :TRect index bkGraph   read GetBoundingRect;
+    property Modified        :Boolean               read fModified         write fModified;
+    property Objects         :TEvsGraphObjectList   read fObjects;
+    property SelectedObjects :TEvsGraphObjectList   read fSelectedObjects;
+    property ObjectAtCursor  :TEvsGraphObject       read fObjectAtCursor;
     /// index property will create a number of problems
-    property SelectionBounds: TRect index bkSelected read GetBoundingRect;
-    property DraggingBounds: TRect index bkDragging read GetBoundingRect;
+    property SelectionBounds :TRect index bkSelected read GetBoundingRect;
+    property DraggingBounds  :TRect index bkDragging read GetBoundingRect;
 
-    property VisibleBounds: TRect read GetVisibleBounds;
-    property CursorPos: TPoint read GetCursorPos write SetCursorPos;
-    property DefaultNodeClass: TEvsGraphNodeClass read fDefaultNodeClass write fDefaultNodeClass;
-    property DefaultLinkClass: TEvsGraphLinkClass read fDefaultLinkClass write fDefaultLinkClass;
-    property Layers[Index:Integer] : TEvsGraphLayer read GetLayer;// write SetLayer;
+    property VisibleBounds         :TRect              read GetVisibleBounds;
+    property CursorPos             :TPoint             read GetCursorPos      write SetCursorPos;
+    property DefaultNodeClass      :TEvsGraphNodeClass read fDefaultNodeClass write fDefaultNodeClass;
+    property DefaultLinkClass      :TEvsGraphLinkClass read fDefaultLinkClass write fDefaultLinkClass;
+    property Layers[Index:Integer] :TEvsGraphLayer     read GetLayer;         //write SetLayer;
   published
-    property HorzScrollBar: TEvsGraphScrollBar read fHorzScrollBar write SetHorzScrollBar;
-    property VertScrollBar: TEvsGraphScrollBar read fVertScrollBar write SetVertScrollBar;
-    property FixedScrollBars: Boolean read fFixedScrollBars write SetFixedScrollBars default False;
+    property HorzScrollBar   :TEvsGraphScrollBar read FHorzScrollBar   write SetHorzScrollBar;
+    property VertScrollBar   :TEvsGraphScrollBar read FVertScrollBar   write SetVertScrollBar;
+    property FixedScrollBars :Boolean            read FFixedScrollBars write SetFixedScrollBars     default False;
     //zoom moved to protected
-    property ShowGrid: Boolean read fShowGrid write SetShowGrid default True;
-    property GridColor: TColor read fGridColor write SetGridColor default clGray;
-    property GridSize: TGridSize read fGridSize write SetGridSize default 8;
-    property GraphConstraints: TEvsGraphConstraints read fGraphConstraints write SetGraphConstraints;
-    property SnapToGrid: boolean read fSnapToGrid write fSnapToGrid default True;
+    property ShowGrid        :Boolean              read FShowGrid         write SetShowGrid         default True;
+    property GridColor       :TColor               read FGridColor        write SetGridColor        default clGray;
+    property GridSize        :TGridSize            read FGridSize         write SetGridSize         default 8;
+    property GraphConstraints:TEvsGraphConstraints read FGraphConstraints write SetGraphConstraints;
+    property SnapToGrid      :Boolean              read FSnapToGrid       write fSnapToGrid         default True;
     property Align;
     property Anchors;
     property BiDiMode;
-    property ClipboardFormats: TEvsGraphClipboardFormats
-      read fClipboardFormats write fClipboardFormats default [cfNative];
+    property ClipboardFormats:TEvsGraphClipboardFormats read fClipboardFormats write fClipboardFormats default [cfNative];
     property Color;
     property Constraints;
-    property DefaultKeyMap: boolean
-      read fDefaultKeyMap write fDefaultKeyMap default True;
+    property DefaultKeyMap :Boolean read fDefaultKeyMap write fDefaultKeyMap default True;
     property DragCursor;
     property DragKind;
     property DragMode;
-    property DrawOrder: TEvsGraphDrawOrder read fDrawOrder write SetDrawOrder default doDefault;
+    property DrawOrder     :TEvsGraphDrawOrder read fDrawOrder write SetDrawOrder default doDefault;
     property Enabled;
     property Font;
     property Height;
-    property HideSelection: boolean read fHideSelection write SetHideSelection default False;
-    property LockLinks: boolean read fLockLinks write SetLockLinks default False;
-    property LockNodes: boolean read fLockNodes write SetLockNodes default False;
+    property HideSelection :Boolean read FHideSelection write SetHideSelection default False;
+    property LockLinks     :Boolean read FLockLinks     write SetLockLinks     default False;
+    property LockNodes     :Boolean read FLockNodes     write SetLockNodes     default False;
     //property OnContextPopup;
-    property MarkerColor: TColor read fMarkerColor write SetMarkerColor default clBlack;
-    property MarkerSize: TMarkerSize read fMarkerSize write SetMarkerSize default 3;
-    property MinNodeSize: word read fMinNodeSize write fMinNodeSize default 16;
-    property ObjectPopupMenu: TPopupMenu read fObjectPopupMenu write fObjectPopupMenu;
+    property MarkerColor     :TColor      read fMarkerColor     write SetMarkerColor    default clBlack;
+    property MarkerSize      :TMarkerSize read fMarkerSize      write SetMarkerSize     default 3;
+    property MinNodeSize     :word        read fMinNodeSize     write fMinNodeSize      default 16;
+    property ObjectPopupMenu :TPopupMenu  read fObjectPopupMenu write fObjectPopupMenu;
     property ParentBiDiMode;
     property ParentColor;
     property ParentFont;
     property ParentShowHint;
     property PopupMenu;
-    property ShowHiddenObjects: boolean read fShowHiddenObjects write SetShowHiddenObjects default False;
+    property ShowHiddenObjects :Boolean read FShowHiddenObjects write SetShowHiddenObjects default False;
     property ShowHint;
     property TabOrder;
     property TabStop;
@@ -1666,53 +1696,35 @@ type
     property OnStartDock;
     property OnStartDrag;
     property OnUnDock;
-    property OnObjectInitInstance: TEvsGraphNotifyEvent
-      read fOnObjectInitInstance write fOnObjectInitInstance;
-    property OnObjectInsert: TEvsGraphNotifyEvent
-      read fOnObjectInsert write fOnObjectInsert;
-    property OnObjectRemove: TEvsGraphNotifyEvent
-      read fOnObjectRemove write fOnObjectRemove;
-    property OnObjectChange: TEvsGraphNotifyEvent
-      read fOnObjectChange write fOnObjectChange;
-    property OnObjectSelect: TEvsGraphNotifyEvent
-      read fOnObjectSelect write fOnObjectSelect;
-    property OnObjectClick: TEvsGraphNotifyEvent read fOnObjectClick write fOnObjectClick;
-    property OnObjectDblClick: TEvsGraphNotifyEvent
-      read fOnObjectDblClick write fOnObjectDblClick;
-    property OnObjectContextPopup: TEvsGraphContextPopupEvent
-      read fOnObjectContextPopup write fOnObjectContextPopup;
-    property OnObjectBeforeDraw: TEvsGraphObjectDrawEvent
-      read fOnObjectBeforeDraw write fOnObjectBeforeDraw;
-    property OnObjectAfterDraw: TEvsGraphObjectDrawEvent
-      read fOnObjectAfterDraw write fOnObjectAfterDraw;
-    property OnObjectBeginDrag: TEvsGraphBeginDragEvent
-      read fOnObjectBeginDrag write fOnObjectBeginDrag;
-    property OnObjectEndDrag: TEvsGraphEndDragEvent
-      read fOnObjectEndDrag write fOnObjectEndDrag;
-    property OnObjectMouseEnter: TEvsGraphNotifyEvent
-      read fOnObjectMouseEnter write fOnObjectMouseEnter;
-    property OnObjectMouseLeave: TEvsGraphNotifyEvent
-      read fOnObjectMouseLeave write fOnObjectMouseLeave;
-    property OnObjectRead: TEvsGraphStreamEvent read fOnObjectRead write fOnObjectRead;
-    property OnObjectWrite: TEvsGraphStreamEvent read fOnObjectWrite write fOnObjectWrite;
-    property OnObjectHook: TEvsGraphHookEvent read fOnObjectHook write fOnObjectHook;
-    property OnObjectUnhook: TEvsGraphHookEvent read fOnObjectUnhook write fOnObjectUnhook;
-    property OnCanHookLink: TEvsGraphCanHookEvent read fOnCanHookLink write fOnCanHookLink;
-    property OnCanLinkObjects: TEvsGraphCanLinkEvent
-      read fOnCanLinkObjects write fOnCanLinkObjects;
-    property OnCanMoveResizeNode: TEvsCanMoveResizeNodeEvent
-      read fOnCanMoveResizeNode write fOnCanMoveResizeNode;
-    property OnCanRemoveObject: TEvsGraphCanRemoveEvent
-      read fOnCanRemoveObject write fOnCanRemoveObject;
-    property OnNodeMoveResize: TEvsGraphNodeResizeEvent
-      read fOnNodeMoveResize write fOnNodeMoveResize;
-    property OnGraphChange: TNotifyEvent read fOnGraphChange write fOnGraphChange;
-    property OnCommandModeChange: TNotifyEvent
-      read fOnCommandModeChange write fOnCommandModeChange;
-    property OnBeforeDraw: TEvsGraphDrawEvent read fOnBeforeDraw write fOnBeforeDraw;
-    property OnAfterDraw: TEvsGraphDrawEvent read fOnAfterDraw write fOnAfterDraw;
-    property OnInfoTip: TEvsGraphInfoTipEvent read fOnInfoTip write fOnInfoTip;
-    property OnZoomChange: TNotifyEvent read fOnZoomChange write fOnZoomChange;
+    property OnObjectInitInstance :TEvsGraphNotifyEvent       read FOnObjectInitInstance write FOnObjectInitInstance;
+    property OnObjectInsert       :TEvsGraphNotifyEvent       read FOnObjectInsert       write FOnObjectInsert;
+    property OnObjectRemove       :TEvsGraphNotifyEvent       read FOnObjectRemove       write FOnObjectRemove;
+    property OnObjectChange       :TEvsGraphNotifyEvent       read FOnObjectChange       write FOnObjectChange;
+    property OnObjectSelect       :TEvsGraphNotifyEvent       read FOnObjectSelect       write FOnObjectSelect;
+    property OnObjectClick        :TEvsGraphNotifyEvent       read FOnObjectClick        write FOnObjectClick;
+    property OnObjectDblClick     :TEvsGraphNotifyEvent       read FOnObjectDblClick     write FOnObjectDblClick;
+    property OnObjectContextPopup :TEvsGraphContextPopupEvent read fOnObjectContextPopup write fOnObjectContextPopup;
+    property OnObjectBeforeDraw   :TEvsGraphObjectDrawEvent   read fOnObjectBeforeDraw   write fOnObjectBeforeDraw;
+    property OnObjectAfterDraw    :TEvsGraphObjectDrawEvent   read fOnObjectAfterDraw    write fOnObjectAfterDraw;
+    property OnObjectBeginDrag    :TEvsGraphBeginDragEvent    read fOnObjectBeginDrag    write fOnObjectBeginDrag;
+    property OnObjectEndDrag      :TEvsGraphEndDragEvent      read fOnObjectEndDrag      write fOnObjectEndDrag;
+    property OnObjectMouseEnter   :TEvsGraphNotifyEvent       read fOnObjectMouseEnter   write fOnObjectMouseEnter;
+    property OnObjectMouseLeave   :TEvsGraphNotifyEvent       read fOnObjectMouseLeave   write fOnObjectMouseLeave;
+    property OnObjectRead         :TEvsGraphStreamEvent       read fOnObjectRead         write fOnObjectRead;
+    property OnObjectWrite        :TEvsGraphStreamEvent       read fOnObjectWrite        write fOnObjectWrite;
+    property OnObjectHook         :TEvsGraphHookEvent         read fOnObjectHook         write fOnObjectHook;
+    property OnObjectUnhook       :TEvsGraphHookEvent         read fOnObjectUnhook       write fOnObjectUnhook;
+    property OnCanHookLink        :TEvsGraphCanHookEvent      read fOnCanHookLink        write fOnCanHookLink;
+    property OnCanLinkObjects     :TEvsGraphCanLinkEvent      read fOnCanLinkObjects     write fOnCanLinkObjects;
+    property OnCanMoveResizeNode  :TEvsCanMoveResizeNodeEvent read fOnCanMoveResizeNode  write fOnCanMoveResizeNode;
+    property OnCanRemoveObject    :TEvsGraphCanRemoveEvent    read fOnCanRemoveObject    write fOnCanRemoveObject;
+    property OnNodeMoveResize     :TEvsGraphNodeResizeEvent   read fOnNodeMoveResize     write fOnNodeMoveResize;
+    property OnGraphChange        :TNotifyEvent               read fOnGraphChange        write fOnGraphChange;
+    property OnCommandModeChange  :TNotifyEvent               read fOnCommandModeChange  write fOnCommandModeChange;
+    property OnBeforeDraw         :TEvsGraphDrawEvent         read fOnBeforeDraw         write fOnBeforeDraw;
+    property OnAfterDraw          :TEvsGraphDrawEvent         read fOnAfterDraw          write fOnAfterDraw;
+    property OnInfoTip            :TEvsGraphInfoTipEvent      read fOnInfoTip            write fOnInfoTip;
+    property OnZoomChange         :TNotifyEvent               read fOnZoomChange         write fOnZoomChange;
   end;
 
 
@@ -1762,15 +1774,15 @@ var
 
 implementation
 
-uses Math, InterfaceBase, Clipbrd;//, Windows;
+uses Math, InterfaceBase, Clipbrd;
 
 {$R Cursors.res}
 
 resourcestring
-  SListIndexError = 'Index out of range (%d)';
+  SListIndexError     = 'Index out of range (%d)';
   SListEnumerateError = 'List enumeration is not initialized';
   SStreamContentError = 'Invalid stream content';
-  SLinkCreateError = 'Cannot create link with the specified parameters';
+  SLinkCreateError    = 'Cannot create link with the specified parameters';
 
 const {$MESSAGE HINT 'NEEDS ATTENTION FOR OTHER OPERATING SYSTEMS'}
   WM_SETREDRAW = 11;
@@ -1780,15 +1792,15 @@ const {$MESSAGE HINT 'NEEDS ATTENTION FOR OTHER OPERATING SYSTEMS'}
   // drawing.
 
 const
-  EmptySize :TSize = (CX:0;CY:0;);
+  EmptySize :TSize = (CX:0; CY:0;);
   StreamSignature: DWORD =
     (Ord('S') shl 24) or (Ord('G') shl 16) or (Ord('.') shl 8) or Ord('0');
 
   TextAlignFlags: array[TAlignment] of integer = (DT_LEFT, DT_RIGHT, DT_CENTER);
   TextLayoutFlags: array[TTextLayout] of integer = (DT_TOP, DT_VCENTER, DT_BOTTOM);
 
-  Pi: double = System.Pi;
-  MaxDouble: double = +1.7E+308;
+  Pi: Double = System.Pi;
+  MaxDouble: Double = +1.7E+308;
 
   EmptyRect: TRect = (Left: +MaxInt; Top: +MaxInt; Right: -MaxInt; Bottom: -MaxInt);
   {$IFDEF WIN}
@@ -1819,6 +1831,11 @@ const
 
 {$REGION ' HELPER FUNCTIONS '}
 
+Function UnderConstruction:Exception;
+begin
+  Result := EEvsSimpleGraphException.Create('Under Construction');
+end;
+
 function GetBezierPolyline(Control_Points: array of TPoint): TPoints;
 const
   cBezierTolerance = 0.00001;
@@ -1837,8 +1854,7 @@ var
   const
     F = 1 / 65536;
   begin
-    with P do
-    begin
+    with P do begin
       Result.X := X * F;
       Result.Y := Y * F;
     end;
@@ -1851,14 +1867,13 @@ var
      // assess flatness of curve ...
      // http://groups.google.com/group/comp.graphics.algorithms/tree/browse_frm/thread/d85ca902fdbd746e
      if abs(p1.x + p3.x - 2*p2.x) + abs(p2.x + p4.x - 2*p3.x) +
-       abs(p1.y + p3.y - 2*p2.y) + abs(p2.y + p4.y - 2*p3.y) < cBezierTolerance then
+        abs(p1.y + p3.y - 2*p2.y) + abs(p2.y + p4.y - 2*p3.y) < cBezierTolerance then
      begin
        if ResultCnt = Length(Result) then
          SetLength (Result, Length(Result) + 128);
        Result[ResultCnt] := FixedPoint(p4);
        Inc(ResultCnt);
-     end else
-     begin
+     end else begin
        p12.X := (p1.X + p2.X) *half;
        p12.Y := (p1.Y + p2.Y) *half;
        p23.X := (p2.X + p3.X) *half;
@@ -1884,8 +1899,7 @@ begin
    SetLength(Result, 128);
    Result[0] := Control_Points[0];
    ResultCnt := 1;
-   for I := 0 to (ArrayLen div 3)-1 do
-   begin
+   for I := 0 to (ArrayLen div 3)-1 do begin
      for J := 0 to 3 do
        CtrlPts[J] := FloatPoint(Control_Points[I*3 +J]);
      RecursiveCBezier(CtrlPts[0], CtrlPts[1], CtrlPts[2], CtrlPts[3]);
@@ -1937,7 +1951,7 @@ end;
 function RotateCW(aPoint:Tpoint; aAngle:Double; aCenter:TPoint):TPoint; overload;
 var
   vSinA, vCosA : Extended;
-  vRads      : Double;
+  vRads        : Double;
 begin
   vRads := aAngle;
   vSinA := Sin(vRads);vCosA := Cos(vRads);
@@ -1949,22 +1963,16 @@ begin
   Result.y := Result.y + aCenter.y;
 end;
 
-function PtInPoly
-   (const Points: Array of TPoint; X,Y: Integer):
-   Boolean;
-var Count, K, J : Integer;
+function PtInPoly (const Points: Array of TPoint; X,Y: Integer): Boolean;
+var
+  Count, K, J : Integer;
 begin
   Result := False;
   Count := Length(Points) ;
   J := Count-1;
   for K := 0 to Count-1 do begin
-   if ((Points[K].Y <=Y) and (Y < Points[J].Y)) or
-      ((Points[J].Y <=Y) and (Y < Points[K].Y)) then
-   begin
-    if (x < (Points[j].X - Points[K].X) *
-       (y - Points[K].Y) /
-       (Points[j].Y - Points[K].Y) + Points[K].X) then
-        Result := not Result;
+    if ((Points[K].Y <=Y) and (Y < Points[J].Y)) or ((Points[J].Y <=Y) and (Y < Points[K].Y)) then begin
+      if (x < (Points[j].X - Points[K].X) * (y - Points[K].Y) / (Points[j].Y - Points[K].Y) + Points[K].X) then Result := not Result;
     end;
     J := K;
   end;
@@ -2071,12 +2079,15 @@ begin
     end;
   end;
 end;
+
 {$ELSE WIN_TRANSFORM}
+
 begin
   Result := CreateRegionCopy(Rgn);
 
   OffsetRgn(Result, round(XForm.eDx), round(XForm.eDy));
 end;
+
 {$ENDIF WIN_TRANSFORM}
 
 function WrapText(Canvas: TCanvas; const Text: string; MaxWidth: integer): string;
@@ -2746,7 +2757,37 @@ begin
   end;
 end;
 
-{ TEvsCustomGraphPainter }
+{$ENDREGION}
+
+{$REGION '  TEvsAutoNumberGenerator '}
+
+constructor TEvsAutoNumberGenerator.Create;
+begin
+  inherited;
+  FNo := -1;
+  FStep := 1;
+end;
+
+function TEvsAutoNumberGenerator.Next :Int64;
+begin
+  Inc(FNo,FStep);
+  Result := FNo;
+end;
+
+function TEvsAutoNumberGenerator.Peek :Int64;
+begin
+  Result := FNo;
+end;
+
+procedure TEvsAutoNumberGenerator.Reset(const aStartValue :Int64=-1; const aStep :SmallInt=1);
+begin
+  FNo   := aStartValue;
+  FStep := aStep;
+end;
+
+{$ENDREGION}
+
+{$REGION ' TEvsCustomGraphPainter '}
 
 procedure TEvsCustomGraphPainter.SetGraph(AValue: TEvsSimpleGraph);
 begin
@@ -2776,11 +2817,24 @@ end;
 
 {$REGION ' TEvsGraphObjectListEnumerator '}
 
+procedure TEvsGraphObjectListEnumerator.Reset;
+begin
+  if FReverse then FPosition := FGraphList.Count else FPosition := -1;
+end;
+
 constructor TEvsGraphObjectListEnumerator.Create(aList : TEvsGraphObjectList);
 begin
   inherited Create;
   FGraphList := aList;
   FPosition := -1;
+  FReverse  := False;
+  FBaseClass := Nil;
+end;
+
+function TEvsGraphObjectListEnumerator.Filter(const aBaseClass :TEvsGraphObjectClass) :TEvsGraphObjectListEnumerator;
+begin
+  FBaseClass := aBaseClass;
+  reset
 end;
 
 function TEvsGraphObjectListEnumerator.GetCurrent : TEvsGraphObject;
@@ -2790,30 +2844,25 @@ end;
 
 function TEvsGraphObjectListEnumerator.MoveNext : Boolean;
 begin
-  Inc(FPosition);
-  Result := FPosition < FGraphList.Count;
-end;
-{$ENDREGION}
-
-{$REGION ' TEvsGraphObjectListReverseEnumerator '}
-
-constructor TEvsGraphObjectListReverseEnumerator.Create(
-  aList : TEvsGraphObjectList);
-begin
-  inherited Create;
-  FGraphList := aList;
-  FPosition := aList.Count;
+  if FReverse then begin
+    Dec(FPosition);
+    Result := FPosition > -1;
+  end else begin
+    Inc(FPosition);
+    Result := FPosition < FGraphList.Count;
+  end;
 end;
 
-function TEvsGraphObjectListReverseEnumerator.GetCurrent : TEvsGraphObject;
+function TEvsGraphObjectListEnumerator.GetEnumerator :TEvsGraphObjectListEnumerator;
 begin
-  Result := FGraphList[FPosition];
+  Result := Self;
 end;
 
-function TEvsGraphObjectListReverseEnumerator.MoveNext : Boolean;
+function TEvsGraphObjectListEnumerator.Reverse :TEvsGraphObjectListEnumerator;
 begin
-  Dec(FPosition);
-  Result := FPosition > -1;
+  FReverse := not FReverse;
+  Reset;//if FReverse then FPosition := FGraphList.Count else FPosition := -1;
+  Result := Self;
 end;
 
 {$ENDREGION}
@@ -2822,7 +2871,7 @@ end;
 
 function TEvsGraphLayerList.GetCount: Integer;
 begin
-  Result := fList.Count;
+  Result := FList.Count;
 end;
 
 function TEvsGraphLayerList.GetLayer(Index: Integer): TEvsGraphLayer;
@@ -2940,6 +2989,12 @@ procedure TEvsGraphLayer.SetPrintable(AValue: Boolean);
 begin
   if FPrintable=AValue then Exit;
   FPrintable:=AValue;
+end;
+
+procedure TEvsGraphLayer.SetTitle(aValue :string);
+begin
+  if FTitle=aValue then Exit;
+  FTitle:=aValue;
 end;
 
 procedure TEvsGraphLayer.SetVisible(AValue: Boolean);
@@ -3104,16 +3159,13 @@ const
 var
   NewValue: integer;
 begin
-  if Value <> Size then
-  begin
+  if Value <> Size then begin
     NewValue := Value;
-    if NewValue = 0 then
-      Value := GetSystemMetrics(SysConsts[Kind]); {NEEDS TO BE TESTED WITH NON WINDOWS CLIENTS}
-    fSize := Value;
-    fUpdateNeeded := True;
+    if NewValue = 0 then Value := GetSystemMetrics(SysConsts[Kind]); {NEEDS TO BE TESTED WITH NON WINDOWS CLIENTS}
+    FSize := Value;
+    FUpdateNeeded := True;
     Owner.UpdateScrollBars;
-    if NewValue = 0 then
-      fSize := 0;
+    if NewValue = 0 then fSize := 0;
   end;
 end;
 
@@ -3286,17 +3338,16 @@ begin
           FinalIncr := 0;
       end;
       CurrentTime := 0;
-      while Count > 0 do
-      begin
+      while Count > 0 do begin
         StartTime := GetTickCount;
         ElapsedTime := StartTime - CurrentTime;
         if ElapsedTime < fDelay then
           Sleep(fDelay - ElapsedTime);
         CurrentTime := StartTime;
         case ScrollCode of
-          SB_LINEUP: SetPosition(fPosition - Incr);
+          SB_LINEUP  : SetPosition(fPosition - Incr);
           SB_LINEDOWN: SetPosition(fPosition + Incr);
-          SB_PAGEUP: SetPosition(fPosition - Incr);
+          SB_PAGEUP  : SetPosition(fPosition - Incr);
           SB_PAGEDOWN: SetPosition(fPosition + Incr);
         end;
         Owner.Update;
@@ -3305,19 +3356,19 @@ begin
       if FinalIncr > 0 then
       begin
         case ScrollCode of
-          SB_LINEUP: SetPosition(fPosition - FinalIncr);
-          SB_LINEDOWN: SetPosition(fPosition + FinalIncr);
-          SB_PAGEUP: SetPosition(fPosition - FinalIncr);
-          SB_PAGEDOWN: SetPosition(fPosition + FinalIncr);
+          SB_LINEUP   : SetPosition(fPosition - FinalIncr);
+          SB_LINEDOWN : SetPosition(fPosition + FinalIncr);
+          SB_PAGEUP   : SetPosition(fPosition - FinalIncr);
+          SB_PAGEDOWN : SetPosition(fPosition + FinalIncr);
         end;
       end;
     end
     else begin
       case ScrollCode of
-        SB_LINEUP: SetPosition(fPosition - fIncrement);
-        SB_LINEDOWN: SetPosition(fPosition + fIncrement);
-        SB_PAGEUP: SetPosition(fPosition - ControlSize(True, False));
-        SB_PAGEDOWN: SetPosition(fPosition + ControlSize(True, False));
+        SB_LINEUP   : SetPosition(fPosition - fIncrement);
+        SB_LINEDOWN : SetPosition(fPosition + fIncrement);
+        SB_PAGEUP   : SetPosition(fPosition - ControlSize(True, False));
+        SB_PAGEDOWN : SetPosition(fPosition + ControlSize(True, False));
         SB_THUMBPOSITION:
           //if fCalcRange > 32767 then
           //  //SetPosition(GetRealScrollPosition)
@@ -3334,17 +3385,14 @@ begin
               SetPosition(Pos);
             end else SetPosition(Pos);
           end;
-        SB_THUMBTRACK:
-          if Tracking then
+        SB_THUMBTRACK: if Tracking then
             //if fCalcRange > 32767 then
             //  SetPosition(GetRealScrollPosition)
             //else
               SetPosition(Pos);
-        SB_TOP: SetPosition(0);
-        SB_BOTTOM: SetPosition(fCalcRange);
-        SB_ENDSCROLL:
-        begin
-        end;
+        SB_TOP       : SetPosition(0);
+        SB_BOTTOM    : SetPosition(fCalcRange);
+        SB_ENDSCROLL : begin end;
       end;
       Owner.Invalidate;
     end;
@@ -3453,15 +3501,13 @@ begin
     Code := SB_VERT
   else
     Code := SB_HORZ;
-  if Visible then
-  begin
+  if Visible then begin
     fCalcRange := Range - ControlSize(ControlSB, AssumeSB);
-    if fCalcRange < 0 then
-      fCalcRange := 0;
+    if fCalcRange < 0 then fCalcRange := 0;
   end;
   ScrollInfo.cbSize := SizeOf(ScrollInfo);
-  ScrollInfo.fMask := SIF_ALL;
-  ScrollInfo.nMin := 0;
+  ScrollInfo.fMask  := SIF_ALL;
+  ScrollInfo.nMin   := 0;
   if fCalcRange > 0 then
     ScrollInfo.nMax := Range
   else
@@ -3479,111 +3525,101 @@ end;
 {$ENDREGION}
 
 {$REGION ' TEvsSimpleGraph '}
-procedure TEvsSimpleGraph.SetHorzScrollBar(AValue: TEvsGraphScrollBar);
+procedure TEvsSimpleGraph.SetHorzScrollBar(aValue: TEvsGraphScrollBar);
 begin
-  fHorzScrollBar.Assign(AValue);
+
+  fHorzScrollBar.Assign(aValue);
 end;
 
-procedure TEvsSimpleGraph.SetLayer(Index :Integer; aValue :TEvsGraphLayer);
+procedure TEvsSimpleGraph.SetLayer(aIndex :Integer; aValue :TEvsGraphLayer);
 begin
-  //FLayers.Layers[Index] := aValue;
+  //FLayers.Layers[aIndex] := aValue;
 end;
 
-procedure TEvsSimpleGraph.SetLockNodes(Value: boolean);
+procedure TEvsSimpleGraph.SetLockNodes(aValue: boolean);
 begin
-  if LockNodes <> Value then
-  begin
-    fLockNodes := Value;
+  if LockNodes <> aValue then begin
+    FLockNodes := aValue;
     Invalidate;
   end;
 end;
 
-procedure TEvsSimpleGraph.SetLockLinks(Value: boolean);
+procedure TEvsSimpleGraph.SetLockLinks(aValue: boolean);
 begin
-  if LockLinks <> Value then
-  begin
-    fLockLinks := Value;
+  if LockLinks <> aValue then begin
+    FLockLinks := aValue;
     Invalidate;
   end;
 end;
 
-procedure TEvsSimpleGraph.SetMarkedArea(AValue: TRect);
+procedure TEvsSimpleGraph.SetMarkedArea(aValue: TRect);
 begin
-  if not LCLIntf.EqualRect(MarkedArea, AValue) then
-  begin
-    if fValidMarkedArea then
-      InvalidateRect(fMarkedArea);
-    fMarkedArea := AValue;
-    fValidMarkedArea := (AValue.Left <= AValue.Right) and (AValue.Top <= AValue.Bottom);
+  if not LCLIntf.EqualRect(MarkedArea, AValue) then begin
+    if fValidMarkedArea then InvalidateRect(FMarkedArea);
+    FMarkedArea := AValue;
+    FValidMarkedArea := (aValue.Left <= aValue.Right) and (aValue.Top <= aValue.Bottom);
     CalcAutoRange;
-    if fValidMarkedArea then
-      InvalidateRect(fMarkedArea);
+    if FValidMarkedArea then InvalidateRect(FMarkedArea);
   end;
 end;
 
-procedure TEvsSimpleGraph.SetMarkerColor(Value: TColor);
+procedure TEvsSimpleGraph.SetMarkerColor(aValue: TColor);
 begin
-  if MarkerColor <> Value then
-  begin
-    fMarkerColor := Value;
-    if SelectedObjects.Count > 0 then
-      Invalidate;
+  if MarkerColor <> aValue then begin
+    FMarkerColor := aValue;
+    if SelectedObjects.Count > 0 then Invalidate;
   end;
 end;
 
-procedure TEvsSimpleGraph.SetMarkerSize(Value: TMarkerSize);
+procedure TEvsSimpleGraph.SetMarkerSize(aValue: TMarkerSize);
 begin
-  if MarkerSize <> Value then
-  begin
-    fMarkerSize := Value;
-    if SelectedObjects.Count > 0 then
-      Invalidate;
+  if MarkerSize <> aValue then begin
+    FMarkerSize := aValue;
+    if SelectedObjects.Count > 0 then Invalidate;
   end;
 end;
 
-procedure TEvsSimpleGraph.SetShowHiddenObjects(Value: boolean);
+procedure TEvsSimpleGraph.SetShowHiddenObjects(aValue: boolean);
 begin
-  if ShowHiddenObjects <> Value then
-  begin
-    fShowHiddenObjects := Value;
+  if ShowHiddenObjects <> aValue then begin
+    FShowHiddenObjects := aValue;
     CalcAutoRange;
     Invalidate;
   end;
 end;
 
-procedure TEvsSimpleGraph.SetHideSelection(Value: boolean);
+procedure TEvsSimpleGraph.SetHideSelection(aValue: boolean);
 begin
-  if HideSelection <> Value then
-  begin
-    fHideSelection := Value;
+  if HideSelection <> aValue then begin
+    FHideSelection := aValue;
     if not Focused and (SelectedObjects.Count > 0) then
       InvalidateRect(SelectionBounds);
   end;
 end;
 
-procedure TEvsSimpleGraph.SetFixedScrollBars(AValue: Boolean);
+procedure TEvsSimpleGraph.SetFixedScrollBars(aValue: Boolean);
 begin
-  if fFixedScrollBars = AValue then Exit;
-  fFixedScrollBars := AValue;
+  if fFixedScrollBars = aValue then Exit;
+  FFixedScrollBars := aValue;
   CalcAutoRange;
 end;
 
-procedure TEvsSimpleGraph.SetGraphConstraints(AValue: TEvsGraphConstraints);
+procedure TEvsSimpleGraph.SetGraphConstraints(aValue: TEvsGraphConstraints);
 begin
-  fGraphConstraints.Assign(AValue);
+  FGraphConstraints.Assign(aValue);
 end;
 
-procedure TEvsSimpleGraph.SetGridColor(AValue: TColor);
+procedure TEvsSimpleGraph.SetGridColor(aValue: TColor);
 begin
-  if fGridColor=AValue then Exit;
-  fGridColor:=AValue;
+  if FGridColor = aValue then Exit;
+  FGridColor := aValue;
   if ShowGrid then Invalidate;
 end;
 
-procedure TEvsSimpleGraph.SetGridSize(AValue: TGridSize);
+procedure TEvsSimpleGraph.SetGridSize(aValue: TGridSize);
 begin
-  if fGridSize=AValue then Exit;
-  fGridSize:=AValue;
+  if FGridSize = aValue then Exit;
+  FGridSize := aValue;
   if ShowGrid then Invalidate;
 end;
 
@@ -3593,35 +3629,35 @@ begin
     Result := ClientToGraph(X, Y);
 end;
 
-function TEvsSimpleGraph.GetBoundingRect(Kind: TEvsGraphBoundsKind): TRect;
+function TEvsSimpleGraph.GetBoundingRect(aKind: TEvsGraphBoundsKind): TRect;
 begin
-  if Kind in SaveBoundsChange then
+  if aKind in FSaveBoundsChange then
   begin
-    case Kind of
+    case aKind of
       bkGraph:
-        SaveBounds[Kind] := GetObjectsBounds(Objects);
+        FSaveBounds[aKind] := GetObjectsBounds(Objects);
       bkSelected:
-        SaveBounds[Kind] := GetObjectsBounds(SelectedObjects);
+        FSaveBounds[aKind] := GetObjectsBounds(SelectedObjects);
       bkDragging:
-        SaveBounds[Kind] := GetObjectsBounds(DraggingObjects);
+        FSaveBounds[aKind] := GetObjectsBounds(DraggingObjects);
     end;
-    Exclude(SaveBoundsChange, Kind);
+    Exclude(FSaveBoundsChange, aKind);
   end;
-  Result := SaveBounds[Kind];
+  Result := FSaveBounds[aKind];
 end;
 
 function TEvsSimpleGraph.GetMidPoint : TPoint;
 var
-  vBounds : TRECT;
+  vBounds : TRect;
 begin
   vBounds := GetObjectsBounds(fObjects);
   Result.Y := (vBounds.Top + vBounds.Bottom) div 2;
   Result.X := (vBounds.Left + vBounds.Right) div 2;
 end;
 
-function TEvsSimpleGraph.GetLayer(Index :Integer) :TEvsGraphLayer;
+function TEvsSimpleGraph.GetLayer(aIndex :Integer) :TEvsGraphLayer;
 begin
-  Result := FLayers.Layers[Index];
+  Result := FLayers.Layers[aIndex];
 end;
 
 function TEvsSimpleGraph.GetVisibleBounds: TRect;
@@ -3630,23 +3666,20 @@ begin
   CPToGP(Result, 2);
 end;
 
-procedure TEvsSimpleGraph.SetCommandMode(AValue: TEvsGraphCommandMode);
+procedure TEvsSimpleGraph.SetCommandMode(aValue: TEvsGraphCommandMode);
 begin
-  if CommandMode <> AValue then
-  begin
-    if Assigned(DragSource) then
-      DragSource.EndDrag(False);
-    fCommandMode := AValue;
-    if not (CommandMode in [cmPan, cmEdit]) then
-      SelectedObjects.Clear;
+  if CommandMode <> aValue then begin
+    if Assigned(DragSource) then DragSource.EndDrag(False);
+    fCommandMode := aValue;
+    if not (CommandMode in [cmPan, cmEdit]) then SelectedObjects.Clear;
     CalcAutoRange;
     DoCommandModeChange;
   end;
 end;
 
-procedure TEvsSimpleGraph.SetCursorPos(const Pt: TPoint);
+procedure TEvsSimpleGraph.SetCursorPos(const aPt: TPoint);
 begin
-  Mouse.CursorPos := ClientToScreen(GraphToClient(Pt.X, Pt.Y));
+  Mouse.CursorPos := ClientToScreen(GraphToClient(aPt.X, aPt.Y));
 end;
 
 procedure TEvsSimpleGraph.SetCustomCanvas(aValue :TCanvasClass);
@@ -3660,21 +3693,20 @@ begin
   //end;//nice idea will not work the create method is not virtual.
 end;
 
-procedure TEvsSimpleGraph.SetDrawOrder(Value: TEvsGraphDrawOrder);
+procedure TEvsSimpleGraph.SetDrawOrder(aValue: TEvsGraphDrawOrder);
 begin
-  if DrawOrder <> Value then
-  begin
-    fDrawOrder := Value;
+  if DrawOrder <> aValue then begin
+    FDrawOrder := aValue;
     Invalidate;
   end;
 end;
 
 procedure TEvsSimpleGraph.UpdateScrollBars;
 begin
-  if not UpdatingScrollBars and HandleAllocated then
+  if not FUpdatingScrollBars and HandleAllocated then
   begin
     try
-      UpdatingScrollBars := True;
+      FUpdatingScrollBars := True;
       if VertScrollBar.NeedsScrollBarVisible then
       begin
         HorzScrollBar.Update(False, True);
@@ -3691,12 +3723,12 @@ begin
         HorzScrollBar.Update(True, False);
       end;
     finally
-      UpdatingScrollBars := False;
+      FUpdatingScrollBars := False;
     end;
   end;
 end;
 
-procedure TEvsSimpleGraph.SetShowGrid(AValue: Boolean);
+procedure TEvsSimpleGraph.SetShowGrid(aValue: Boolean);
 begin
   if fShowGrid <> AValue then begin
     fShowGrid:=AValue;
@@ -3704,7 +3736,7 @@ begin
   end;
 end;
 
-procedure TEvsSimpleGraph.SetVertScrollBar(AValue: TEvsGraphScrollBar);
+procedure TEvsSimpleGraph.SetVertScrollBar(aValue: TEvsGraphScrollBar);
 begin
   FVertScrollBar.Assign(AValue);
 end;
@@ -3717,7 +3749,7 @@ begin
   vFS.Free;
 end;
 
-function TEvsSimpleGraph.PasteFromClipboard: boolean;
+function TEvsSimpleGraph.PasteFromClipboard :Boolean;
 var
   vStream: TMemoryStream;
   I, vCount: integer;
@@ -3737,8 +3769,9 @@ begin
           vStream.Position:=0;
           ReadObjects(vStream);
           SelectedObjects.Capacity := Objects.Count - vCount;
-          for I := Objects.Count - 1 downto vCount do
+          for I := Objects.Count - 1 downto vCount do begin
             Objects[I].Selected := True;
+          end;
           OffsetObjects(SelectedObjects, 10, 10);
           Result := True;
         finally
@@ -3841,15 +3874,15 @@ begin
 end;
 {$ENDIF}
 
-procedure TEvsSimpleGraph.SetZoom(AValue: TZoom);
+procedure TEvsSimpleGraph.SetZoom(aValue: TZoom);
 begin
-  if AValue < Low(TZoom) then
-    AValue := Low(TZoom)
-  else if AValue > High(TZoom) then
-    AValue := High(TZoom);
-  if Zoom <> AValue then
+  if aValue < Low(TZoom) then
+    aValue := Low(TZoom)
+  else if aValue > High(TZoom) then
+    aValue := High(TZoom);
+  if FZoom <> aValue then
   begin
-    fZoom := AValue;
+    FZoom := aValue;
     FZoomFactor := FZoom/100;
     CalcAutoRange;
     Invalidate;
@@ -3857,19 +3890,19 @@ begin
   end;
 end;
 
-procedure TEvsSimpleGraph.ObjectChanged(GraphObject: TEvsGraphObject;
-  Flags: TEvsGraphChangeFlags);
+procedure TEvsSimpleGraph.ObjectChanged(aGraphObject: TEvsGraphObject;
+  aFlags: TEvsGraphChangeFlags);
 begin
   if (csDestroying in ComponentState) then
     Exit;
-  if UpdateCount = 0 then
+  if FUpdateCount = 0 then
   begin
-    if gcPlacement in Flags then
+    if gcPlacement in aFlags then
     begin
-      SaveBoundsChange := [Low(TEvsGraphBoundsKind)..High(TEvsGraphBoundsKind)];
+      FSaveBoundsChange := [Low(TEvsGraphBoundsKind)..High(TEvsGraphBoundsKind)];
       CalcAutoRange;
     end;
-    if gcData in Flags then
+    if gcData in aFlags then
     begin
       if not Assigned(DragSource) then
       begin
@@ -3882,66 +3915,64 @@ begin
   end
   else
   begin
-    if (gcData in Flags) and not (CommandMode in [cmInsertLink, cmInsertNode]) then
-      SaveModified := 1;
-    if gcPlacement in Flags then
-      SaveRangeChange := True;
+    if (gcData in aFlags) and not (CommandMode in [cmInsertLink, cmInsertNode]) then
+      FSaveModified := 1;
+    if gcPlacement in aFlags then
+      FSaveRangeChange := True;
   end;
-  if gcView in Flags then
-    GraphObject.Invalidate;
+  if gcView in aFlags then
+    aGraphObject.Invalidate;
 end;
 
-procedure TEvsSimpleGraph.ObjectListChanged(Sender: TObject;
-  GraphObject: TEvsGraphObject; AAction: TEvsGraphObjectListAction);
+procedure TEvsSimpleGraph.ObjectListChanged(aSender :TObject; aGraphObject :TEvsGraphObject; aAction :TEvsGraphObjectListAction);
 begin
   case AAction of
     glAdded:
-      if GraphObject.Owner = Self then
+      if aGraphObject.Owner = Self then
       begin
-        DoObjectInsert(GraphObject);
-        ObjectChanged(GraphObject, [gcView, gcData, gcPlacement]);
+        DoObjectInsert(aGraphObject);
+        ObjectChanged(aGraphObject, [gcView, gcData, gcPlacement]);
       end
       else
-        TEvsGraphObjectList(Sender).Remove(GraphObject);
+        TEvsGraphObjectList(aSender).Remove(aGraphObject);
     glRemoved:
-      if GraphObject.Owner = Self then
+      if aGraphObject.Owner = Self then
       begin
-        if GraphObject = DragSource then
-          GraphObject.EndDrag(False)
-        else if osDragging in GraphObject.States then
-          DraggingObjects.Remove(GraphObject);
-        if GraphObject = ObjectAtCursor then
+        if aGraphObject = DragSource then
+          aGraphObject.EndDrag(False)
+        else if osDragging in aGraphObject.States then
+          DraggingObjects.Remove(aGraphObject);
+        if aGraphObject = ObjectAtCursor then
           RenewObjectAtCursor(nil);
-        GraphObject.Selected := False;
-        DoObjectRemove(GraphObject);
-        ObjectChanged(GraphObject, [gcView, gcData, gcPlacement]);
-        if not (osDestroying in GraphObject.States) then
-          GraphObject.Free;
+        aGraphObject.Selected := False;
+        DoObjectRemove(aGraphObject);
+        ObjectChanged(aGraphObject, [gcView, gcData, gcPlacement]);
+        if not (osDestroying in aGraphObject.States) then
+          aGraphObject.Free;
       end;
     glReordered:
-      if GraphObject.Owner = Self then
-        ObjectChanged(GraphObject, [gcView, gcData]);
+      if aGraphObject.Owner = Self then
+        ObjectChanged(aGraphObject, [gcView, gcData]);
   end;
 end;
 
-procedure TEvsSimpleGraph.SelectedListChanged(Sender: TObject;
-  GraphObject: TEvsGraphObject; AAction: TEvsGraphObjectListAction);
+procedure TEvsSimpleGraph.SelectedListChanged(aSender :TObject; aGraphObject :TEvsGraphObject; aAction :TEvsGraphObjectListAction);
 begin
   case AAction of
     glAdded:
-      if (GraphObject.Owner = Self) and GraphObject.Selected then
+      if (aGraphObject.Owner = Self) and aGraphObject.Selected then
       begin
-        Include(SaveBoundsChange, bkSelected);
-        DoObjectSelect(GraphObject);
+        Include(FSaveBoundsChange, bkSelected);
+        DoObjectSelect(aGraphObject);
       end
       else
-        TEvsGraphObjectList(Sender).Remove(GraphObject);
+        TEvsGraphObjectList(aSender).Remove(aGraphObject);
     glRemoved:
-      if GraphObject.Owner = Self then
+      if aGraphObject.Owner = Self then
       begin
-        GraphObject.Selected := False;
-        Include(SaveBoundsChange, bkSelected);
-        DoObjectSelect(GraphObject);
+        aGraphObject.Selected := False;
+        Include(FSaveBoundsChange, bkSelected);
+        DoObjectSelect(aGraphObject);
       end;
   end;
 end;
@@ -3960,18 +3991,18 @@ begin
   else Result := FindClass(AClassName);
 end;
 
-function TEvsSimpleGraph.ReadGraphObject(Stream: TStream): TEvsGraphObject;
+function TEvsSimpleGraph.ReadGraphObject(aStream: TStream): TEvsGraphObject;
 var
   vClassName: array[0..255] of AnsiChar;
   ClassNameLen: integer;
   ClassNameStr: string;
   GraphObjectClass: TEvsGraphObjectClass;
 begin
-  Stream.Read(ClassNameLen, SizeOf(ClassNameLen));
-  Stream.Read(vClassName, ClassNameLen);
+  aStream.Read(ClassNameLen, SizeOf(ClassNameLen));
+  aStream.Read(vClassName, ClassNameLen);
   ClassNameStr := string(vClassName);
   GraphObjectClass := TEvsGraphObjectClass(EvsFindClass(ClassNameStr));
-  Result := GraphObjectClass.CreateFromStream(Self, Stream);
+  Result := GraphObjectClass.CreateFromStream(Self, aStream);
 end;
 
 procedure TEvsSimpleGraph.WriteGraphObject(Stream: TStream;
@@ -4015,42 +4046,49 @@ begin
   Dec(FSuspendQueryEvents);
 end;
 
-//procedure TEvsSimpleGraph.AdjustDC(aDC: HDC; aOrg: PPoint);
-//begin
-//  if Assigned(aOrg) then
-//    LCLIntf.SetViewPortOrgEx(aDC, -(aOrg^.X + HorzScrollBar.Position), -(aOrg^.Y + VertScrollBar.Position), nil)
-//  else
-//    LCLIntf.SetViewPortOrgEx(aDC, -HorzScrollBar.Position, -VertScrollBar.Position, nil);
-//  LCLIntf.SetMapMode(aDC, MM_ANISOTROPIC);
-//  LCLIntf.SetWindowExtEx(aDC, 100, 100, nil);
-//  LCLIntf.SetViewPortExtEx(aDC, Zoom, Zoom, nil);
-//end;
-
-function TEvsSimpleGraph.CreateUniqueID(aGraphObject: TEvsGraphObject): DWORD;
-var
-  G: TEvsGraphObject;
-  vUnique: boolean;
-  vID: DWORD;
-  I: integer;
+{$IFDEF EVS_ZOOM}
+procedure TEvsSimpleGraph.AdjustDC(aDC: HDC; aOrg: PPoint);
 begin
-  if aGraphObject.ID <> 0 then
-    vID := aGraphObject.ID
+  if Assigned(aOrg) then
+    LCLIntf.SetViewPortOrgEx(aDC, -(aOrg^.X + FHorzScrollBar.Position), -(aOrg^.Y + FVertScrollBar.Position), nil)
   else
-    vID := Objects.Count + 1;
+    LCLIntf.SetViewPortOrgEx(aDC, -FHorzScrollBar.Position, -FVertScrollBar.Position, nil);
+  LCLIntf.SetMapMode(aDC, MM_ANISOTROPIC);
+  LCLIntf.SetWindowExtEx(aDC, 100, 100, nil);
+  LCLIntf.SetViewPortExtEx(aDC, Zoom, Zoom, nil);
+end;
+{$ENDIF}
+
+{ function TSimpleGraph.CreateUniqueID(GraphObject: TGraphObject): DWORD;
+var
+  G      :TGraphObject;
+  Unique :Boolean;
+  ID     :DWORD;
+  I      :Integer;
+begin
+  if GraphObject.ID <> 0 then
+    ID := GraphObject.ID
+  else
+    ID := Objects.Count + 1;
   repeat
-    vUnique := True;
+    Unique := True;
     for I := Objects.Count - 1 downto 0 do
     begin
       G := Objects[I];
-      if (G <> aGraphObject) and (G.ID = vID) then
+      if (G <> GraphObject) and (G.ID = ID) then
       begin
-        Inc(vID);
-        vUnique := False;
+        Inc(ID);
+        Unique := False;
         Break;
       end;
     end;
-  until vUnique;
-  Result := vID;
+  until Unique;
+  Result := ID;
+end;}
+
+function TEvsSimpleGraph.CreateUniqueID(aGraphObject: TEvsGraphObject): DWORD;
+begin
+  Result := FIDGenerator.Next;
 end;
 
 procedure TEvsSimpleGraph.CreateWnd;
@@ -4062,53 +4100,47 @@ end;
 procedure TEvsSimpleGraph.BackupObjects(aStream: TStream;
   aObjectList: TEvsGraphObjectList);
 var
-  vObjectCount : integer;
-  I, vID       : integer;
+  vObjectCount :Integer;
+  I, vID       :Integer;
 begin
   vObjectCount := aObjectList.Count;
   aStream.Write(vObjectCount, SizeOf(vObjectCount));
-  for I := 0 to aObjectList.Count - 1 do
-  begin
+  for I := 0 to aObjectList.Count - 1 do begin
     vID := aObjectList[I].ID;
     aStream.Write(vID, SizeOf(vID));
     aObjectList[I].SaveToStream(aStream);
   end;
 end;
 
-function TEvsSimpleGraph.BeginDragObject(aGraphObject: TEvsGraphObject;
-  const aPt: TPoint; aHT: DWORD): boolean;
+function TEvsSimpleGraph.BeginDragObject(aGraphObject: TEvsGraphObject; const aPt: TPoint; aHT: DWORD): Boolean;
 var
   I: integer;
 begin
   Result := False;
-  if Assigned(aGraphObject) then
-  begin
-    UndoStorage.Clear;
+  if Assigned(aGraphObject) then begin
+    FUndoStorage.Clear;
     fDragSource := aGraphObject;
     fDragHitTest := aHT;
     fDragSourcePt := aPt;
     fDragTargetPt := aPt;
-    if not DragSource.Selected then
-    begin
+    if not DragSource.Selected then begin
       SelectedObjects.Clear;
       DragSource.Selected := True;
     end;
     DraggingObjects.Clear;
     DraggingObjects.Capacity := SelectedObjects.Count;
     DraggingObjects.Add(DragSource);
-    if not (CommandMode in [cmInsertLink, cmInsertNode]) then
-    begin
-      fDragModified := False;
-      UndoStorage.Seek(0, soFromBeginning);
-      BackupObjects(UndoStorage, DraggingObjects);
+    if not (CommandMode in [cmInsertLink, cmInsertNode]) then begin
+      FDragModified := False;
+      FUndoStorage.Seek(0, soFromBeginning);
+      BackupObjects(FUndoStorage, DraggingObjects);
       for I := 0 to SelectedObjects.Count - 1 do
         with SelectedObjects[I] do
           if (DragSource.ID <> ID) and BeginFollowDrag(DragHitTest) then
             DraggingObjects.Add(SelectedObjects[I]);
       DoObjectBeginDrag(aGraphObject, aHT);
-    end
-    else
-      fDragModified := True;
+    end else
+      FDragModified := True;
     Result := True;
   end;
 end;
@@ -4119,12 +4151,12 @@ begin
   case aAction of
     glAdded:
       if aGraphObject.Owner = Self then
-        Include(SaveBoundsChange, bkDragging)
+        Include(FSaveBoundsChange, bkDragging)
       else
         TEvsGraphObjectList(Sender).Remove(aGraphObject);
     glRemoved:
       if aGraphObject.Owner = Self then
-        Include(SaveBoundsChange, bkDragging);
+        Include(FSaveBoundsChange, bkDragging);
   end;
 end;
 
@@ -4228,7 +4260,7 @@ begin
     begin
       SavedDC := SaveDC(Msg.DC);
       try
-        //AdjustDC(Msg.DC);  //jkoz remove AdjustDC
+        AdjustDC(Msg.DC);  //jkoz remove AdjustDC
         PaintWindow(Msg.DC);
       finally
         RestoreDC(Msg.DC, SavedDC);
@@ -4250,53 +4282,53 @@ end;
 procedure TEvsSimpleGraph.WMSize(var Msg: TLMSize);
 begin
   {.$MESSAGE HINT 'Seek a method to override instead.'}
-  UpdatingScrollBars := True;
+  FUpdatingScrollBars := True;
   try
     CalcAutoRange;
   finally
-    UpdatingScrollBars := False;
+    FUpdatingScrollBars := False;
   end;
   if HorzScrollBar.Visible or VertScrollBar.Visible then
     UpdateScrollBars;
   inherited;
 end;
 
-procedure TEvsSimpleGraph.WMHScroll(var Msg: TLMHScroll);
+procedure TEvsSimpleGraph.WMHScroll(var aMsg: TLMHScroll);
 begin
-  if {$IFDEF LCLWIN32} (Msg.ScrollBar = 0) and {$ENDIF} HorzScrollBar.Visible then
+  if {$IFDEF LCLWIN32} (aMsg.ScrollBar = 0) and {$ENDIF} HorzScrollBar.Visible then
   begin
-    HorzScrollBar.ScrollMessage(Msg);
+    HorzScrollBar.ScrollMessage(aMsg);
     Invalidate;
   end
   else
     inherited;
 end;
 
-procedure TEvsSimpleGraph.WMVScroll(var Msg: TLMVScroll);
+procedure TEvsSimpleGraph.WMVScroll(var aMsg: TLMVScroll);
 begin
-  if {$IFDEF LCLWIN32} (Msg.ScrollBar = 0) and  {$ENDIF} VertScrollBar.Visible then
+  if {$IFDEF LCLWIN32} (aMsg.ScrollBar = 0) and  {$ENDIF} VertScrollBar.Visible then
   begin
-    VertScrollBar.ScrollMessage(Msg);
+    VertScrollBar.ScrollMessage(aMsg);
     Invalidate;
   end
   else
     inherited;
 end;
 
-procedure TEvsSimpleGraph.CNKeyDown(var Msg: TLMKeyDown);
+procedure TEvsSimpleGraph.CNKeyDown(var aMsg: TLMKeyDown);
 begin
   Mouse.CursorPos := Mouse.CursorPos; // To force cursor update
-  if not (DefaultKeyMap and DefaultKeyHandler(Msg.CharCode, KeyDataToShiftState(Msg.KeyData))) then
+  if not (DefaultKeyMap and DefaultKeyHandler(aMsg.CharCode, KeyDataToShiftState(aMsg.KeyData))) then
     inherited;
 end;
 
-procedure TEvsSimpleGraph.CNKeyUp(var Msg: TLMKeyUp);
+procedure TEvsSimpleGraph.CNKeyUp(var aMsg: TLMKeyUp);
 begin
   inherited;
   Mouse.CursorPos := Mouse.CursorPos; // To force cursor update
 end;
 
-procedure TEvsSimpleGraph.CMFontChanged(var Msg: TLMessage);
+procedure TEvsSimpleGraph.CMFontChanged(var aMsg: TLMessage);
 var
   I: integer;
 begin
@@ -4311,18 +4343,18 @@ begin
   end;
 end;
 
-procedure TEvsSimpleGraph.CMBiDiModeChanged(var Msg: TLMessage);
+procedure TEvsSimpleGraph.CMBiDiModeChanged(var aMsg: TLMessage);
 var
   Save: integer;
 begin
-  Save := Msg.WParam;
+  Save := aMsg.WParam;
   try
     { prevent inherited from calling Invalidate & RecreateWnd }
     if not (Self is TEvsSimpleGraph) then
-      Msg.wParam := 1;
+      aMsg.wParam := 1;
     inherited;
   finally
-    Msg.wParam := Save;
+    aMsg.wParam := Save;
   end;
   if HandleAllocated then
   begin
@@ -4331,7 +4363,7 @@ begin
   end;
 end;
 
-procedure TEvsSimpleGraph.CMMouseLeave(var Msg: TLMessage);
+procedure TEvsSimpleGraph.CMMouseLeave(var aMsg: TLMessage);
 begin
   inherited;
   if (GetCapture <> WindowHandle) then
@@ -4341,12 +4373,12 @@ begin
   end;
 end;
 
-procedure TEvsSimpleGraph.CMHintShow(var Msg: TCMHintShow);
+procedure TEvsSimpleGraph.CMHintShow(var aMsg: TCMHintShow);
 var
   HintObject: TEvsGraphObject;
 begin
   inherited;
-  with Msg.HintInfo^ do
+  with aMsg.HintInfo^ do
   begin
     with ClientToGraph(CursorPos.X, CursorPos.Y) do
       HintObject := FindObjectAt(X, Y);
@@ -4368,9 +4400,64 @@ begin
   end;
 end;
 
+{$IFDEF EVS_ZOOM}
+procedure TEvsSimpleGraph.WMPaint(var aMsg :TLMPaint);
+var
+  vDC, vMemDC: HDC;
+  vMemBitmap, vOldBitmap: HBITMAP;
+  vPS: TPaintStruct;
+  vWidth, vHeight: Integer;
+  vSavedDC: Integer;
+begin
+  if (aMsg.DC <> 0) or not DoubleBuffered  then begin
+    //AdjustDC(aMsg.DC);
+    PaintHandler(aMsg)
+  end else begin
+    vDC := BeginPaint(WindowHandle, vPS);
+    try
+      vWidth := (vPS.rcPaint.Right - vPS.rcPaint.Left);
+      vHeight := (vPS.rcPaint.Bottom - vPS.rcPaint.Top);
+      vMemDC := CreateCompatibleDC(vDC);
+      vMemBitmap := CreateCompatibleBitmap(vDC, vWidth, vHeight);
+      vOldBitmap := SelectObject(vMemDC, vMemBitmap);
+      try
+        //if FTransparent then
+        //  CopyParentImage(Self, vMemDC, vPS.rcPaint.Left, vPS.rcPaint.Top)
+        //else
+          FillRect(vMemDC, Classes.Rect(0, 0, vWidth, vHeight), Brush.Handle);
+        vSavedDC := SaveDC(vMemDC);
+        try
+          AdjustDC(vMemDC, @vPS.rcPaint.TopLeft);
+          PaintWindow(vMemDC);
+        finally
+          RestoreDC(vMemDC, vSavedDC);
+        end;
+        if ControlCount > 0 then
+        begin
+          vSavedDC := SaveDC(vMemDC);
+          try
+            SetViewportOrgEx(vMemDC, -vPS.rcPaint.Left, -vPS.rcPaint.Top, nil);
+            PaintControls(vMemDC, nil);
+          finally
+            RestoreDC(vMemDC, vSavedDC);
+          end;
+        end;
+        BitBlt(vDC, vPS.rcPaint.Left, vPS.rcPaint.Top, vWidth, vHeight, vMemDC, 0, 0, SRCCOPY);
+      finally
+        SelectObject(vMemDC, vOldBitmap);
+        DeleteObject(vMemBitmap);
+        DeleteDC(vMemDC);
+      end;
+    finally
+      EndPaint(WindowHandle, vPS);
+    end;
+  end;
+end;
 {$ENDIF}
 
-procedure TEvsSimpleGraph.DrawGrid(ACanvas: TCanvas);
+{$ENDIF}
+
+procedure TEvsSimpleGraph.DrawGrid(aCanvas: TCanvas);
 
   function FirstGridPos(aPos: integer): integer;
   var
@@ -4422,14 +4509,15 @@ var
 begin
   DoBeforeDraw(aCanvas);
   CanvasRecall.Reference := aCanvas;
+  {$IFNDEF LCLWIN32}
   if aCanvas is TEvsGraphCanvas then begin
     TEvsGraphCanvas(aCanvas).OffsetX := -fHorzScrollBar.Position;
     TEvsGraphCanvas(aCanvas).OffsetY := -fVertScrollBar.Position;
   end;
+  {$ENDIF}
   try
     case DrawOrder of
-      doNodesOnTop:
-      begin
+      doNodesOnTop: begin
         for I := 0 to AObjectList.Count - 1 do
           with AObjectList[I] do
             if IsLink then
@@ -4439,20 +4527,19 @@ begin
             if IsNode then
               Draw(aCanvas);
       end;
-      doLinksOnTop:
-      begin
-        for I := 0 to AObjectList.Count - 1 do
-          with AObjectList[I] do
-            if IsNode then
-              Draw(aCanvas);
-        for I := 0 to AObjectList.Count - 1 do
-          with AObjectList[I] do
-            if IsLink then
-              Draw(aCanvas);
-      end;
-      else
-        for I := 0 to AObjectList.Count - 1 do
-          AObjectList[I].Draw(aCanvas);
+      doLinksOnTop: begin
+          for I := 0 to AObjectList.Count - 1 do
+            with AObjectList[I] do
+              if IsNode then
+                Draw(aCanvas);
+          for I := 0 to AObjectList.Count - 1 do
+            with AObjectList[I] do
+              if IsLink then
+                Draw(aCanvas);
+        end;
+    else
+      for I := 0 to AObjectList.Count - 1 do
+        AObjectList[I].Draw(aCanvas);
     end;
   finally
     CanvasRecall.Reference := nil;
@@ -4460,7 +4547,7 @@ begin
   DoAfterDraw(aCanvas);
 end;
 
-procedure TEvsSimpleGraph.EndDragObject(Accept: boolean);
+procedure TEvsSimpleGraph.EndDragObject(aAccept :Boolean);
 var
   I: integer;
   Source: TEvsGraphObject;
@@ -4472,20 +4559,20 @@ begin
     for I := 1 to DraggingObjects.Count - 1 do
       DraggingObjects[I].EndFollowDrag;
     DraggingObjects.Clear;
-    if not Accept then
+    if not aAccept then
     begin
       fDragModified := False;
       if not (CommandMode in [cmInsertLink, cmInsertNode]) then
       begin
-        UndoStorage.Seek(0, soFromBeginning);
-        RestoreObjects(UndoStorage);
+        FUndoStorage.Seek(0, soFromBeginning);
+        RestoreObjects(FUndoStorage);
       end
       else
         Source.Free;
     end;
-    UndoStorage.Clear;
+    FUndoStorage.Clear;
     if not (CommandMode in [cmInsertLink, cmInsertNode]) then
-      DoObjectEndDrag(Source, DragHitTest, not Accept)
+      DoObjectEndDrag(Source, DragHitTest, not aAccept)
     else
       CommandMode := cmEdit;
     if DragModified then
@@ -4519,51 +4606,51 @@ end;
 
 procedure TEvsSimpleGraph.Paint;
 
-procedure InitCanvas(aCnv:TCanvas);
-begin
-  if aCnv is TEvsGraphCanvas then begin
-    TEvsGraphCanvas(aCnv).OffsetX := -fHorzScrollBar.Position;
-    TEvsGraphCanvas(aCnv).OffsetY := -fVertScrollBar.Position;
-  end;
-  if Assigned(FCanvasInit) then FCanvasInit(aCnv);
-end;
-
-procedure RestoreCanvas(aCnv:TCanvas);
-begin
-  if aCnv is TEvsGraphCanvas then begin
-    TEvsGraphCanvas(aCnv).OffsetX := 0;
-    TEvsGraphCanvas(aCnv).OffsetY := 0;
-  end;
-end;
-
-Function GetCanvas:TCanvas;
-begin
-  if Assigned(FCustomCanvas) then begin
-    if FCustomCanvas.InheritsFrom(TEvsGraphCanvas) then begin
-      Result := TEvsGraphCanvasClass(FCustomCanvas).Create(Canvas)
-    end else begin
-      Result := FCustomCanvas.Create;
-      Result.Handle := Canvas.Handle;
+  procedure InitCanvas(aCnv:TCanvas);
+  begin
+    if aCnv is TEvsGraphCanvas then begin
+      TEvsGraphCanvas(aCnv).OffsetX := -FHorzScrollBar.Position;
+      TEvsGraphCanvas(aCnv).OffsetY := -FVertScrollBar.Position;
     end;
-    Result.AntialiasingMode := Canvas.AntialiasingMode;
-  end else Result := Canvas;
-end;
+    if Assigned(FCanvasInit) then FCanvasInit(aCnv);
+  end;
+
+  procedure RestoreCanvas(aCnv:TCanvas);
+  begin
+    if aCnv is TEvsGraphCanvas then begin
+      TEvsGraphCanvas(aCnv).OffsetX := 0;
+      TEvsGraphCanvas(aCnv).OffsetY := 0;
+    end;
+  end;
+
+  Function GetCanvas:TCanvas;
+  begin
+    if Assigned(FCustomCanvas) then begin
+      if FCustomCanvas.InheritsFrom(TEvsGraphCanvas) then begin
+        Result := TEvsGraphCanvasClass(FCustomCanvas).Create(Canvas)
+      end else begin
+        Result := FCustomCanvas.Create;
+        Result.Handle := Canvas.Handle;
+      end;
+      Result.AntialiasingMode := Canvas.AntialiasingMode;
+    end else Result := Canvas;
+  end;
 
 var
   vTmp : TCanvas;
-  vdbg : string;
+  vDbg : string;
 
-procedure LockCanvas(aCanvas:TCanvas);
-begin
-  aCanvas.lock;
-  IF aCanvas<>Canvas then Canvas.Lock;
-end;
+  procedure LockCanvas(aCanvas:TCanvas);
+  begin
+    aCanvas.Lock; // overide lock to call begindraw in d2dcanvas.
+    If aCanvas <> Canvas then Canvas.Lock;
+  end;
 
-procedure UnlockCanvas(aCanvas:TCanvas);
-begin
-  aCanvas.Unlock;
-  IF aCanvas<>Canvas then Canvas.Unlock;
-end;
+  procedure UnlockCanvas(aCanvas:TCanvas);
+  begin
+    aCanvas.Unlock;
+    IF aCanvas<>Canvas then Canvas.Unlock;
+  end;
 
 begin
   vTmp := GetCanvas;
@@ -4609,7 +4696,7 @@ begin
   end;
 end;
 
-procedure TEvsSimpleGraph.MouseDown(Button: TMouseButton; Shift: TShiftState;
+procedure TEvsSimpleGraph.MouseDown(aButton: TMouseButton; Shift: TShiftState;
   X, Y: integer);
 var
   Pt: TPoint;
@@ -4617,14 +4704,14 @@ var
 begin
   if not Focused then
     SetFocus;
-  inherited MouseDown(Button, Shift, X, Y);
+  inherited MouseDown(aButton, Shift, X, Y);
   Pt := ClientToGraph(X, Y);
   CheckObjectAtCursor(Pt);
   case CommandMode of
     cmInsertNode, cmInsertLink:
       if Assigned(DragSource) then
-        DragSource.MouseDown(Button, Shift, Pt)
-      else if (Button = mbLeft) and not (ssDouble in Shift) then
+        DragSource.MouseDown(aButton, Shift, Pt)
+      else if (aButton = mbLeft) and not (ssDouble in Shift) then
       begin
         NewObject := nil;
         case CommandMode of
@@ -4638,7 +4725,7 @@ begin
         if Assigned(NewObject) then
         begin
           NewObject.Selected := True;
-          NewObject.MouseDown(Button, Shift, Pt);
+          NewObject.MouseDown(aButton, Shift, Pt);
           if DragSource <> NewObject then
           begin
             CommandMode := cmEdit;
@@ -4650,7 +4737,7 @@ begin
         end;
       end;
     cmPan:
-      if (Button = mbLeft) and not (ssDouble in SHift) then
+      if (aButton = mbLeft) and not (ssDouble in SHift) then
       begin
         fDragSourcePt.X := X;
         fDragSourcePt.Y := Y;
@@ -4659,8 +4746,8 @@ begin
     else
       if Assigned(ObjectAtCursor) and (CommandMode <> cmViewOnly) and
         (goSelectable in ObjectAtCursor.Options) then
-        ObjectAtCursor.MouseDown(Button, Shift, Pt)
-      else if (Button = mbLeft) and not (ssDouble in Shift) then
+        ObjectAtCursor.MouseDown(aButton, Shift, Pt)
+      else if (aButton = mbLeft) and not (ssDouble in Shift) then
       begin
         fDragSourcePt := Pt;
         fDragTargetPt := Pt;
@@ -4670,7 +4757,7 @@ begin
   end;
 end;
 
-procedure TEvsSimpleGraph.MouseMove(Shift: TShiftState; X, Y: integer);
+procedure TEvsSimpleGraph.MouseMove(aShift :TShiftState; X, Y :Integer);
 var
   Pt: TPoint;
   NewPos: integer;
@@ -4679,7 +4766,7 @@ begin
   CheckObjectAtCursor(Pt);
   if CommandMode = cmPan then
   begin
-    if ssLeft in Shift then
+    if ssLeft in aShift then
     begin
       with HorzScrollBar do
         if IsScrollBarVisible then
@@ -4716,16 +4803,16 @@ begin
   else
   begin
     if Assigned(ObjectAtCursor) and (CommandMode <> cmViewOnly) then
-      ObjectAtCursor.MouseMove(Shift, Pt)
+      ObjectAtCursor.MouseMove(aShift, Pt)
     else if CommandMode in [cmInsertNode, cmInsertLink] then
       Screen.Cursor := crXHair1
     else
       Screen.Cursor := Cursor;
   end;
-  inherited MouseMove(Shift, X, Y);
+  inherited MouseMove(aShift, X, Y);
 end;
 
-procedure TEvsSimpleGraph.MouseUp(Button: TMouseButton; Shift: TShiftState; X,
+procedure TEvsSimpleGraph.MouseUp(aButton: TMouseButton; Shift: TShiftState; X,
   Y: integer);
 var
   Pt: TPoint;
@@ -4734,7 +4821,7 @@ begin
   CheckObjectAtCursor(Pt);
   if CommandMode = cmPan then
   begin
-    if Button = mbLeft then
+    if aButton = mbLeft then
       Screen.Cursor := crHandFlat;
   end
   else if ValidMarkedArea then
@@ -4757,29 +4844,29 @@ begin
   else
   begin
     if Assigned(ObjectAtCursor) and (CommandMode <> cmViewOnly) then
-      ObjectAtCursor.MouseUp(Button, Shift, Pt)
+      ObjectAtCursor.MouseUp(aButton, Shift, Pt)
     else
       Screen.Cursor := Cursor;
   end;
-  inherited MouseUp(Button, Shift, X, Y);
+  inherited MouseUp(aButton, Shift, X, Y);
 end;
 
-procedure TEvsSimpleGraph.DoContextPopup(MousePos: TPoint; var Handled: boolean);
+procedure TEvsSimpleGraph.DoContextPopup(aMousePos :TPoint; var Handled :Boolean);
 begin
   if not Assigned(DragSource) then
   begin
     if SelectedObjects.Count > 0 then
     begin
-      DoObjectContextPopup(SelectedObjects[0], MousePos, Handled);
+      DoObjectContextPopup(SelectedObjects[0], aMousePos, Handled);
       if not Handled and Assigned(ObjectPopupMenu) then
       begin
-        with ClientToScreen(MousePos) do
+        with ClientToScreen(aMousePos) do
           ObjectPopupMenu.Popup(X, Y);
         Handled := True;
       end;
     end;
     if not Handled then
-      inherited DoContextPopup(MousePos, Handled);
+      inherited DoContextPopup(aMousePos, Handled);
   end
   else
     Handled := True;
@@ -4848,7 +4935,7 @@ begin
       GraphObject.LoadFromStream(aStream);
     end;
   finally
-    Inc(FSuspendQueryEvents);
+    Dec(FSuspendQueryEvents);
     EndUpdate;
   end;
 end;
@@ -4864,6 +4951,34 @@ var
   vOldObjectCount      : integer;
   vObjectCount         : integer;
   I, J, vOldID, vNewID : integer;
+
+  procedure ReplaceObjectID(const aOldID, aNewID :DWord);inline;
+  var
+    vCntr : Integer;
+  begin//make sure that all objects that rely on the old id get the new id as well.
+    for vCntr := vOldObjectCount to FObjects.Count -1 do
+      FObjects[vCntr].ReplaceID(aOldID, aNewID);
+  end;
+  function Max( const A,B:DWord):DWord;inline;
+  begin
+    Result := A;
+    if B > A then Result := B;
+  end;
+
+  function GetMaxID:DWord;
+  var
+    vCntr :Integer;
+  begin
+    Result := FIDGenerator.Peek;
+    for vCntr := 0 to FObjects.Count -1 do
+      Result := Max(Result, FObjects[vCntr].ID);
+  end;
+
+  procedure ResetIDGenerator;
+  begin
+    FIDGenerator.Reset(GetMaxID,1);
+  end;
+
 begin
   BeginUpdate;
   SuspendQueryEvents;
@@ -4875,14 +4990,10 @@ begin
       Objects.Capacity := vOldObjectCount + vObjectCount;
       for I := 0 to vObjectCount - 1 do
         ReadGraphObject(aStream);
-      for I := vOldObjectCount to Objects.Count - 1 do
-      begin
-        vOldID := Objects[I].ID;
-        vNewID := CreateUniqueID(Objects[I]);
-        if vOldID <> vNewID then
-          for J := vOldObjectCount to Objects.Count - 1 do
-            Objects[J].ReplaceID(vOldID, vNewID);
-      end;
+      if vOldObjectCount > 0 then begin //replace IDs only on paste/merge and only if there are other controls in the graph already.
+        for I := vOldObjectCount to Objects.Count - 1 do
+          ReplaceObjectID(Objects[I].ID, CreateUniqueID(Objects[I]));
+      end else ResetIDGenerator;
       for I := vOldObjectCount to Objects.Count - 1 do
         Objects[I].Loaded;
     end;
@@ -4925,8 +5036,7 @@ begin
     fOnCanLinkObjects(Self, aLink, aSource, aTarget, aCanLink);
 end;
 
-procedure TEvsSimpleGraph.DoCanHookLink(aGraphObject: TEvsGraphObject;
-  aLink: TEvsGraphLink; aIndex: integer; var aCanHook: boolean);
+procedure TEvsSimpleGraph.DoCanHookLink(aGraphObject :TEvsGraphObject; aLink :TEvsGraphLink; aIndex :Integer; var aCanHook :boolean);
 begin
   if (FSuspendQueryEvents = 0) and Assigned(fOnCanHookLink) then
     fOnCanHookLink(Self, aGraphObject, aLink, aIndex, aCanHook);
@@ -5051,71 +5161,138 @@ end;
 procedure TEvsSimpleGraph.GPToCP(var aPoints; aCount: Integer);
 Type PPPoint = ^PPOINT;
 var
-//{$IFDEF LCLWIN32}
-//  vMemDC: HDC;
-//{$ELSE}
+{$IFDEF EVS_ZOOM}
+  vMemDC: HDC;
+{$ELSE}
   vTmp  : PPoint;
   vCntr : Integer;
-//{$ENDIF}
+{$ENDIF}
 begin
-  //{$IFDEF LCLWIN32}
-  //vMemDC := CreateCompatibleDC(0);
-  //try
-  //  AdjustDC(vMemDC);
-  //  LPtoDP(vMemDC, aPoints, aCount);
-  //finally
-  //  DeleteDC(vMemDC);
+  {$IFDEF EVS_ZOOM}
+  vMemDC := CreateCompatibleDC(0);
+  try
+function TEvsSimpleGraph.CreateUniqueID(aGraphObject: TEvsGraphObject): DWORD;
+//const
+//  cLastKnownID :DWORD = 0;
+  //function _Max(a, b: DWORD): DWORD;inline;
+  //begin
+  //  if a > b then
+  //    Result := a
+  //  else
+  //    Result := b;
   //end;
-  //{$ELSE}
+  //function GetBiggerKnownID:DWORD;
+  //var
+  //  vCntr :Integer;
+  //begin
+  //  Result :=0;
+  //  if fObjects.Count > 0 then begin;
+  //    Result := Objects[0].ID;
+  //    for vCntr := 1 to Objects.Count -1 do begin
+  //      Result := _Max(Objects[vCntr].ID, Result);
+  //    end;
+  //  end;
+  //end;
+
+//var
+//  G      : TEvsGraphObject;
+//  vUnique: boolean;
+//  vID    : DWORD;
+//  I      : integer;
+
+begin
+  Result := FIDGenerator.Next;
+  //if cLastKnownID = 0 then cLastKnownID := GetbiggerKnownID;
+  //if cLastKnownID <> 0 then begin
+    //Result := cLastKnownID +1;
+    //cLastKnownID := Result;
+    //Exit;
+  //end;
+  //if aGraphObject.ID <> 0 then
+  //  vID := aGraphObject.ID
+  //else
+  //  vID := Objects.Count + 1;
+  //repeat
+  //  vUnique := True;
+  //  for I := Objects.Count - 1 downto 0 do
+  //  begin
+  //    G := Objects[I];
+  //    if (G <> aGraphObject) and (G.ID = vID) then
+  //    begin
+  //      Inc(vID);
+  //      vUnique := False;
+  //      Break;
+  //    end;
+  //  end;
+  //until vUnique;
+  //Result := vID;
+  //cLastKnownID := vID;
+end;
+    AdjustDC(vMemDC);
+    LPtoDP(vMemDC, aPoints, aCount);
+  finally
+    DeleteDC(vMemDC);
+  end;
+  {$ELSE}
   vTmp := @aPoints;
   for vCntr := 0 to aCount -1 do begin
     vTmp[vCntr].x := vTmp[vCntr].x - fHorzScrollBar.Position;
     vTmp[vCntr].y := vTmp[vCntr].y - fVertScrollBar.Position;
   end;
-  //{$ENDIF}
+  {$ENDIF}
 end;
 
 procedure TEvsSimpleGraph.CPToGP(var aPoints; aCount: Integer);
 var
-//{$IFDEF LCLWIN32}
-//  vMemDC: HDC;
-//{$ELSE}
+{$IFDEF EVS_ZOOM}
+  vMemDC: HDC;
+{$ELSE}
   vTmp : PPoint;
   vCntr : Integer;
-//{$ENDIF}
+{$ENDIF}
 begin
-  //{$IFDEF LCLWIN32}
-  //vMemDC := CreateCompatibleDC(0);
-  //try
-  //  AdjustDC(vMemDC);   //JKOZ Remove AdjustDC
-  //  DPtoLP(vMemDC, aPoints, aCount);
-  //finally
-  //  DeleteDC(vMemDC);
-  //end;
-  //{$ELSE}
+  {$IFDEF EVS_ZOOM}
+  vMemDC := CreateCompatibleDC(0);
+  try
+    AdjustDC(vMemDC);
+    DPtoLP(vMemDC, aPoints, aCount);
+  finally
+    DeleteDC(vMemDC);
+  end;
+  {$ELSE}
   vTmp := @aPoints;
   for vCntr := 0 to aCount -1 do begin
     vTmp[vCntr].x := vTmp[vCntr].x + fHorzScrollBar.Position;
     vTmp[vCntr].y := vTmp[vCntr].y + fVertScrollBar.Position;
   end;
-  //{$ENDIF}
+  {$ENDIF}
 end;
 
 function TEvsSimpleGraph.GetAsBitmap(aObjectList: TEvsGraphObjectList): Graphics.TBitmap;
 var
-  vRect: TRect;
+  vObjPoint :TPoint;
+  vRect     :TRect;
+  vCnv      :TEvsCustomCanvas;
 begin
-  vRect := GetObjectsBounds(aObjectList);
-  GPToCP(vRect,2);
+  vRect     := GetObjectsBounds(aObjectList);
+  InflateRect(vRect, 2, 2);
+  vObjPoint := vRect.TopLeft;
+  //dec(vObjPoint.x,2); Dec(vObjPoint.y,2);
+  //GPToCP(vRect,2);
+  //MoveRect(vRect,-vRect.Left, -vRect.Top);
   Result := Graphics.TBitmap.Create;
   Result.PixelFormat := pf24bit;
   Result.Canvas.Brush.Color := clWhite;
   Result.Canvas.Brush.Style := bsSolid;
-  Result.SetSize((vRect.Right - vRect.Left) + 1,(vRect.Bottom - vRect.Top) + 1);
+  Result.SetSize((vRect.Right - vRect.Left) ,(vRect.Bottom - vRect.Top) );
   Result.Canvas.FillRect(0, 0, Result.Width, Result.Height);
-  SetViewportOrgEx(Result.Canvas.Handle, -vRect.Left, -vRect.Top, nil);
-  DrawObjects(Result.Canvas, aObjectList);
-  SetViewportOrgEx(Result.Canvas.Handle, 0, 0, nil);
+  //SetViewportOrgEx(Result.Canvas.Handle, -vObjPoint.x, -vObjPoint.y, nil);
+  vCnv := TEvsCustomCanvas.Create;
+  vCnv.Assign(Result.Canvas);
+  vCnv.OffsetX := -vRect.Left; // FHorzScrollBar.Position -2;
+  vCnv.OffsetY := -vRect.Top; //FVertScrollBar.Position -2;
+  DrawObjects(vCnv, aObjectList);
+  //SetViewportOrgEx(Result.Canvas.Handle, 0, 0, nil);
 end;
 
 procedure TEvsSimpleGraph.PerformDragBy(adX, adY: integer);
@@ -5167,8 +5344,7 @@ begin
     RenewObjectAtCursor(FindObjectAt(aPt.X, aPt.Y));
 end;
 
-function TEvsSimpleGraph.InsertObjectByMouse(var aPt: TPoint;
-  aGraphObjectClass: TEvsGraphObjectClass; aGridSnap: boolean): TEvsGraphObject;
+function TEvsSimpleGraph.InsertObjectByMouse(var aPt :TPoint; aGraphObjectClass :TEvsGraphObjectClass; aGridSnap :Boolean) :TEvsGraphObject;
 var
   vObjectAtPt: TEvsGraphObject;
   vRect: TRect;
@@ -5219,7 +5395,7 @@ begin
   end;
 end;
 
-function TEvsSimpleGraph.DefaultKeyHandler(var Key: word; Shift: TShiftState): boolean;
+function TEvsSimpleGraph.DefaultKeyHandler(var aKey :word; aShift :TShiftState) :Boolean;
 const
   VK_PAGEUP = 33;
   VK_PAGEDOWN = 34;
@@ -5231,7 +5407,7 @@ begin
   if Assigned(DragSource) then
   begin
     GraphConstraints.SourceRect := DraggingBounds;
-    Result := DragSource.KeyPress(Key, Shift);
+    Result := DragSource.KeyPress(aKey, aShift);
   end
   else if not (CommandMode in [cmViewOnly, cmPan]) then
   begin
@@ -5243,7 +5419,7 @@ begin
       begin
         SelectedObjects.Push;
         try
-          if GraphObject.KeyPress(Key, Shift) then
+          if GraphObject.KeyPress(aKey, aShift) then
             Result := True;
         finally
           SelectedObjects.Pop;
@@ -5255,11 +5431,11 @@ begin
     end;
   end;
   if not Result then
-    case Key of
+    case aKey of
       VK_TAB:
         if not (CommandMode in [cmViewOnly, cmPan]) then
         begin
-          SelectNextObject(ssShift in Shift);
+          SelectNextObject(ssShift in aShift);
           Result := True;
         end;
       VK_LEFT, VK_RIGHT:
@@ -5267,7 +5443,7 @@ begin
         with HorzScrollBar do
           if {(CommandMode = cmPan) and }IsScrollBarVisible then
           begin
-            if Key = VK_LEFT then
+            if aKey = VK_LEFT then
               NewPos := Position - Increment
             else
               NewPos := Position + Increment;
@@ -5285,7 +5461,7 @@ begin
         with VertScrollBar do
           if {(CommandMode = cmPan) and }IsScrollBarVisible then
           begin
-            if Key = VK_UP then
+            if aKey = VK_UP then
               NewPos := Position - Increment
             else
               NewPos := Position + Increment;
@@ -5417,7 +5593,7 @@ begin
 
   FCustomCanvas             := Nil;
 
-  UndoStorage               := TMemoryStream.Create;
+  FUndoStorage               := TMemoryStream.Create;
   fHorzScrollBar            := TEvsGraphScrollBar.Create(Self, sbHorizontal);
   fVertScrollBar            := TEvsGraphScrollBar.Create(Self, sbVertical);
   fGraphConstraints         := TEvsGraphConstraints.Create(Self);
@@ -5447,6 +5623,8 @@ begin
   fPrinting                 := False;
   FLayers                   := TEvsGraphLayerList.Create;
   FActiveLayer              := FLayers.New;
+  FIDGenerator              := TEvsAutoNumberGenerator.Create;
+  FIDGenerator.Reset(0,1);
   if NodeClassCount > 0 then fDefaultNodeClass := NodeClasses(0);
   if LinkClassCount > 0 then fDefaultLinkClass := LinkClasses(0);
   //DoubleBuffered := True;
@@ -5456,7 +5634,7 @@ end;
 destructor TEvsSimpleGraph.Destroy;
 begin
   Inc(FSuspendQueryEvents);
-  Inc(UpdateCount);
+  Inc(FUpdateCount);
   fObjects.Free;
   fSelectedObjects.Free;
   fDraggingObjects.Free;
@@ -5464,36 +5642,36 @@ begin
   fHorzScrollBar.Free;
   fVertScrollBar.Free;
   fCanvasRecall.Free;
-  UndoStorage.Free;
+  FUndoStorage.Free;
   inherited Destroy;
 end;
 
 procedure TEvsSimpleGraph.BeginUpdate;
 begin
-  if UpdateCount = 0 then
+  if FUpdateCount = 0 then
   begin
-    SaveModified := 0;
-    SaveRangeChange := False;
-    SaveInvalidateRect := EmptyRect;
+    FSaveModified := 0;
+    FSaveRangeChange := False;
+    FSaveInvalidateRect := EmptyRect;
   end;
-  Inc(UpdateCount);
+  Inc(FUpdateCount);
 end;
 
 procedure TEvsSimpleGraph.EndUpdate;
 begin
-  Dec(UpdateCount);
-  if (UpdateCount = 0) and not (csDestroying in ComponentState) then
+  Dec(FUpdateCount);
+  if (FUpdateCount = 0) and not (csDestroying in ComponentState) then
   begin
-    if SaveRangeChange then
+    if FSaveRangeChange then
     begin
-      SaveBoundsChange := [Low(TEvsGraphBoundsKind)..High(TEvsGraphBoundsKind)];
+      FSaveBoundsChange := [Low(TEvsGraphBoundsKind)..High(TEvsGraphBoundsKind)];
       CalcAutoRange;
     end;
-    if not IsRectEmpty(SaveInvalidateRect) then
-      PerformInvalidate(@SaveInvalidateRect);
-    if SaveModified <> 0 then
+    if not IsRectEmpty(FSaveInvalidateRect) then
+      PerformInvalidate(@FSaveInvalidateRect);
+    if FSaveModified <> 0 then
     begin
-      Modified := (SaveModified = 1);
+      Modified := (FSaveModified = 1);
       DoGraphChange;
     end;
   end;
@@ -5501,8 +5679,8 @@ end;
 
 procedure TEvsSimpleGraph.Invalidate;
 begin
-  if UpdateCount <> 0 then
-    SaveInvalidateRect := Types.Rect(0, 0, Screen.Width, Screen.Height)
+  if FUpdateCount <> 0 then
+    FSaveInvalidateRect := Types.Rect(0, 0, Screen.Width, Screen.Height)
   else
     PerformInvalidate(nil);
 end;
@@ -5515,12 +5693,12 @@ begin
   GPToCP(ScreenRect, 2); {$MESSAGE WARN 'GPTOCP'}
   Inc(ScreenRect.Right);
   Inc(ScreenRect.Bottom);
-  if UpdateCount <> 0 then
+  if FUpdateCount <> 0 then
   begin
-    if IsRectEmpty(SaveInvalidateRect) then
-      SaveInvalidateRect := ScreenRect
+    if IsRectEmpty(FSaveInvalidateRect) then
+      FSaveInvalidateRect := ScreenRect
     else
-      UnionRect(SaveInvalidateRect, ScreenRect);
+      UnionRect(FSaveInvalidateRect, ScreenRect);
   end
   else
     PerformInvalidate(@ScreenRect);
@@ -5655,8 +5833,7 @@ begin
   UpdateWindow(WindowHandle);
 end;
 
-procedure TEvsSimpleGraph.ToggleSelection(const aRect: TRect; aKeepOld: boolean;
-  aGraphObjectClass: TEvsGraphObjectClass);
+procedure TEvsSimpleGraph.ToggleSelection(const aRect :TRect; aKeepOld :Boolean; aGraphObjectClass :TEvsGraphObjectClass);
 var
   vGraphObject: TEvsGraphObject;
   vCntr: integer;
@@ -5713,29 +5890,36 @@ begin
   end;
 end;
 
-function TEvsSimpleGraph.FindObjectByID(aID: DWORD): TEvsGraphObject;
+function TEvsSimpleGraph.FindObjectByID(aID :DWORD; const aList :TEvsGraphObjectList) :TEvsGraphObject;
+  function iif(aCond:Boolean;TrueRes,FalseRes:TEvsGraphObjectList):TEvsGraphObjectList;inline;
+  begin
+    Result := FalseRes;
+    if aCond then Result := TrueRes;
+  end;
 var
-  I: integer;
+  I     :Integer;
+  vList :TEvsGraphObjectList;
 begin
   Result := nil;
-  for I := Objects.Count - 1 downto 0 do
-    if Objects[I].ID = aID then
-    begin
+  vList := iif(aList = nil, Objects, aList);
+  for I := vList.Count - 1 downto 0 do
+    if Objects[I].ID = aID then begin
       Result := Objects[I];
       Exit;
     end;
 end;
 
-function TEvsSimpleGraph.InsertNode(const aBounds: TRect;
-  aNodeClass: TEvsGraphNodeClass): TEvsGraphNode;
+function TEvsSimpleGraph.InsertNode(const aBounds: TRect; aNodeClass: TEvsGraphNodeClass): TEvsGraphNode;
 begin
-  if not Assigned(aNodeClass) then
-    aNodeClass := DefaultNodeClass;
+  if not Assigned(aNodeClass) then aNodeClass := DefaultNodeClass;
+
   try
     Result := aNodeClass.CreateNew(Self, aBounds);
+    Result.ReplaceID(Result.ID, FIDGenerator.Next);
   except
     Result := nil;
   end;
+
 end;
 
 function TEvsSimpleGraph.InsertLink(aSource, aTarget: TEvsGraphObject;
@@ -5744,7 +5928,8 @@ begin
   if not Assigned(aLinkClass) then
     aLinkClass := DefaultLinkClass;
   try
-    Result := aLinkClass.CreateNew(Self, aSource, [], aTarget)
+    Result := aLinkClass.CreateNew(Self, aSource, [], aTarget);
+    Result.ReplaceID(Result.ID, FIDGenerator.Next);
   except
     Result := nil;
   end;
@@ -5757,6 +5942,7 @@ begin
     aLinkClass := DefaultLinkClass;
   try
     Result := aLinkClass.CreateNew(Self, aSource, aPts, nil);
+    Result.ReplaceID(Result.ID, FIDGenerator.Next);
   except
     Result := nil;
   end;
@@ -5769,6 +5955,7 @@ begin
     aLinkClass := DefaultLinkClass;
   try
     Result := aLinkClass.CreateNew(Self, nil, aPts, aTarget);
+    Result.ReplaceID(Result.ID, FIDGenerator.Next);
   except
     Result := nil;
   end;
@@ -5781,6 +5968,7 @@ begin
     aLinkClass := DefaultLinkClass;
   try
     Result := aLinkClass.CreateNew(Self, nil, aPts, nil);
+    Result.ReplaceID(Result.ID, FIDGenerator.Next);
   except
     Result := nil;
   end;
@@ -5895,13 +6083,18 @@ end;
 procedure TEvsSimpleGraph.CLtoGP(var Points : array of TPoint);
 var
   vCntr : Integer;
-  vZoomFactor : Double;
+  //vZoomFactor : Double;
 begin
-  vZoomFactor := Zoom/100;
-  fHorzScrollBar.IsScrollBarVisible;
+  //vZoomFactor := Zoom/100;
+  //fHorzScrollBar.IsScrollBarVisible;
   for vCntr := Low(Points) to High(Points) do begin
+  {$IFDEF EVS_Zoom}
+    if fHorzScrollBar.IsScrollBarVisible then Points[vCntr].X := round((Points[vCntr].X + fHorzScrollBar.Position)/FZoomFactor);
+    if fVertScrollBar.IsScrollBarVisible then Points[vCntr].Y := round((Points[vCntr].Y + fVertScrollBar.Position)/FZoomFactor);
+  {$ELSE}
     if fHorzScrollBar.IsScrollBarVisible then Points[vCntr].X := Points[vCntr].X + fHorzScrollBar.Position;
     if fVertScrollBar.IsScrollBarVisible then Points[vCntr].Y := Points[vCntr].Y + fVertScrollBar.Position;
+  {$ENDIF}
   end;
 end;
 
@@ -5910,8 +6103,13 @@ var
   vCntr : Integer;
 begin
   for vCntr := Low(Points) to High(Points) do begin
-    Points[vCntr].X := round((Points[vCntr].X - fHorzScrollBar.Position) * FZoomFactor);
-    Points[vCntr].Y := round((Points[vCntr].Y - fVertScrollBar.Position) * FZoomFactor);
+    {$IFDEF EVS_Zoom}
+    Points[vCntr].X := round((Points[vCntr].X - FHorzScrollBar.Position) * FZoomFactor);
+    Points[vCntr].Y := round((Points[vCntr].Y - FVertScrollBar.Position) * FZoomFactor);
+    {$ELSE}
+    Points[vCntr].X := Points[vCntr].X - FHorzScrollBar.Position;
+    Points[vCntr].Y := Points[vCntr].Y - FVertScrollBar.Position;
+    {$ENDIF}
   end;
 end;
 
@@ -5934,7 +6132,7 @@ begin
   FPrinting := False;
 end;
 
-function TEvsSimpleGraph.AlignSelection(aHorz: TEvsHAlignOption; aVert: TEvsVAlignOption): boolean;
+function TEvsSimpleGraph.AlignSelection(aHorz :TEvsHAlignOption; aVert :TEvsVAlignOption) :Boolean;
 
   function DoHSpaceEqually: boolean;
   var
@@ -6084,8 +6282,7 @@ begin
   end;
 end;
 
-function TEvsSimpleGraph.ResizeSelection(aHorz: TEvsResizeOption;
-  aVert: TEvsResizeOption): boolean;
+function TEvsSimpleGraph.ResizeSelection(aHorz :TEvsResizeOption; aVert :TEvsResizeOption) :Boolean;
 var
   vMaxWidth, vMaxHeight: integer;
   vMinWidth, vMinHeight: integer;
@@ -6302,10 +6499,11 @@ begin
       SuspendQueryEvents;
       try
         Objects.Clear;
+        FIDGenerator.Reset;
       finally
         ResumeQueryEvents;
       end;
-      SaveModified := 2;
+      FSaveModified := 2;
     finally
       EndUpdate;
     end;
@@ -6347,6 +6545,17 @@ end;
 procedure TEvsSimpleGraph.LoadFromStream(aStream: TStream);
 var
   vSignature: DWORD;
+
+  Function MaxID:Int64;
+  var
+    vObj :TEvsGraphObject;
+  begin
+    Result := -1;
+    for vObj in Objects do begin
+      Result := Max(vObj.ID, Result);
+    end;
+  end;
+
 begin
   aStream.Read(vSignature, SizeOf(vSignature));
   if vSignature <> StreamSignature then
@@ -6355,7 +6564,8 @@ begin
   try
     Clear;
     ReadObjects(aStream);
-    SaveModified := 2;
+    FIDGenerator.Reset(MaxID, 1);
+    FSaveModified := 2;
   finally
     EndUpdate;
   end;
@@ -6448,16 +6658,22 @@ function TEvsSimpleGraph.ClientToGraph(aX, aY: integer): TPoint;
 begin
   Result.X := aX;
   Result.Y := aY;
+  {$IFDEF EVS_ZOOM}
   //CPToGP(Result, 1);
+  {$ELSE}
   CLtoGP(Result);
+  {$ENDIF}
 end;
 
 function TEvsSimpleGraph.GraphToClient(aX, aY: integer): TPoint;
 begin
   Result.X := aX;
   Result.Y := aY;
+  {$IFDEF EVS_ZOOM}
   GPToCP(Result, 1);
-  //GPtoCL(Result);
+  {$ELSE}
+  GPtoCL(Result);
+  {$ENDIF}
 end;
 
 function TEvsSimpleGraph.ScreenToGraph(aX, aY: integer): TPoint;
@@ -6719,7 +6935,6 @@ end;
 {$ENDREGION}
 
 {$REGION ' TGraphObjectList '}
-{ TEvsGraphObjectList }
 
 destructor TEvsGraphObjectList.Destroy;
 begin
@@ -6777,7 +6992,7 @@ end;
 procedure TEvsGraphObjectList.Clear;
 begin
   SetCapacity(0);
-  EnumStack := nil;
+  FEnumStack := nil;
 end;
 
 function TEvsGraphObjectList.GetEnumerator : TEvsGraphObjectListEnumerator;
@@ -6785,9 +7000,9 @@ begin
   Result := TEvsGraphObjectListEnumerator.Create(Self);
 end;
 
-function TEvsGraphObjectList.GetReverseEnumerator : TEvsGraphObjectListReverseEnumerator;
+function TEvsGraphObjectList.GetReverseEnumerator : TEvsGraphObjectListEnumerator;
 begin
-  Result := TEvsGraphObjectListReverseEnumerator.Create(Self);
+  Result := GetEnumerator.Reverse;
 end;
 
 procedure TEvsGraphObjectList.Assign(Source: TPersistent);
@@ -6837,7 +7052,7 @@ begin
   if Index < fCount then
     System.Move(fItems[Index], fItems[Index + 1], (fCount - Index) *
       SizeOf(TEvsGraphObject));
-  fItems[Index] := Item;
+  FItems[Index] := Item;
   Inc(fCount);
   NotifyAction(Item, glAdded);
 end;
@@ -6854,9 +7069,9 @@ begin
   if Index < fCount then
     System.Move(fItems[Index + 1], fItems[Index], (fCount - Index) *
       SizeOf(TEvsGraphObject));
-  AdjustDeleted(Index, Enum);
-  for I := 0 to EnumStackPos - 1 do
-    AdjustDeleted(Index, EnumStack[I]);
+  AdjustDeleted(Index, FEnum);
+  for I := 0 to FEnumStackPos - 1 do
+    AdjustDeleted(Index, FEnumStack[I]);
   NotifyAction(Item, glRemoved);
 end;
 
@@ -6886,29 +7101,30 @@ begin
   end;
 end;
 
+{$IFDEF SUPPORT_Stack}
 function TEvsGraphObjectList.First: TEvsGraphObject;
 begin
   if fCount > 0 then
   begin
-    Enum.Dir := +1;
-    Enum.Current := 0;
+    FEnum.Dir := +1;
+    FEnum.Current := 0;
     Result := fItems[0];
   end
   else
   begin
-    Enum.Dir := 0;
+    FEnum.Dir := 0;
     Result := nil;
   end;
 end;
 
 function TEvsGraphObjectList.Prior: TEvsGraphObject;
 begin
-  Dec(Enum.Current);
-  if (Enum.Current >= 0) and (Enum.Current < fCount) then
-    Result := fItems[Enum.Current]
-  else if Enum.Dir <> 0 then
+  Dec(FEnum.Current);
+  if (FEnum.Current >= 0) and (FEnum.Current < fCount) then
+    Result := fItems[FEnum.Current]
+  else if FEnum.Dir <> 0 then
   begin
-    Enum.Dir := 0;
+    FEnum.Dir := 0;
     Result := nil;
   end
   else
@@ -6917,12 +7133,12 @@ end;
 
 function TEvsGraphObjectList.Next: TEvsGraphObject;
 begin
-  Inc(Enum.Current);
-  if (Enum.Current >= 0) and (Enum.Current < fCount) then
-    Result := fItems[Enum.Current]
-  else if Enum.Dir <> 0 then
+  Inc(FEnum.Current);
+  if (FEnum.Current >= 0) and (FEnum.Current < fCount) then
+    Result := fItems[FEnum.Current]
+  else if FEnum.Dir <> 0 then
   begin
-    Enum.Dir := 0;
+    FEnum.Dir := 0;
     Result := nil;
   end
   else
@@ -6933,40 +7149,42 @@ function TEvsGraphObjectList.Last: TEvsGraphObject;
 begin
   if fCount > 0 then
   begin
-    Enum.Dir := -1;
-    Enum.Current := fCount - 1;
+    FEnum.Dir := -1;
+    FEnum.Current := fCount - 1;
     Result := fItems[fCount - 1];
   end
   else
   begin
-    Enum.Dir := 0;
+    FEnum.Dir := 0;
     Result := nil;
   end;
 end;
 
-function TEvsGraphObjectList.Push: boolean;
+function TEvsGraphObjectList.Push: Boolean;
 begin
   Result := False;
-  if Enum.Dir <> 0 then
+  if FEnum.Dir <> 0 then
   begin
-    if EnumStackPos = Length(EnumStack) then
-      SetLength(EnumStack, EnumStackPos + 1);
-    EnumStack[EnumStackPos] := Enum;
-    Inc(EnumStackPos);
+    if FEnumStackPos = Length(FEnumStack) then
+      SetLength(FEnumStack, FEnumStackPos + 1);
+    FEnumStack[FEnumStackPos] := FEnum;
+    Inc(FEnumStackPos);
     Result := True;
   end;
 end;
 
-function TEvsGraphObjectList.Pop: boolean;
+function TEvsGraphObjectList.Pop: Boolean;
 begin
   Result := False;
-  if EnumStackPos > 0 then
+  if FEnumStackPos > 0 then
   begin
-    Dec(EnumStackPos);
-    Enum := EnumStack[EnumStackPos];
+    Dec(FEnumStackPos);
+    FEnum := FEnumStack[FEnumStackPos];
     Result := True;
   end;
 end;
+
+{$ENDIF}
 
 {$ENDREGION}
 
@@ -7001,7 +7219,7 @@ end;
 
 constructor TEvsGraphObject.CreateFromStream(AOwner: TEvsSimpleGraph; AStream: TStream);
 begin
-  Include(fStates, osLoading);
+  Include(FStates, osLoading);
   Create(AOwner);
   LoadFromStream(AStream);
 end;
@@ -7089,7 +7307,7 @@ begin
   if not (osLoading in States) then
     LookupDependencies;
   UpdateTextPlacement(True, 0, 0);
-  QueryVisualRect(fVisualRect);
+  QueryVisualRect(FVisualRect);
   NotifyDependents(gdcChanged);
 end;
 
@@ -7099,10 +7317,9 @@ begin
   LookupDependencies;
 end;
 
-procedure TEvsGraphObject.ReplaceID(OldID, NewID: DWORD);
+procedure TEvsGraphObject.ReplaceID(OldID, NewID :DWORD; const aStart :Integer);
 begin
-  if ID = OldID then
-    fID := NewID;
+  if ID = OldID then FID := NewID;
 end;
 
 procedure TEvsGraphObject.ReplaceObject(OldObject, NewObject: TEvsGraphObject);
@@ -7357,7 +7574,7 @@ begin
   end;
 end;
 
-function TEvsGraphObject.BeginDrag(const Pt: TPoint; HT: DWORD): boolean;
+function TEvsGraphObject.BeginDrag(const Pt :TPoint; HT :DWORD) :Boolean;
 begin
   Result := False;
   if not (osDragDisabled in States) and (not Assigned(Owner.DragSource) or
@@ -7374,13 +7591,13 @@ begin
   end;
 end;
 
-function TEvsGraphObject.DragTo(const Pt: TPoint; SnapToGrid: boolean): boolean;
+function TEvsGraphObject.DragTo(const Pt :TPoint; SnapToGrid :Boolean) :Boolean;
 begin
   with Owner.DragTargetPt do
     Result := DragBy(Pt.X - X, Pt.Y - Y, SnapToGrid);
 end;
 
-function TEvsGraphObject.DragBy(dX, dY: integer; SnapToGrid: boolean): boolean;
+function TEvsGraphObject.DragBy(dX, dY :integer; SnapToGrid :Boolean) :Boolean;
 begin
   Result := False;
   if Owner.DragSource = Self then
@@ -7395,7 +7612,7 @@ begin
   end;
 end;
 
-function TEvsGraphObject.EndDrag(Accept: boolean): boolean;
+function TEvsGraphObject.EndDrag(Accept :boolean) :Boolean;
 begin
   Result := False;
   if Owner.DragSource = Self then
@@ -7443,7 +7660,7 @@ begin
     Exclude(fStates, osDragDisabled);
 end;
 
-function TEvsGraphObject.IsFontStored: boolean;
+function TEvsGraphObject.IsFontStored :Boolean;
 begin
   Result := not ParentFont;
 end;
@@ -7482,7 +7699,7 @@ begin
   end;
 end;
 
-procedure TEvsGraphObject.SetHasCustomData(Value: boolean);
+procedure TEvsGraphObject.SetHasCustomData(Value :Boolean);
 begin
   if HasCustomData <> Value then
   begin
@@ -7540,7 +7757,7 @@ begin
   end;
 end;
 
-function TEvsGraphObject.GetZOrder: integer;
+function TEvsGraphObject.GetZOrder :Integer;
 begin
   Result := Owner.Objects.IndexOf(Self);
 end;
@@ -7610,12 +7827,12 @@ begin
     InflateRect(Result, D, D);
 end;
 
-function TEvsGraphObject.GetShowing: boolean;
+function TEvsGraphObject.GetShowing :Boolean;
 begin
   Result := (Visible or Owner.ShowHiddenObjects) and not (osDestroying in States);
 end;
 
-function TEvsGraphObject.GetDragging: boolean;
+function TEvsGraphObject.GetDragging :Boolean;
 begin
   Result := osDragging in States;
 end;
@@ -7625,42 +7842,42 @@ begin
   Result := DependentList[Index];
 end;
 
-function TEvsGraphObject.GetDependentCount: integer;
+function TEvsGraphObject.GetDependentCount :Integer;
 begin
   Result := DependentList.Count;
 end;
 
-function TEvsGraphObject.GetLinkInputs(Index: integer): TEvsGraphLink;
+function TEvsGraphObject.GetLinkInputs(Index :Integer) :TEvsGraphLink;
 begin
   Result := TEvsGraphLink(LinkInputList[Index]);
 end;
 
-function TEvsGraphObject.GetLinkInputCount: integer;
+function TEvsGraphObject.GetLinkInputCount :Integer;
 begin
   Result := LinkInputList.Count;
 end;
 
-function TEvsGraphObject.GetLinkOutputs(Index: integer): TEvsGraphLink;
+function TEvsGraphObject.GetLinkOutputs(Index :Integer) :TEvsGraphLink;
 begin
   Result := TEvsGraphLink(LinkOutputList[Index]);
 end;
 
-function TEvsGraphObject.GetLinkOutputCount: integer;
+function TEvsGraphObject.GetLinkOutputCount :Integer;
 begin
   Result := LinkOutputList.Count;
 end;
 
-class function TEvsGraphObject.IsLink: boolean;
+class function TEvsGraphObject.IsLink :Boolean;
 begin
   Result := False;
 end;
 
-class function TEvsGraphObject.IsNode: boolean;
+class function TEvsGraphObject.IsNode :Boolean;
 begin
   Result := not IsLink;
 end;
 
-function TEvsGraphObject.IsLocked: boolean;
+function TEvsGraphObject.IsLocked :Boolean;
 begin
   if IsLink then
     Result := Owner.LockLinks
@@ -7672,15 +7889,33 @@ end;
 
 function TEvsGraphObject.IsVisibleOn(aCanvas : TCanvas) : boolean;
 Var
-  vDCRect:TRect;
+  vDCRect  :TRect;
+  vCnvRect :TRect;
+  vOfsX, vOfsY : Integer;
 begin
   if Showing then begin
     {$MESSAGE HINT 'METAFILE SUPPORT OMMITED'}
     if not Owner.Printing then begin
     //if not (aCanvas is TMetafileCanvas) then  // Windows.RectVisible bug!!!
        vDCRect := SelectedVisualRect;
-       owner.GPToCP(vDCRect,2);      {$MESSAGE HINT 'GPtoCP needs attention'}
-       Result := RectVisible(aCanvas.Handle, vDCRect)
+       if aCanvas is TEvsCustomCanvas then begin
+         vOfsX := round(TEvsCustomCanvas(aCanvas).OffsetX);
+         vOfsY := round(TEvsCustomCanvas(aCanvas).OffsetY);
+         OffsetRect(vDCRect, round(TEvsCustomCanvas(aCanvas).OffsetX), round(TEvsCustomCanvas(aCanvas).OffsetY));
+         //Result := RectVisible(aCanvas.Handle, vDCRect)
+         Result := OverlappedRect(Classes.Rect(0, 0, aCanvas.Width, aCanvas.Height), vDCRect);
+       end else if aCanvas is TEvsGraphCanvas then begin
+         vOfsX := Round(TEvsGraphCanvas(aCanvas).OffsetX);
+         vOfsY := Round(TEvsGraphCanvas(aCanvas).OffsetY);
+         OffsetRect(vDCRect, vOfsX, vOfsY);
+         vCnvRect := Classes.Rect(0, 0, aCanvas.Width, aCanvas.Height);
+         Result := OverlappedRect(vCnvRect, vDCRect);
+         //Result := RectVisible(aCanvas.Handle, vDCRect)
+       end else begin
+         owner.GPToCP(vDCRect, 2);      {$MESSAGE HINT 'GPtoCP needs attention'}
+         //LCLIntf.DPtoLP(aCanvas.Handle, PPOINT(@vDCRect.TopLeft), 2);
+         Result := RectVisible(aCanvas.Handle, vDCRect)
+       end;
     end else
       Result := True
   end else
@@ -7709,7 +7944,7 @@ begin
   ZOrder := 0;
 end;
 
-function TEvsGraphObject.Delete: boolean;
+function TEvsGraphObject.Delete :Boolean;
 begin
   Result := False;
   if (Self <> nil) and CanDelete then
@@ -7719,7 +7954,7 @@ begin
   end;
 end;
 
-function TEvsGraphObject.CanDelete: boolean;
+function TEvsGraphObject.CanDelete :Boolean;
 begin
   Result := True;
   Owner.DoCanRemoveObject(Self, Result);
@@ -7740,12 +7975,12 @@ begin
   end;
 end;
 
-function TEvsGraphObject.ContainsPoint(X, Y: integer): boolean;
+function TEvsGraphObject.ContainsPoint(X, Y :integer) :Boolean;
 begin
   Result := (HitTest(Types.Point(X, Y)) <> GHT_NOWHERE);
 end;
 
-function TEvsGraphObject.ContainsRect(const Rect: TRect): boolean;
+function TEvsGraphObject.ContainsRect(const Rect :TRect) :Boolean;
 begin
   if Showing then
     if Selected then
@@ -7802,8 +8037,7 @@ end;
 
 procedure TEvsGraphObject.Draw(aCanvas : TCanvas);
 begin
-  if IsVisibleOn(aCanvas) then
-  begin
+  if IsVisibleOn(aCanvas) then begin
     aCanvas.Brush := Brush;
     aCanvas.Pen := Pen;
     aCanvas.Font := Font;
@@ -8094,7 +8328,7 @@ begin
     Result := False;
 end;
 
-function TEvsGraphLink.PointStyleOffset(Style: TEvsLinkBeginEndStyle; Size: integer): integer;
+function TEvsGraphLink.PointStyleOffset(Style :TEvsLinkBeginEndStyle; Size :integer) :Integer;
 begin
   case Style of
     lsArrow, lsArrowSimple:
@@ -8142,8 +8376,7 @@ begin
   end;
 end;
 
-function TEvsGraphLink.DrawPointStyle(aCanvas : TCanvas; const Pt : TPoint;
-  const Angle : double; Style : TEvsLinkBeginEndStyle; Size : integer) : TPoint;
+function TEvsGraphLink.DrawPointStyle(aCanvas :TCanvas; const Pt :TPoint; const Angle :Double; Style :TEvsLinkBeginEndStyle; Size :Integer) :TPoint;
 var
   Pts: array[1..4] of TPoint;
 begin
@@ -8218,9 +8451,7 @@ begin
       vTmp := Copy(Polyline, vFirst, vLast - vFirst + 1);
     end else vTmp := Copy(Polyline);
     aCanvas.Polyline(vTmp);
-  end
-  else if PointCount = 1 then
-  begin
+  end else if PointCount = 1 then begin
     vPtRect := MakeSquare(Points[0], aCanvas.Pen.Width);
     aCanvas.Ellipse(vPtRect.Left, vPtRect.Top, vPtRect.Right, vPtRect.Bottom);
   end;
@@ -8233,30 +8464,28 @@ var
   vCnvBck     : TEvsCanvasRecall;
   vSize       : TSize;
 begin
-  if TextRegion <> 0 then
-  begin
+  if TextRegion <> 0 then begin
     vCnvBck := TEvsCanvasRecall.Create(aCanvas);
     try
       aCanvas.AntialiasingMode := amOn;
-      aCanvas.Font.Quality := fqCleartypeNatural;
-      aCanvas.Brush.Style := bsClear;
-      vTextStyle := aCanvas.TextStyle;
-      vTextStyle.Alignment := taCenter;
-      vTextStyle.Layout := tlBottom;
-      vTextStyle.Opaque := False;
-      vTextStyle.Clipping := True;
-      vTextStyle.SingleLine := False;
-      vTextStyle.Wordbreak := True;
-      vTextStyle.RightToLeft := Owner.UseRightToLeftReading;
-      vSize := aCanvas.TextExtent(TextToShow);
+      aCanvas.Font.Quality     := fqCleartypeNatural;
+      aCanvas.Brush.Style      := bsClear;
+      vTextStyle               := aCanvas.TextStyle;
+      vTextStyle.Alignment     := taCenter;
+      vTextStyle.Layout        := tlBottom;
+      vTextStyle.Opaque        := False;
+      vTextStyle.Clipping      := True;
+      vTextStyle.SingleLine    := False;
+      vTextStyle.Wordbreak     := True;
+      vTextStyle.RightToLeft   := Owner.UseRightToLeftReading;
+      vSize  := aCanvas.TextExtent(TextToShow);
       vPoint := TextCenter;
-      vPt.x := vPoint.x - (vSize.cx div 2);
-      vPt.y := vPoint.y - vSize.cy;
+      vPt.x  := vPoint.x - (vSize.cx div 2);
+      vPt.y  := vPoint.y - vSize.cy;
       if Abs(TextAngle) > Pi / 2 then begin
         aCanvas.Font.Orientation := Round(-1800 * (TextAngle - Pi) / Pi);
         RotatePoints(vPt, TextAngle - Pi, TextCenter);
-      end
-      else begin
+      end else begin
         aCanvas.Font.Orientation := Round(-1800 * TextAngle / Pi);
         RotatePoints(vPt, TextAngle, TextCenter);
       end;
@@ -8279,45 +8508,35 @@ procedure TEvsGraphLink.DrawBody(Canvas: TCanvas);
   end;
 
 var
-  OldPenStyle: TPenStyle;
-  OldBrushStyle: TBrushStyle;
+  OldPenStyle     : TPenStyle;
+  OldBrushStyle   : TBrushStyle;
   ModifiedPolyline: TPoints;
-  Angle: double =0.0;
-  PtRect: TRect;
+  Angle           : Double = 0.0;
+  PtRect          : TRect;
 begin
   ModifiedPolyline := nil;
-  if PointCount = 1 then
-  begin
+  if PointCount = 1 then begin
     PtRect := MakeSquare(Points[0], Pen.Width div 2);
-    while not IsRectEmpty(PtRect) do
-    begin
+    while not IsRectEmpty(PtRect) do begin
       Canvas.Ellipse(PtRect.Left, PtRect.Top, PtRect.Right, PtRect.Bottom);
       InflateRect(PtRect, -1, -1);
     end;
-  end
-  else if PointCount >= 2 then
-  begin
-    if (BeginStyle <> lsNone) or (EndStyle <> lsNone) then
-    begin
+  end else if PointCount >= 2 then begin
+    if (BeginStyle <> lsNone) or (EndStyle <> lsNone) then begin
       OldPenStyle := Canvas.Pen.Style;
       Canvas.Pen.Style := psSolid;
       try
-        if BeginStyle <> lsNone then
-        begin
+        if BeginStyle <> lsNone then begin
           if ModifiedPolyline = nil then
             ModifiedPolyline := Copy(Polyline, 0, PointCount);
           Angle := LineSlopeAngle(fPoints[1], fPoints[0]);
-          ModifiedPolyline[0] :=
-            DrawPointStyle(Canvas, fPoints[0], Angle, BeginStyle, BeginSize);
+          ModifiedPolyline[0] := DrawPointStyle(Canvas, fPoints[0], Angle, BeginStyle, BeginSize);
         end;
-        if EndStyle <> lsNone then
-        begin
+        if EndStyle <> lsNone then begin
           if ModifiedPolyline = nil then
             ModifiedPolyline := Copy(Polyline, 0, PointCount);
           Angle := LineSlopeAngle(fPoints[PointCount - 2], fPoints[PointCount - 1]);
-          ModifiedPolyline[PointCount - 1] :=
-            DrawPointStyle(Canvas, fPoints[PointCount - 1], Angle, EndStyle, EndSize);
-
+          ModifiedPolyline[PointCount - 1] := DrawPointStyle(Canvas, fPoints[PointCount - 1], Angle, EndStyle, EndSize);
         end;
       finally
         Canvas.Pen.Style := OldPenStyle;
@@ -8364,8 +8583,7 @@ begin
       Angle := LineSlopeAngle(fPoints[1], fPoints[0]);
       UnionRect(Rect, PointStyleRect(fPoints[0], Angle, BeginStyle, BeginSize));
     end;
-    if EndStyle <> lsNone then
-    begin
+    if EndStyle <> lsNone then begin
       Angle := LineSlopeAngle(fPoints[PointCount - 2], fPoints[PointCount - 1]);
       UnionRect(Rect, PointStyleRect(fPoints[PointCount - 1], Angle, EndStyle, EndSize));
     end;
@@ -8865,11 +9083,11 @@ begin
     begin
       if AGraphObject = Source then
         Result := True
-      else if CheckingLink or (AGraphObject <> Target) then
+      else if FCheckingLink or (AGraphObject <> Target) then
       begin
         Result := goLinkable in AGraphObject.Options;
         Owner.DoCanHookLink(AGraphObject, Self, AIndex, Result);
-        if Result and not CheckingLink and Assigned(Target) then
+        if Result and not FCheckingLink and Assigned(Target) then
           Owner.DoCanLinkObjects(Self, AGraphObject, Target, Result);
       end;
     end
@@ -8877,11 +9095,11 @@ begin
     begin
       if AGraphObject = Target then
         Result := True
-      else if CheckingLink or (AGraphObject <> Source) then
+      else if FCheckingLink or (AGraphObject <> Source) then
       begin
         Result := goLinkable in AGraphObject.Options;
         Owner.DoCanHookLink(AGraphObject, Self, AIndex, Result);
-        if Result and not CheckingLink and Assigned(Source) then
+        if Result and not FCheckingLink and Assigned(Source) then
           Owner.DoCanLinkObjects(Self, Source, AGraphObject, Result);
       end;
     end;
@@ -8905,7 +9123,7 @@ begin
           if PointCount < 1 then
             InsertPoint(0, AGraphObject.FixHookAnchor);
           fSource := AGraphObject;
-          SourceID := AGraphObject.ID;
+          FSourceID := AGraphObject.ID;
           AGraphObject.LinkOutputList.Add(Self);
           Changed([gcView, gcData, gcDependency]);
         finally
@@ -8927,7 +9145,7 @@ begin
           if PointCount < 2 then
             AddPoint(AGraphObject.FixHookAnchor);
           fTarget := AGraphObject;
-          TargetID := AGraphObject.ID;
+          FTargetID := AGraphObject.ID;
           AGraphObject.LinkInputList.Add(Self);
           Changed([gcView, gcData, gcDependency]);
         finally
@@ -8948,14 +9166,14 @@ begin
     if fSource = AGraphObject then
     begin
       fSource := nil;
-      SourceID := 0;
+      FSourceID := 0;
       Result := 0;
       AGraphObject.LinkOutputList.Remove(Self);
     end;
     if fTarget = AGraphObject then
     begin
       fTarget := nil;
-      TargetID := 0;
+      FTargetID := 0;
       Result := PointCount - 1;
       AGraphObject.LinkInputList.Remove(Self);
     end;
@@ -8979,7 +9197,7 @@ end;
 function TEvsGraphLink.CanLink(ASource, ATarget: TEvsGraphObject): boolean;
 begin
   Result := False;
-  CheckingLink := True;
+  FCheckingLink := True;
   try
     if (ASource <> ATarget) and CanHook(0, ASource) and
       CanHook(PointCount - 1, ATarget) then
@@ -8988,7 +9206,7 @@ begin
       Owner.DoCanLinkObjects(Self, ASource, ATarget, Result);
     end;
   finally
-    CheckingLink := False;
+    FCheckingLink := False;
   end;
 end;
 
@@ -9005,7 +9223,7 @@ begin
         if PointCount < 1 then
           InsertPoint(0, ASource.FixHookAnchor);
         fSource := ASource;
-        SourceID := ASource.ID;
+        FSourceID := ASource.ID;
         ASource.LinkOutputList.Add(Self);
         Changed([gcView, gcData, gcDependency]);
         Owner.DoObjectHook(ASource, Self, 0);
@@ -9016,7 +9234,7 @@ begin
         if PointCount < 2 then
           AddPoint(ATarget.FixHookAnchor);
         fTarget := ATarget;
-        TargetID := ATarget.ID;
+        FTargetID := ATarget.ID;
         ATarget.LinkInputList.Add(Self);
         Changed([gcView, gcData, gcDependency]);
         Owner.DoObjectHook(ATarget, Self, PointCount - 1);
@@ -9034,10 +9252,10 @@ var
   RecheckCount: integer;
   StartPt, EndPt: TPoint;
 begin
-  if not UpdatingEndPoints and (PointCount >= 2) and
+  if not FUpdatingEndPoints and (PointCount >= 2) and
     (Assigned(Source) or Assigned(Target)) then
   begin
-    UpdatingEndPoints := True;
+    FUpdatingEndPoints := True;
     try
       Recheck := False;
       StartPt := Points[0];
@@ -9084,22 +9302,22 @@ begin
         Points[PointCount - 1]) then
         Changed([gcView, gcText, gcPlacement]);
     finally
-      UpdatingEndPoints := False;
+      FUpdatingEndPoints := False;
     end;
   end;
 end;
 
-function TEvsGraphLink.UpdateTextPlacement(Recalc: boolean; dX, dY: integer): boolean;
+function TEvsGraphLink.UpdateTextPlacement(Recalc: Boolean; dX, dY: Integer): Boolean;
 begin
   Result := False;
   if Recalc then begin
     if fTextRegion <> 0 then begin
       DeleteObject(TextRegion);
-      fTextRegion := 0;
+      FTextRegion := 0;
     end;
-    fTextRegion := CreateTextRegion;
+    FTextRegion := CreateTextRegion;
     Result := True;
-  end else if fTextRegion <> 0 then begin
+  end else if FTextRegion <> 0 then begin
     Inc(fTextCenter.X, dX);
     Inc(fTextCenter.Y, dY);
     OffsetRgn(fTextRegion, dX, dY);
@@ -9411,11 +9629,11 @@ var
   I: integer;
 begin
   GraphObject := fSource;
-  GraphObjectID := SourceID;
+  GraphObjectID := FSourceID;
   fSource := fTarget;
-  SourceID := TargetID;
+  FSourceID := FTargetID;
   fTarget := GraphObject;
-  TargetID := GraphObjectID;
+  FTargetID := GraphObjectID;
   if (fTextPosition >= 0) and (PointCount > 2) then
     fTextPosition := PointCount - 2 - fTextPosition;
   for I := 0 to (PointCount div 2) - 1 do
@@ -9464,7 +9682,7 @@ begin
   end;
 end;
 
-procedure TEvsGraphLink.SetTextPosition(Value: integer);
+procedure TEvsGraphLink.SetTextPosition(Value :Integer);
 begin
   if TextPosition <> Value then
   begin
@@ -9473,66 +9691,60 @@ begin
   end;
 end;
 
-procedure TEvsGraphLink.SetTextSpacing(Value: integer);
+procedure TEvsGraphLink.SetTextSpacing(Value :Integer);
 begin
-  if TextSpacing <> Value then
-  begin
-    fTextSpacing := Value;
+  if TextSpacing <> Value then begin
+    FTextSpacing := Value;
     Changed([gcView, gcData, gcText]);
   end;
 end;
 
 procedure TEvsGraphLink.SetBeginStyle(Value: TEvsLinkBeginEndStyle);
 begin
-  if BeginStyle <> Value then
-  begin
-    fBeginStyle := Value;
+  if BeginStyle <> Value then begin
+    FBeginStyle := Value;
     Changed([gcView, gcData, gcText]);
   end;
 end;
 
-procedure TEvsGraphLink.SetBeginSize(Value: byte);
+procedure TEvsGraphLink.SetBeginSize(Value :Byte);
 begin
-  if BeginSize <> Value then
-  begin
-    fBeginSize := Value;
+  if BeginSize <> Value then begin
+    FBeginSize := Value;
     Changed([gcView, gcData, gcText]);
   end;
 end;
 
 procedure TEvsGraphLink.SetEndStyle(Value: TEvsLinkBeginEndStyle);
 begin
-  if EndStyle <> Value then
-  begin
-    fEndStyle := Value;
+  if EndStyle <> Value then begin
+    FEndStyle := Value;
     Changed([gcView, gcData, gcText]);
   end;
 end;
 
-procedure TEvsGraphLink.SetEndSize(Value: byte);
+procedure TEvsGraphLink.SetEndSize(Value :Byte);
 begin
-  if EndSize <> Value then
-  begin
-    fEndSize := Value;
+  if EndSize <> Value then begin
+    FEndSize := Value;
     Changed([gcView, gcData, gcText]);
   end;
 end;
 
-function TEvsGraphLink.GetPoints(Index: integer): TPoint;
+function TEvsGraphLink.GetPoints(Index :Integer) :TPoint;
 begin
   if (Index < 0) or (Index >= PointCount) then
     raise EEvsPointListError.CreateFmt('Invalid point index. (%d)', [Index]);
-  Result := fPoints[Index];
+  Result := FPoints[Index];
 end;
 
-procedure TEvsGraphLink.SetPoints(Index: integer; const Value: TPoint);
+procedure TEvsGraphLink.SetPoints(Index :Integer; const Value :TPoint);
 begin
   if (Index < 0) or (Index >= PointCount) then
     raise EEvsPointListError.CreateFmt('Invalid point index. (%d)', [Index]);
-  if not EqualPoint(fPoints[Index], Value) then
-  begin
+  if not EqualPoint(fPoints[Index], Value) then begin
     Unhook(Index);
-    fPoints[Index] := Value;
+    FPoints[Index] := Value;
     Changed([gcView, gcData, gcText, gcPlacement]);
   end;
 end;
@@ -9542,8 +9754,8 @@ begin
   if (PointCount <> Length(Value)) or ((PointCount > 0) and not
     CompareMem(@fPoints[0], @Value[0], PointCount * SizeOf(TPoint))) then
   begin
-    fPointCount := Length(Value);
-    fPoints := Copy(Value, 0, fPointCount);
+    FPointCount := Length(Value);
+    FPoints     := Copy(Value, 0, fPointCount);
     Unhook(Source);
     Unhook(Target);
     Changed([gcView, gcData, gcText, gcPlacement]);
@@ -9554,21 +9766,20 @@ procedure TEvsGraphLink.Loaded;
 begin
   inherited Loaded;
   // Backward compatibility
-  if (PointCount = 0) and Assigned(Source) and Assigned(Target) then
-  begin
-    Inc(fPointCount, 2);
-    SetLength(fPoints, fPointCount);
+  if (PointCount = 0) and Assigned(Source) and Assigned(Target) then begin
+    Inc(FPointCount, 2);
+    SetLength(FPoints, FPointCount);
     UpdateDependencies;
   end;
 end;
 
-procedure TEvsGraphLink.ReplaceID(OldID, NewID: DWORD);
+procedure TEvsGraphLink.ReplaceID(OldID, NewID :DWORD; const aStart :Integer);
 begin
   inherited ReplaceID(OldID, NewID);
-  if (SourceID <> 0) and (SourceID = OldID) then
-    SourceID := NewID;
-  if (TargetID <> 0) and (TargetID = OldID) then
-    TargetID := NewID;
+  if (FSourceID <> 0) and (FSourceID = OldID) then
+    FSourceID := NewID;
+  if (FTargetID <> 0) and (FTargetID = OldID) then
+    FTargetID := NewID;
 end;
 
 procedure TEvsGraphLink.ReplaceObject(OldObject, NewObject: TEvsGraphObject);
@@ -9576,12 +9787,12 @@ begin
   if Source = OldObject then
   begin
     fSource := NewObject;
-    SourceID := NewObject.ID;
+    FSourceID := NewObject.ID;
   end;
   if Target = OldObject then
   begin
     fTarget := NewObject;
-    TargetID := NewObject.ID;
+    FTargetID := NewObject.ID;
   end;
   inherited ReplaceObject(OldObject, NewObject);
 end;
@@ -9590,18 +9801,16 @@ procedure TEvsGraphLink.LookupDependencies;
 var
   GraphObject: TEvsGraphObject;
 begin
-  if (SourceID <> 0) and not Assigned(Source) then
+  if (FSourceID <> 0) and not Assigned(Source) then
   begin
-    GraphObject := Owner.FindObjectByID(SourceID);
-    if Assigned(GraphObject) then
-    begin
+    GraphObject := Owner.FindObjectByID(FSourceID);
+    if Assigned(GraphObject) then begin
       fSource := GraphObject;
       GraphObject.LinkOutputList.Add(Self);
     end;
   end;
-  if (TargetID <> 0) and not Assigned(Target) then
-  begin
-    GraphObject := Owner.FindObjectByID(TargetID);
+  if (FTargetID <> 0) and not Assigned(Target) then begin
+    GraphObject := Owner.FindObjectByID(FTargetID);
     if Assigned(GraphObject) then
     begin
       fTarget := GraphObject;
@@ -9654,22 +9863,22 @@ end;
 
 procedure TEvsGraphLink.ReadSource(Reader: TReader);
 begin
-  SourceID := Reader.ReadInteger;
+  FSourceID := Reader.ReadInteger;
 end;
 
 procedure TEvsGraphLink.WriteSource(Writer: TWriter);
 begin
-  Writer.WriteInteger(SourceID);
+  Writer.WriteInteger(FSourceID);
 end;
 
 procedure TEvsGraphLink.ReadTarget(Reader: TReader);
 begin
-  TargetID := Reader.ReadInteger;
+  FTargetID := Reader.ReadInteger;
 end;
 
 procedure TEvsGraphLink.WriteTarget(Writer: TWriter);
 begin
-  Writer.WriteInteger(TargetID);
+  Writer.WriteInteger(FTargetID);
 end;
 
 procedure TEvsGraphLink.ReadPoints(Stream: TStream);
@@ -11489,7 +11698,6 @@ end;
 
 {$ENDREGION}
 
-
 {$REGION ' TEvsCustomCanvas '}
 
 procedure TEvsCustomCanvas.SetOffsetX(aValue : Double);
@@ -11935,10 +12143,37 @@ begin
   end;
 end;
 
+function TEvsCustomCanvas.DPToLP(const aPoint :TPoint) :TPoint;
+begin
+  raise UnderConstruction; {$MESSAGE WARN 'Needs Implementation'}
+end;
+
+function TEvsCustomCanvas.LPToDP(const aPoint :TPoint) :TPoint;
+begin
+  raise UnderConstruction; {$MESSAGE WARN 'Needs Implementation'}
+end;
+
 constructor TEvsCustomCanvas.Create;
 begin
   inherited Create;
   FOffsetX := 0.0; FOffsetY := 0.0; FScaleX := 0.0; FScaleY := 0.0;
+end;
+
+procedure TEvsCustomCanvas.Assign(Source :TPersistent);
+begin
+  if source is Graphics.TCanvas then begin
+    Brush.Assign(TCanvas(Source).Brush);
+    Font.Assign(TCanvas(Source).Font);
+    Pen.Assign(TCanvas(Source).Pen);
+    TextStyle  := TCanvas(Source).TextStyle;
+    AutoRedraw := TCanvas(Source).AutoRedraw;
+    CopyMode   := TCanvas(Source).CopyMode;
+    //Height     := TCanvas(Source).Height;
+    //Width      := TCanvas(Source).Width;
+    //Region.Assign(TCanvas(Source).Region);
+    AntialiasingMode := TCanvas(Source).AntialiasingMode;
+    Handle := TCanvas(Source).Handle;
+  end else inherited Assign(Source);
 end;
 
 procedure TEvsCustomCanvas.SetTransformation(XScale, YScale, DX, DY : Double);
@@ -11948,7 +12183,7 @@ end;
 
 procedure TEvsCustomCanvas.ClearTransformation;
 begin
-  SetTransformation(0.0,0.0,0.0,0.0);
+  SetTransformation(1.0, 1.0, 0.0, 0.0);
 end;
 
 procedure TEvsCustomCanvas.Rectangle(X1, Y1, X2, Y2 : Integer);
@@ -12005,6 +12240,7 @@ begin
   TEvsSimpleGraph.Register(TEvsPentagonalNode);
   TEvsSimpleGraph.Register(TEvsHexagonalNode);
 end;
+
 procedure _UnRegisterClasses;
 begin
   TEvsSimpleGraph.Unregister(TEvsGraphLink);
@@ -12035,4 +12271,5 @@ initialization
 finalization
   if Assigned(RegisteredLinkClasses) then RegisteredLinkClasses.Free;
   if Assigned(RegisteredNodeClasses) then RegisteredNodeClasses.Free;
+
 end.

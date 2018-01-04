@@ -1,12 +1,12 @@
 object EvsMain: TEvsMain
-  Left = 442
+  Left = 548
   Height = 410
-  Top = 163
+  Top = 317
   Width = 719
   Caption = 'EvsMain'
   ClientHeight = 410
   ClientWidth = 719
-  LCLVersion = '1.6.4.0'
+  LCLVersion = '1.4.4.0'
   object ToolBar1: TToolBar
     Left = 0
     Height = 26
@@ -64,7 +64,7 @@ object EvsMain: TEvsMain
     object ToolButton10: TToolButton
       Left = 330
       Top = 2
-      Action = actDebugForm
+      Action = actCheckDuplicates
     end
     object ToolButton11: TToolButton
       Left = 297
@@ -513,6 +513,11 @@ object EvsMain: TEvsMain
       OnExecute = actEditToBackExecute
       OnUpdate = actEditToBackUpdate
       ShortCut = 8226
+    end
+    object actCheckDuplicates: TAction
+      Caption = 'CheckDuplicates'
+      ImageIndex = 45
+      OnExecute = actCheckDuplicatesExecute
     end
   end
   object dlgOpen: TOpenDialog
