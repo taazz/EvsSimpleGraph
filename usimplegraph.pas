@@ -489,6 +489,7 @@ type
     property ScaleX  : Double  read FScaleX  write SetScaleX;
     property ScaleY  : Double  read FScaleY  write SetScaleY;
   end;
+
   //{$INTERFACE CORBA}
   //IEvsCoordinateTranslation = interface
   //  ['{D173501F-C8D5-4FE6-80DE-1F0FF958BB37}']
@@ -496,14 +497,17 @@ type
   //  procedure SetScale(constref aScaleX:Double; constref aScaleY:Double);
   //end;
   //
+
+  TEvsCustomCanvasClass = class of TEvsCustomCanvas;
+
   { TEvsGraphCanvas }
 
   TEvsGraphCanvas = class(TControlCanvas) //add extra functionality  to existing canvas and use different renderers as well eg(GDI+)
   private
-    FOffsetX : Double;
-    FOffsetY : Double;
-    FScaleX  : Double;
-    FScaleY  : Double;
+    FOffsetX :Double;
+    FOffsetY :Double;
+    FScaleX  :Double;
+    FScaleY  :Double;
     procedure SetOffsetX(aValue : Double);
     procedure SetOffsetY(aValue : Double);
     procedure SetScaleX (aValue : Double);
@@ -615,28 +619,28 @@ type
 
   TEvsGraphScrollBar = class(TPersistent)                    //NEEDS WORK ON 3 METHODS
   private
-    fOwner: TEvsSimpleGraph;
-    fIncrement: TScrollBarInc;
-    fPageIncrement: TScrollBarInc;
-    fPosition: Integer;
-    fRange: Integer;
-    fCalcRange: Integer;
-    fKind: TScrollBarKind;
-    fMargin: Word;
-    fVisible: Boolean;
-    fTracking: Boolean;
-    fSmooth: Boolean;
-    fDelay: Integer;
-    fButtonSize: Integer;
-    fColor: TColor;
-    fParentColor: Boolean;
-    fSize: Integer;
-    fStyle: TScrollBarStyle;
-    fThumbSize: Integer;
-    fPageDiv: Integer;
-    fLineDiv: Integer;
-    fUpdateNeeded: Boolean;
-    FLastMsgPos:Integer;
+    fOwner         :TEvsSimpleGraph;
+    fIncrement     :TScrollBarInc;
+    fPageIncrement :TScrollBarInc;
+    fPosition      :Integer;
+    fRange         :Integer;
+    fCalcRange     :Integer;
+    fKind          :TScrollBarKind;
+    fMargin        :Word;
+    fVisible       :Boolean;
+    fTracking      :Boolean;
+    fSmooth        :Boolean;
+    fDelay         :Integer;
+    fButtonSize    :Integer;
+    fColor         :TColor;
+    fParentColor   :Boolean;
+    fSize          :Integer;
+    fStyle         :TScrollBarStyle;
+    fThumbSize     :Integer;
+    fPageDiv       :Integer;
+    fLineDiv       :Integer;
+    fUpdateNeeded  :Boolean;
+    FLastMsgPos    :Integer;
     procedure DoSetRange(Value: Integer);
     function InternalGetScrollPos: integer;
     procedure SetButtonSize(AValue: integer);
@@ -1550,7 +1554,8 @@ type
     class procedure Unregister(aLinkClass: TEvsGraphLinkClass); overload;
     class function LinkClassCount: integer;
     class function LinkClasses(aIndex: integer): TEvsGraphLinkClass;
-
+    class procedure RegisterControlCanvas(const aCanvasClass:TEvsGraphCanvasClass);
+    class procedure RegisterCanvas(const aCanvasClas:TEvsCustomCanvasClass);
   public  //methods
     constructor Create(aOwner: TComponent); override;
     destructor Destroy; override;
@@ -1806,9 +1811,12 @@ const
   {$IFDEF WIN}
   //GGI_MARK_NONEXISTING_GLYPHS = $1;
   {$ENDIF}
+
 var
-  RegisteredNodeClasses: TList;
-  RegisteredLinkClasses: TList;
+  RegisteredNodeClasses :TList;
+  RegisteredLinkClasses :TList;
+  CanvasClass           :TEvsCustomCanvas;
+  ControlCanvasClass    :TEvsGraphCanvas;
 
 type
   TParentControl = class(TWinControl);
@@ -2834,7 +2842,8 @@ end;
 function TEvsGraphObjectListEnumerator.Filter(const aBaseClass :TEvsGraphObjectClass) :TEvsGraphObjectListEnumerator;
 begin
   FBaseClass := aBaseClass;
-  reset
+  Reset;
+  Result := Self;
 end;
 
 function TEvsGraphObjectListEnumerator.GetCurrent : TEvsGraphObject;
@@ -2843,12 +2852,23 @@ begin
 end;
 
 function TEvsGraphObjectListEnumerator.MoveNext : Boolean;
+
+  function Include:Boolean; inline;
+  begin
+    Result := False;
+    if (FPosition >= 0) or (FPosition < FGraphList.Count) then Result := FGraphList[FPosition].InheritsFrom(FBaseClass);
+  end;
+
 begin
   if FReverse then begin
-    Dec(FPosition);
+    repeat
+      Dec(FPosition);
+    until (FPosition <0) or Include;
     Result := FPosition > -1;
   end else begin
-    Inc(FPosition);
+    repeat
+      Inc(FPosition);
+    until (FPosition >= FGraphList.Count) or Include;
     Result := FPosition < FGraphList.Count;
   end;
 end;
@@ -5578,6 +5598,16 @@ end;
 class function TEvsSimpleGraph.LinkClasses(aIndex: integer): TEvsGraphLinkClass;
 begin
   Result := TEvsGraphLinkClass(RegisteredLinkClasses[aIndex]);
+end;
+
+class procedure TEvsSimpleGraph.RegisterControlCanvas(const aCanvasClass :TEvsGraphCanvasClass);
+begin
+  ControlCanvasClass := aCanvasClass;
+end;
+
+class procedure TEvsSimpleGraph.RegisterCanvas(const aCanvasClas :TEvsCustomCanvasClass);
+begin
+  CanvasClass := aCanvasClass;
 end;
 
 constructor TEvsSimpleGraph.Create(aOwner: TComponent);
@@ -11013,21 +11043,18 @@ begin
   end
   else if PointCount >= 2 then
   begin
-    if (BeginStyle <> lsNone) or (EndStyle <> lsNone) then
-    begin
+    if (BeginStyle <> lsNone) or (EndStyle <> lsNone) then begin
       vOldPenStyle := aCanvas.Pen.Style;
       aCanvas.Pen.Style := psSolid;
       try
-        if BeginStyle <> lsNone then
-        begin
-          if vModifiedPolyline = nil then vModifiedPolyline := Copy(Polyline, 0, PointCount);
+        if BeginStyle <> lsNone then begin
+          if (vModifiedPolyline = nil) then vModifiedPolyline := Copy(Polyline, 0, PointCount);
           vAngle := LineSlopeAngle(Points[1], Points[0]);
           vModifiedPolyline[0] := DrawPointStyle(aCanvas, Points[0],
             vAngle, BeginStyle, BeginSize);
         end;
-        if EndStyle <> lsNone then
-        begin
-          if vModifiedPolyline = nil then vModifiedPolyline := Copy(Polyline, 0, PointCount);
+        if (EndStyle <> lsNone) then begin
+          if (vModifiedPolyline = nil) then vModifiedPolyline := Copy(Polyline, 0, PointCount);
           vAngle := LineSlopeAngle(Points[PointCount - 2], Points[PointCount - 1]);
           vModifiedPolyline[PointCount - 1] := DrawPointStyle(aCanvas, Points[PointCount - 1],
             vAngle, EndStyle, EndSize);;
@@ -12267,7 +12294,8 @@ initialization
   CF_SIMPLEGRAPH := RegisterClipboardFormat('Simple Graph Format');
   // Registers Link and Node classes
   _RegisterClasses;
-
+  TEvsSimpleGraph.RegisterControlCanvas(TEvsGraphCanvas);
+  TEvsSimpleGraph.RegisterCanvas(TEvsCustomCanvas);
 finalization
   if Assigned(RegisteredLinkClasses) then RegisteredLinkClasses.Free;
   if Assigned(RegisteredNodeClasses) then RegisteredNodeClasses.Free;

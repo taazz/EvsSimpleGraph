@@ -16,6 +16,7 @@ begin
   RequireDerivedFormResource := True;
   Application.Initialize;
   Application.CreateForm(TEvsMain, EvsMain);
+  TEvsMain.Create(nil); New();
   Application.Run;
 end.
 

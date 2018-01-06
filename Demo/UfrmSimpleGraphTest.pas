@@ -69,7 +69,7 @@ type
     actRoundRectNode      :TAction;
     actRectNode           :TAction;
     ActionList            :TActionList;
-    EvsSimpleGraph1 :TEvsSimpleGraph;
+    EvsSimpleGraph1       :TEvsSimpleGraph;
     ImageList             :TImageList;
     dlgOpen               :TOpenDialog;
     dlgSave               :TSaveDialog;
@@ -197,8 +197,7 @@ uses {windows, freetype, IniFiles,} uFrmDebug, ufrmnodeproperties, UFrmlinkprop;
 const
   cLinkStart = 1000;
 
-//procedure TMainForm.SimpleGraphMouseWheelDown(Sender: TObject;
-//  Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
+//procedure TMainForm.SimpleGraphMouseWheelDown(Sender: TObject;Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
 //var
 //  I: Integer;
 //begin
