@@ -184,6 +184,7 @@ type
   TEvsGraphLayer      = class;
   TEvsGraphCanvas     = class;
   TCanvasClass        = class of TCanvas;
+  TControlCanvasClass = class of TControlCanvas;
 
   TPoints                   = array of TPoint;
   EEvsGraphStreamError      = class(EStreamError);
@@ -479,7 +480,7 @@ type
     function DPToLP     (const aPoint:TPoint):TPoint;                                                                    virtual;
     function LPToDP     (const aPoint :TPoint):TPoint;                                                                   virtual;
   public
-    constructor Create;
+    constructor Create;                                                                                                  virtual;
     procedure Assign(Source :TPersistent);                                                                               override;
     procedure SetTransformation(XScale, YScale, DX, DY : Double); virtual;
     procedure ClearTransformation; virtual;
@@ -519,6 +520,8 @@ type
     procedure DoMoveTo(x, y : integer); override;
     procedure DoLineTo(x, y : integer); override;
     procedure DoLine(x1, y1, x2, y2: integer); override;
+
+    procedure ReplaceCanvas(const aControl:TCustomControl);
   public
 
     procedure Arc          (ALeft, ATop, ARight, ABottom, Angle16Deg, Angle16DegLength: Integer);                        override;
@@ -548,8 +551,10 @@ type
     procedure Polygon   (Points: PPoint; NumPts: Integer; Winding: boolean = False);                                     override;
     procedure Polyline  (Points: PPoint; NumPts: Integer);                                                               override;
   public
-    constructor Create;virtual;overload;
-    constructor Create(aCanvas:TCanvas);Virtual;overload;
+    constructor Create;                                                                                                  virtual;   overload;
+    constructor Create(aCanvas:TCanvas);                                                                                 Virtual;   overload;
+    constructor Create(aControl:TControl);                                                                               Virtual;   overload;
+    procedure Assign(Source :TPersistent);                                                                               override;
     property OffsetX : Double  read FOffsetX write SetOffsetX;
     property OffsetY : Double  read FOffsetY write SetOffsetY;
     property ScaleX  : Double  read FScaleX  write SetScaleX;
@@ -610,6 +615,7 @@ type
   public
     constructor Create;
     destructor Destroy; override;
+    procedure Clear;
     function New : TEvsGraphLayer;
     function Delete(Index :integer):Boolean;overload;
     function Delete(Layer :TEvsGraphLayer):Boolean;overload;
@@ -702,18 +708,15 @@ type
     property Current       :TEvsGraphObject read GetCurrent;
   end;
 
-{$DEFINE SUPPORT_Stack}
   TEvsGraphObjectList = class(TPersistent)
   private
     FItems        :array of TEvsGraphObject;
     FCount        :Integer;
     FCapacity     :Integer;
     FOnChange     :TEvsGraphObjectListEvent;
-    {$IFDEF SUPPORT_Stack}
     FEnum         :TListEnumState;
     FEnumStack    :array of TListEnumState;
     FEnumStackPos :Integer;
-    {$ENDIF}
     procedure SetCapacity(Value: integer);
     function GetItems(Index: integer): TEvsGraphObject;
   protected
@@ -733,14 +736,12 @@ type
     function  Remove(Item: TEvsGraphObject): integer;
     procedure Move(CurIndex, NewIndex: integer);
     function  IndexOf(Item: TEvsGraphObject): integer;
-    {$IFDEF SUPPORT_Stack}
     function First:TEvsGraphObject;
     function Prior:TEvsGraphObject;
     function Next :TEvsGraphObject;
     function Last :TEvsGraphObject;
     function Push :Boolean;
     function Pop  :Boolean;
-    {$ENDIF}
     property Count: integer read fCount;
     property Capacity: integer read fCapacity write SetCapacity;
     property Items[Index: integer]: TEvsGraphObject read GetItems; default;
@@ -1554,8 +1555,7 @@ type
     class procedure Unregister(aLinkClass: TEvsGraphLinkClass); overload;
     class function LinkClassCount: integer;
     class function LinkClasses(aIndex: integer): TEvsGraphLinkClass;
-    class procedure RegisterControlCanvas(const aCanvasClass:TEvsGraphCanvasClass);
-    class procedure RegisterCanvas(const aCanvasClas:TEvsCustomCanvasClass);
+    class procedure RegisterControlCanvas(const aCanvasClass :TEvsGraphCanvasClass);
   public  //methods
     constructor Create(aOwner: TComponent); override;
     destructor Destroy; override;
@@ -1815,8 +1815,8 @@ const
 var
   RegisteredNodeClasses :TList;
   RegisteredLinkClasses :TList;
-  CanvasClass           :TEvsCustomCanvas;
-  ControlCanvasClass    :TEvsGraphCanvas;
+  //CanvasClass           :TEvsCustomCanvasClass;
+  ControlCanvasClass    :TEvsGraphCanvasClass;
 
 type
   TParentControl = class(TWinControl);
@@ -2950,8 +2950,23 @@ end;
 
 destructor TEvsGraphLayerList.Destroy;
 begin
-  fList.Free;
+  Clear;
+  FList.Free;
   inherited Destroy;
+end;
+
+procedure TEvsGraphLayerList.Clear;
+var
+  vCntr :Integer;
+  vTemp :TEvsGraphLayer;
+begin
+  for vCntr := FList.Count-1 downto 0 do begin
+    vTemp := Layers[vCntr];
+    FList[vCntr] := nil;
+    vTemp.Free;
+  end;
+  FList.Pack;
+  FList.Count := 0;
 end;
 
 function TEvsGraphLayerList.New: TEvsGraphLayer;
@@ -5290,29 +5305,27 @@ end;
 
 function TEvsSimpleGraph.GetAsBitmap(aObjectList: TEvsGraphObjectList): Graphics.TBitmap;
 var
-  vObjPoint :TPoint;
   vRect     :TRect;
-  vCnv      :TEvsCustomCanvas;
+  vCnv      :TCanvas;
 begin
   vRect     := GetObjectsBounds(aObjectList);
   InflateRect(vRect, 2, 2);
-  vObjPoint := vRect.TopLeft;
-  //dec(vObjPoint.x,2); Dec(vObjPoint.y,2);
-  //GPToCP(vRect,2);
-  //MoveRect(vRect,-vRect.Left, -vRect.Top);
   Result := Graphics.TBitmap.Create;
   Result.PixelFormat := pf24bit;
   Result.Canvas.Brush.Color := clWhite;
   Result.Canvas.Brush.Style := bsSolid;
   Result.SetSize((vRect.Right - vRect.Left) ,(vRect.Bottom - vRect.Top) );
   Result.Canvas.FillRect(0, 0, Result.Width, Result.Height);
-  //SetViewportOrgEx(Result.Canvas.Handle, -vObjPoint.x, -vObjPoint.y, nil);
-  vCnv := TEvsCustomCanvas.Create;
+  vCnv := ControlCanvasClass.Create;
   vCnv.Assign(Result.Canvas);
-  vCnv.OffsetX := -vRect.Left; // FHorzScrollBar.Position -2;
-  vCnv.OffsetY := -vRect.Top; //FVertScrollBar.Position -2;
+  if vCnv is TEvsCustomCanvas then begin
+    TEvsCustomCanvas(vCnv).OffsetX := -vRect.Left; // FHorzScrollBar.Position -2;
+    TEvsCustomCanvas(vCnv).OffsetY := -vRect.Top;  //FVertScrollBar.Position -2;
+  end else if vCnv is TEvsGraphCanvas then begin
+    TEvsGraphCanvas(vCnv).OffsetX := -vRect.Left;  // FHorzScrollBar.Position -2;
+    TEvsGraphCanvas(vCnv).OffsetY := -vRect.Top;   //FVertScrollBar.Position -2;
+  end;
   DrawObjects(vCnv, aObjectList);
-  //SetViewportOrgEx(Result.Canvas.Handle, 0, 0, nil);
 end;
 
 procedure TEvsSimpleGraph.PerformDragBy(adX, adY: integer);
@@ -5605,17 +5618,12 @@ begin
   ControlCanvasClass := aCanvasClass;
 end;
 
-class procedure TEvsSimpleGraph.RegisterCanvas(const aCanvasClas :TEvsCustomCanvasClass);
-begin
-  CanvasClass := aCanvasClass;
-end;
-
 constructor TEvsSimpleGraph.Create(aOwner: TComponent);
 begin
   inherited Create(aOwner);
 
   Canvas.Free;
-  Canvas := TEvsGraphCanvas.Create;
+  Canvas := ControlCanvasClass.Create;
   TControlCanvas(Canvas).Control := Self;
 
   Canvas.AntialiasingMode:=amOn;
@@ -5623,7 +5631,7 @@ begin
 
   FCustomCanvas             := Nil;
 
-  FUndoStorage               := TMemoryStream.Create;
+  FUndoStorage              := TMemoryStream.Create;
   fHorzScrollBar            := TEvsGraphScrollBar.Create(Self, sbHorizontal);
   fVertScrollBar            := TEvsGraphScrollBar.Create(Self, sbVertical);
   fGraphConstraints         := TEvsGraphConstraints.Create(Self);
@@ -5657,7 +5665,6 @@ begin
   FIDGenerator.Reset(0,1);
   if NodeClassCount > 0 then fDefaultNodeClass := NodeClasses(0);
   if LinkClassCount > 0 then fDefaultLinkClass := LinkClasses(0);
-  //DoubleBuffered := True;
   Color := clWindow;
 end;
 
@@ -5665,14 +5672,16 @@ destructor TEvsSimpleGraph.Destroy;
 begin
   Inc(FSuspendQueryEvents);
   Inc(FUpdateCount);
-  fObjects.Free;
-  fSelectedObjects.Free;
-  fDraggingObjects.Free;
-  fGraphConstraints.Free;
-  fHorzScrollBar.Free;
-  fVertScrollBar.Free;
-  fCanvasRecall.Free;
+  FObjects.Free;
+  FSelectedObjects.Free;
+  FDraggingObjects.Free;
+  FGraphConstraints.Free;
+  FHorzScrollBar.Free;
+  FVertScrollBar.Free;
+  FCanvasRecall.Free;
   FUndoStorage.Free;
+  FIDGenerator.Free;
+  FLayers.Free;
   inherited Destroy;
 end;
 
@@ -7131,7 +7140,6 @@ begin
   end;
 end;
 
-{$IFDEF SUPPORT_Stack}
 function TEvsGraphObjectList.First: TEvsGraphObject;
 begin
   if fCount > 0 then
@@ -7213,8 +7221,6 @@ begin
     Result := True;
   end;
 end;
-
-{$ENDIF}
 
 {$ENDREGION}
 
@@ -11447,6 +11453,15 @@ begin
   inherited;
 end;
 
+procedure TEvsGraphCanvas.ReplaceCanvas(const aControl :TCustomControl);
+var
+  vCnv : TCanvas;
+begin
+  vCnv := aControl.Canvas;
+  aControl.Canvas := self;
+  vCnv.Free;
+end;
+
 procedure TEvsGraphCanvas.Arc(ALeft, ATop, ARight, ABottom, Angle16Deg,
   Angle16DegLength : Integer);
 var
@@ -11677,10 +11692,32 @@ end;
 constructor TEvsGraphCanvas.Create(aCanvas :TCanvas);
 begin
   Create;
-  SetHandle(aCanvas.Handle);
-  Pen.Assign(aCanvas.Pen);
-  Brush.Assign(aCanvas.Brush);
-  TextStyle := aCanvas.TextStyle;
+  Assign(aCanvas);
+end;
+
+constructor TEvsGraphCanvas.Create(aControl :TControl);
+begin
+  Create;
+  if aControl is TCustomControl then begin
+    Assign(TCustomControl(aControl).Canvas);
+    ReplaceCanvas(TCustomControl(aControl));
+  end;// else
+  Control := aControl; //possible double assignment
+end;
+
+procedure TEvsGraphCanvas.Assign(Source :TPersistent);
+begin
+  if source is Graphics.TCanvas then begin
+    Brush.Assign(TCanvas(Source).Brush);
+    Font.Assign(TCanvas(Source).Font);
+    Pen.Assign(TCanvas(Source).Pen);
+    TextStyle  := TCanvas(Source).TextStyle;
+    AutoRedraw := TCanvas(Source).AutoRedraw;
+    CopyMode   := TCanvas(Source).CopyMode;
+    AntialiasingMode := TCanvas(Source).AntialiasingMode;
+    if source is TControlCanvas then Control := TControlCanvas(Source).Control
+    else Handle := TCanvas(Source).Handle;
+  end else inherited Assign(Source);
 end;
 
 procedure TEvsGraphCanvas.Rectangle(X1, Y1, X2, Y2 : Integer);
@@ -12195,9 +12232,6 @@ begin
     TextStyle  := TCanvas(Source).TextStyle;
     AutoRedraw := TCanvas(Source).AutoRedraw;
     CopyMode   := TCanvas(Source).CopyMode;
-    //Height     := TCanvas(Source).Height;
-    //Width      := TCanvas(Source).Width;
-    //Region.Assign(TCanvas(Source).Region);
     AntialiasingMode := TCanvas(Source).AntialiasingMode;
     Handle := TCanvas(Source).Handle;
   end else inherited Assign(Source);
@@ -12295,7 +12329,8 @@ initialization
   // Registers Link and Node classes
   _RegisterClasses;
   TEvsSimpleGraph.RegisterControlCanvas(TEvsGraphCanvas);
-  TEvsSimpleGraph.RegisterCanvas(TEvsCustomCanvas);
+  //TEvsSimpleGraph.RegisterCanvas(TEvsCustomCanvas);
+
 finalization
   if Assigned(RegisteredLinkClasses) then RegisteredLinkClasses.Free;
   if Assigned(RegisteredNodeClasses) then RegisteredNodeClasses.Free;

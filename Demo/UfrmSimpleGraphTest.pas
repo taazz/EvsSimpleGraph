@@ -687,9 +687,15 @@ constructor TEvsMain.Create(aOwner : TComponent);
 //  tmp : UnicodeString;
 //  Mnu : TMenuItem;
   //Cnt: Integer;
+var
+  vName:String;
 begin
   inherited Create(Owner);
   {$IFDEF SIMPLEGRAPH_CREATION}
+    {$IFDEF GDIPLUS}
+    //TEvsSimpleGraph.RegisterCanvas(TEvsGdiPlusControlCanvas);
+    TEvsSimpleGraph.RegisterControlCanvas(TEvsGdiPlusControlCanvas);
+    {$ENDIF}
   Test := TEvsSimpleGraph.Create(Self);
   Test.Parent:= Self;
   Test.Width := 300;
@@ -709,14 +715,15 @@ begin
   Test.VertScrollBar.Tracking:=True;
   Test.ClipboardFormats := Test.ClipboardFormats + [cfBitmap];
   Test.OnObjectDblClick := goDblClick;
+  vName := Test.Canvas.ClassName;
   //Test.OnDblClick := @sgDblClick;
-  Test.OnClick := sgDblClick;
     {$IFDEF GDIPLUS}
     //Test.CustomCanvas := TEvsGdiPlusControlCanvas;
-    Test.Canvas.Free;
-    Test.Canvas := TEvsGdiPlusControlCanvas.Create(Test);
+    //Test.Canvas.Free;
+    //Test.Canvas := TEvsGdiPlusControlCanvas.Create(Test);
     //TControlCanvas(Test.Canvas).Control := Test;
     {$ENDIF}
+  Test.OnClick := sgDblClick;
   {$ENDIF}
   Test.FixedScrollBars := True;
   Caption := caption + '-' + EvsActiveWidgetSet;
@@ -741,58 +748,10 @@ begin
   StaticText3.Caption := 'Nodes : ' +IntToStr(Test.ObjectsCount(TEvsGraphNode));
 end;
 
+initialization
+  {$IFDEF GDIPLUS}
+  //TEvsSimpleGraph.RegisterCanvas(TEvsGdiPlusControlCanvas);
+  //TEvsSimpleGraph.RegisterControlCanvas(TEvsGdiPlusControlCanvas);
+  {$ENDIF}
 end.
 
-
-//unit Unit1;
-//{$mode objfpc}{$H+}
-//
-//interface
-//
-//uses
-//  Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, Clipbrd, USimpleGraph;
-//
-////type
-////  TForm1 = class(TForm)
-////    Graph : TEvsSimpleGraph;
-////    procedure FormShow(Sender: TObject);
-////  private
-////    procedure CopyToClipBoard(aGraph : TEvsSimpleGraph; SrcRect : TRect);
-////  public
-////
-////  end;
-////
-////var
-////  Form1: TForm1;
-////
-////implementation
-////{$R *.lfm}
-//
-//procedure TForm1.FormShow(Sender: TObject);
-//begin
-//  Graph:=TEvsSimpleGraph.Create(Self);
-//  Graph.Align:=alClient;
-//  Graph.Parent:=Self;
-//  Graph.InsertNode(Rect(50,50,100,100));
-//  CopyToClipBoard(Graph,Rect(0,0,110,110));
-//end;
-//
-//procedure TForm1.CopyToClipBoard(aGraph : TEvsSimpleGraph; SrcRect : TRect);
-//var
-//  BmpSrc,BmpDst : TBitmap;
-//  DstRect : TRect;
-//begin
-//  BmpSrc:=TBitmap.Create;
-//  BmpDst:=TBitmap.Create;
-//  aGraph.CopyToGraphic(BmpSrc);
-//  DstRect:=Rect(0,0,SrcRect.Width,SrcRect.Height);
-//  bmp
-//  BmpDst.Width:=DstRect.Width;
-//  BmpDst.Height:=DstRect.Height;
-//  BmpDst.Canvas.CopyRect(DstRect,BmpSrc.Canvas,SrcRect);
-//  Clipboard.Assign(BmpDst);
-//  BmpSrc.Free;
-//  BmpDst.Free;
-//end;
-//
-//end.
