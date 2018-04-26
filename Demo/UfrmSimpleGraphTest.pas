@@ -4,12 +4,11 @@ unit UfrmSimpleGraphTest;
 
 interface
 {$DEFINE SIMPLEGRAPH_CREATION}
-{$DEFINE GDIPLUS}
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, LCLType,
-  LCLIntf, StdCtrls, ComCtrls, ActnList, Menus, Clipbrd,
+  LCLIntf, StdCtrls, ComCtrls, ActnList, Menus, Clipbrd, usimplegraph, uevsIDChecks,
+  ExtCtrls;
 
-  {$IFDEF GDIPLUS} uEvsGDIPlusSGCanvas, {$ENDIF} usimplegraph, {vcl_direct2d,} uevsIDChecks, ExtCtrls;
 const
   {$IFDEF  LCLWIN32}
     EvsActiveWidgetSet = 'Win32';
@@ -683,19 +682,9 @@ begin
 end;
 
 constructor TEvsMain.Create(aOwner : TComponent);
-//VAR
-//  tmp : UnicodeString;
-//  Mnu : TMenuItem;
-  //Cnt: Integer;
-var
-  vName:String;
 begin
   inherited Create(Owner);
   {$IFDEF SIMPLEGRAPH_CREATION}
-    {$IFDEF GDIPLUS}
-    //TEvsSimpleGraph.RegisterCanvas(TEvsGdiPlusControlCanvas);
-    TEvsSimpleGraph.RegisterControlCanvas(TEvsGdiPlusControlCanvas);
-    {$ENDIF}
   Test := TEvsSimpleGraph.Create(Self);
   Test.Parent:= Self;
   Test.Width := 300;
@@ -706,29 +695,21 @@ begin
   test.BorderStyle:= bsSingle;
   test.ShowGrid:=True;
   Test.DoubleBuffered:=True;
-  //Test.HorzScrollBar.Smooth:=True;
-  //Test.VertScrollBar.Smooth:=True;
-  Test.OnMouseMove := FormMouseMove;
-  Test.OnMouseWheelDown := DoMouseWheelDown;
-  test.OnMouseWheelUp   := DoMouseWheelUp;
-  Test.HorzScrollBar.Tracking:=True;
-  Test.VertScrollBar.Tracking:=True;
-  Test.ClipboardFormats := Test.ClipboardFormats + [cfBitmap];
-  Test.OnObjectDblClick := goDblClick;
-  vName := Test.Canvas.ClassName;
-  //Test.OnDblClick := @sgDblClick;
-    {$IFDEF GDIPLUS}
-    //Test.CustomCanvas := TEvsGdiPlusControlCanvas;
-    //Test.Canvas.Free;
-    //Test.Canvas := TEvsGdiPlusControlCanvas.Create(Test);
-    //TControlCanvas(Test.Canvas).Control := Test;
-    {$ENDIF}
+  Test.HorzScrollBar.Smooth   := True;
+  Test.VertScrollBar.Smooth   := True;
+  Test.OnMouseMove            := FormMouseMove;
+  Test.OnMouseWheelDown       := DoMouseWheelDown;
+  test.OnMouseWheelUp         := DoMouseWheelUp;
+  Test.HorzScrollBar.Tracking := True;
+  Test.VertScrollBar.Tracking := True;
+  Test.ClipboardFormats       := Test.ClipboardFormats + [cfBitmap];
+  Test.OnObjectDblClick       := goDblClick;
   Test.OnClick := sgDblClick;
   {$ENDIF}
   Test.FixedScrollBars := True;
-  Caption := caption + '-' + EvsActiveWidgetSet;
-  dbgFrm.PopupMode := pmExplicit;
-  dbgFrm.PopupParent := Self;
+  Caption              := Caption + '-' + EvsActiveWidgetSet;
+  dbgFrm.PopupMode     := pmExplicit;
+  dbgFrm.PopupParent   := Self;
 end;
 
 procedure TEvsMain.goDblClick(Graph :usimplegraph.TEvsSimpleGraph; GraphObject :TEvsGraphObject);

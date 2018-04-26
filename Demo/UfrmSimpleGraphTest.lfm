@@ -6,7 +6,7 @@ object EvsMain: TEvsMain
   Caption = 'EvsMain'
   ClientHeight = 410
   ClientWidth = 719
-  LCLVersion = '1.4.4.0'
+  LCLVersion = '1.8.2.0'
   object ToolBar1: TToolBar
     Left = 0
     Height = 26
@@ -19,17 +19,16 @@ object EvsMain: TEvsMain
       Left = 116
       Height = 22
       Top = 2
-      Width = 10
       Caption = 'ToolButton5'
       Style = tbsSeparator
     end
     object ToolButton6: TToolButton
-      Left = 353
+      Left = 347
       Top = 2
       Action = actExit
     end
     object btnPaste: TToolButton
-      Left = 195
+      Left = 193
       Top = 2
       Action = actEditPaste
     end
@@ -39,10 +38,9 @@ object EvsMain: TEvsMain
       Action = actGraphOpen
     end
     object ToolButton1: TToolButton
-      Left = 241
+      Left = 239
       Height = 22
       Top = 2
-      Width = 10
       Caption = 'ToolButton1'
       Style = tbsSeparator
     end
@@ -52,35 +50,34 @@ object EvsMain: TEvsMain
       Action = actGraphSave
     end
     object btnCopy: TToolButton
-      Left = 172
+      Left = 170
       Top = 2
       Action = actEditCopy
     end
     object btnDelete: TToolButton
-      Left = 218
+      Left = 216
       Top = 2
       Action = actEditDeleteSelected
     end
     object ToolButton10: TToolButton
-      Left = 330
+      Left = 324
       Top = 2
       Action = actCheckDuplicates
     end
     object ToolButton11: TToolButton
-      Left = 297
+      Left = 293
       Top = 2
       Action = actEditSelectAll
     end
     object ToolButton12: TToolButton
-      Left = 320
+      Left = 316
       Height = 22
       Top = 2
-      Width = 10
       Caption = 'ToolButton12'
       Style = tbsSeparator
     end
     object btnCut: TToolButton
-      Left = 126
+      Left = 124
       Top = 2
       Action = actEditCut
     end
@@ -100,17 +97,17 @@ object EvsMain: TEvsMain
       Action = actGraphImport
     end
     object ToolButton4: TToolButton
-      Left = 251
+      Left = 247
       Top = 2
       Action = actEditToFront
     end
     object ToolButton7: TToolButton
-      Left = 274
+      Left = 270
       Top = 2
       Action = actEditToBack
     end
     object ToolButton15: TToolButton
-      Left = 149
+      Left = 147
       Top = 2
       Action = actCopyBmp
     end
@@ -181,7 +178,6 @@ object EvsMain: TEvsMain
       Left = 208
       Height = 22
       Top = 2
-      Width = 5
       Caption = 'ToolButton17'
       Style = tbsDivider
     end
@@ -199,12 +195,11 @@ object EvsMain: TEvsMain
       Left = 259
       Height = 22
       Top = 2
-      Width = 10
       Caption = 'ToolButton3'
       Style = tbsSeparator
     end
     object ToolButton2: TToolButton
-      Left = 269
+      Left = 267
       Top = 2
       Action = actViewGrid
     end
