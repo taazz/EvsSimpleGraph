@@ -93,11 +93,11 @@
         <PackageName Value="LCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="49">
+    <Units Count="37">
       <Unit0>
         <Filename Value="SimpleGraphBuilder.lpr"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="9"/>
+        <EditorIndex Value="3"/>
         <CursorPos Y="18"/>
         <UsageCount Value="208"/>
         <Loaded Value="True"/>
@@ -109,9 +109,9 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <IsVisibleTab Value="True"/>
-        <EditorIndex Value="7"/>
-        <TopLine Value="680"/>
-        <CursorPos Y="685"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="168"/>
+        <CursorPos X="39" Y="194"/>
         <UsageCount Value="208"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -126,7 +126,7 @@
           <CursorPos X="21" Y="194"/>
           <FoldState Value=" TL00{K7"/>
         </ExtraEditor1>
-        <UsageCount Value="106"/>
+        <UsageCount Value="84"/>
         <Bookmarks Count="2">
           <Item0 X="26" Y="4259"/>
           <Item1 X="3" Y="5216" ID="1"/>
@@ -138,13 +138,13 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <CursorPos X="26" Y="16"/>
-        <UsageCount Value="95"/>
+        <UsageCount Value="73"/>
       </Unit3>
       <Unit4>
         <Filename Value="..\uEvsRegions.pas"/>
         <TopLine Value="4"/>
         <CursorPos X="14" Y="30"/>
-        <UsageCount Value="85"/>
+        <UsageCount Value="63"/>
       </Unit4>
       <Unit5>
         <Filename Value="uFrmDebug.pas"/>
@@ -152,12 +152,10 @@
         <ComponentName Value="Form2"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <EditorIndex Value="4"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="32"/>
         <CursorPos X="26" Y="53"/>
         <UsageCount Value="213"/>
-        <Loaded Value="True"/>
-        <LoadedDesigner Value="True"/>
       </Unit5>
       <Unit6>
         <Filename Value="ufrmnodeproperties.pas"/>
@@ -165,12 +163,10 @@
         <ComponentName Value="EvsNodeProperties"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <EditorIndex Value="5"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="7"/>
         <CursorPos X="3" Y="12"/>
         <UsageCount Value="204"/>
-        <Loaded Value="True"/>
-        <LoadedDesigner Value="True"/>
       </Unit6>
       <Unit7>
         <Filename Value="ufrmlinkprop.pas"/>
@@ -179,16 +175,15 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="UFrmlinkprop"/>
-        <EditorIndex Value="6"/>
+        <EditorIndex Value="-1"/>
         <UsageCount Value="211"/>
-        <Loaded Value="True"/>
-        <LoadedDesigner Value="True"/>
       </Unit7>
       <Unit8>
         <Filename Value="..\usimplegraph.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="uSimpleGraph"/>
-        <FoldState Value=" TL00{K TM HjQ03075 p0(9411 T7ocLF21151}"/>
+        <TopLine Value="1065"/>
+        <CursorPos X="2" Y="1065"/>
         <UsageCount Value="202"/>
         <Bookmarks Count="4">
           <Item0 X="22" Y="761" ID="3"/>
@@ -204,409 +199,323 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="1119"/>
         <CursorPos X="15" Y="1162"/>
-        <UsageCount Value="145"/>
+        <UsageCount Value="123"/>
       </Unit9>
       <Unit10>
         <Filename Value="..\uevsgdiplussgcanvas.pas"/>
         <UnitName Value="uEvsGDIPlusSGCanvas"/>
-        <EditorIndex Value="3"/>
-        <CursorPos X="25"/>
-        <UsageCount Value="200"/>
-        <Loaded Value="True"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="34" Y="30"/>
+        <UsageCount Value="178"/>
       </Unit10>
       <Unit11>
         <Filename Value="uevsidchecks.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="uevsIDChecks"/>
-        <EditorIndex Value="2"/>
+        <EditorIndex Value="-1"/>
         <CursorPos X="26" Y="27"/>
         <UsageCount Value="300"/>
-        <Loaded Value="True"/>
       </Unit11>
       <Unit12>
         <Filename Value="..\Experimental\vcl_direct2d.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="1198"/>
         <CursorPos X="14" Y="1227"/>
-        <UsageCount Value="162"/>
+        <UsageCount Value="140"/>
       </Unit12>
       <Unit13>
         <Filename Value="..\Original\SimpleGraph.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="1277"/>
         <CursorPos Y="1310"/>
-        <UsageCount Value="132"/>
+        <UsageCount Value="110"/>
       </Unit13>
       <Unit14>
         <Filename Value="..\..\..\1.4.4\fpc\2.6.4\source\rtl\win\wininc\func.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="744"/>
         <CursorPos X="10" Y="773"/>
-        <UsageCount Value="95"/>
+        <UsageCount Value="73"/>
       </Unit14>
       <Unit15>
         <Filename Value="..\..\..\1.4.4\lcl\include\lclintfh.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="24"/>
         <CursorPos X="10" Y="53"/>
-        <UsageCount Value="85"/>
+        <UsageCount Value="63"/>
       </Unit15>
       <Unit16>
         <Filename Value="..\uevsobjectlist.pas"/>
         <UnitName Value="uEvsObjectList"/>
         <EditorIndex Value="-1"/>
-        <UsageCount Value="217"/>
+        <UsageCount Value="195"/>
       </Unit16>
       <Unit17>
-        <Filename Value="..\..\DB_Aware\flashfiler\Port1\source\ffsrstat.pas"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="60"/>
-        <CursorPos X="25" Y="89"/>
-        <UsageCount Value="3"/>
-      </Unit17>
-      <Unit18>
-        <Filename Value="..\..\DB_Aware\flashfiler\Port1\source\ffsrfltr.pas"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="172"/>
-        <CursorPos X="24" Y="204"/>
-        <UsageCount Value="3"/>
-        <Bookmarks Count="1">
-          <Item0 X="24" Y="208"/>
-        </Bookmarks>
-      </Unit18>
-      <Unit19>
-        <Filename Value="..\..\..\1.4.4\lcl\lclintf.pas"/>
-        <UnitName Value="LCLIntf"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="42"/>
-        <CursorPos X="10" Y="71"/>
-        <UsageCount Value="3"/>
-      </Unit19>
-      <Unit20>
-        <Filename Value="..\..\!Tests\jvDesign\jvdesign\ujvconsts.pas"/>
-        <UnitName Value="uJVConsts"/>
-        <EditorIndex Value="-1"/>
-        <CursorPos X="28" Y="29"/>
-        <UsageCount Value="3"/>
-      </Unit20>
-      <Unit21>
-        <Filename Value="..\..\!Tests\jvDesign\jvdesign\tp_register.pas"/>
-        <EditorIndex Value="-1"/>
-        <UsageCount Value="3"/>
-      </Unit21>
-      <Unit22>
         <Filename Value="..\..\..\1.4.4\fpc\2.6.4\source\rtl\win\wininc\struct.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="200"/>
         <CursorPos X="18" Y="229"/>
-        <UsageCount Value="31"/>
-      </Unit22>
-      <Unit23>
+        <UsageCount Value="9"/>
+      </Unit17>
+      <Unit18>
         <Filename Value="..\..\..\1.4.4\fpc\2.6.4\source\rtl\objpas\types.pp"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="39"/>
         <CursorPos X="3" Y="68"/>
-        <UsageCount Value="31"/>
-      </Unit23>
-      <Unit24>
+        <UsageCount Value="9"/>
+      </Unit18>
+      <Unit19>
         <Filename Value="..\..\..\1.4.4\fpc\2.6.4\source\rtl\inc\threadh.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="110"/>
         <CursorPos X="11" Y="140"/>
-        <UsageCount Value="30"/>
-      </Unit24>
-      <Unit25>
+        <UsageCount Value="8"/>
+      </Unit19>
+      <Unit20>
         <Filename Value="..\..\..\1.4.4\fpc\2.6.4\source\rtl\inc\thread.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="349"/>
         <CursorPos X="13" Y="378"/>
-        <UsageCount Value="30"/>
-      </Unit25>
-      <Unit26>
+        <UsageCount Value="8"/>
+      </Unit20>
+      <Unit21>
         <Filename Value="..\..\..\1.4.4\fpc\2.6.4\source\rtl\nativent\systhrd.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="206"/>
         <CursorPos X="37" Y="236"/>
-        <UsageCount Value="30"/>
-      </Unit26>
-      <Unit27>
+        <UsageCount Value="8"/>
+      </Unit21>
+      <Unit22>
         <Filename Value="..\..\..\1.4.4\fpc\2.6.4\source\rtl\netware\tthread.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="177"/>
         <CursorPos X="143" Y="215"/>
-        <UsageCount Value="30"/>
-      </Unit27>
-      <Unit28>
+        <UsageCount Value="8"/>
+      </Unit22>
+      <Unit23>
         <Filename Value="..\..\..\1.4.4\fpc\2.6.4\source\rtl\objpas\classes\classesh.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="242"/>
         <CursorPos X="14" Y="269"/>
-        <UsageCount Value="30"/>
-      </Unit28>
-      <Unit29>
+        <UsageCount Value="8"/>
+      </Unit23>
+      <Unit24>
         <Filename Value="..\..\..\1.4.4\fpc\2.6.4\source\rtl\win\tthread.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="70"/>
         <CursorPos Y="125"/>
-        <UsageCount Value="30"/>
-      </Unit29>
-      <Unit30>
+        <UsageCount Value="8"/>
+      </Unit24>
+      <Unit25>
         <Filename Value="..\..\..\Components\Evosi\SimpleGraph\Src\uevssimplegraph.pas"/>
         <UnitName Value="uEvsSimpleGraph"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="36"/>
         <CursorPos X="19" Y="61"/>
-        <UsageCount Value="115"/>
-      </Unit30>
-      <Unit31>
+        <UsageCount Value="93"/>
+      </Unit25>
+      <Unit26>
         <Filename Value="..\..\..\1.4.4\lcl\include\custombitmap.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="48"/>
         <CursorPos X="3" Y="50"/>
-        <UsageCount Value="45"/>
-      </Unit31>
-      <Unit32>
+        <UsageCount Value="23"/>
+      </Unit26>
+      <Unit27>
         <Filename Value="..\..\..\1.4.4\lcl\include\rasterimage.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="304"/>
         <CursorPos X="21" Y="306"/>
-        <UsageCount Value="45"/>
-      </Unit32>
-      <Unit33>
+        <UsageCount Value="23"/>
+      </Unit27>
+      <Unit28>
         <Filename Value="..\..\..\1.4.4\lcl\include\bitmapcanvas.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="19"/>
         <CursorPos X="3" Y="64"/>
-        <UsageCount Value="45"/>
-      </Unit33>
-      <Unit34>
+        <UsageCount Value="23"/>
+      </Unit28>
+      <Unit29>
         <Filename Value="..\..\..\1.4.4\lcl\include\region.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="27"/>
         <CursorPos X="3" Y="51"/>
-        <UsageCount Value="45"/>
-      </Unit34>
-      <Unit35>
+        <UsageCount Value="23"/>
+      </Unit29>
+      <Unit30>
         <Filename Value="..\..\..\1.4.4\lcl\include\canvas.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="3"/>
         <CursorPos X="3" Y="24"/>
-        <UsageCount Value="46"/>
-      </Unit35>
-      <Unit36>
+        <UsageCount Value="24"/>
+      </Unit30>
+      <Unit31>
         <Filename Value="..\..\..\1.4.4\lcl\forms.pp"/>
         <UnitName Value="Forms"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="549"/>
         <CursorPos X="17" Y="577"/>
-        <UsageCount Value="45"/>
-      </Unit36>
-      <Unit37>
+        <UsageCount Value="23"/>
+      </Unit31>
+      <Unit32>
         <Filename Value="..\..\..\1.4.4\lcl\include\customform.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="3052"/>
         <CursorPos Y="3063"/>
-        <UsageCount Value="45"/>
-      </Unit37>
-      <Unit38>
+        <UsageCount Value="23"/>
+      </Unit32>
+      <Unit33>
         <Filename Value="..\..\..\1.4.4\fpc\2.6.4\source\rtl\inc\objpash.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="168"/>
         <CursorPos X="29" Y="207"/>
-        <UsageCount Value="45"/>
-      </Unit38>
-      <Unit39>
+        <UsageCount Value="23"/>
+      </Unit33>
+      <Unit34>
         <Filename Value="..\..\..\Components\Evosi\gdiplus\pas\uevsgdipluscanvas.pas"/>
         <UnitName Value="uEvsGDIPlusCanvas"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="31" Y="273"/>
-        <UsageCount Value="45"/>
-      </Unit39>
-      <Unit40>
+        <UsageCount Value="23"/>
+      </Unit34>
+      <Unit35>
         <Filename Value="..\..\..\Components\Evosi\gdiplus\pas\uevsgdiplussgcanvas.pas"/>
         <UnitName Value="uEvsGDIPlusSGCanvas"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="35" Y="150"/>
-        <UsageCount Value="45"/>
-      </Unit40>
-      <Unit41>
-        <Filename Value="..\..\..\1.4.4\fpc\2.6.4\source\rtl\objpas\classes\cregist.inc"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="53"/>
-        <CursorPos Y="57"/>
-        <UsageCount Value="1"/>
-      </Unit41>
-      <Unit42>
+        <UsageCount Value="23"/>
+      </Unit35>
+      <Unit36>
         <Filename Value="..\..\..\1.4.4\lcl\controls.pp"/>
         <UnitName Value="Controls"/>
-        <EditorIndex Value="8"/>
+        <EditorIndex Value="2"/>
         <TopLine Value="2226"/>
         <CursorPos X="14" Y="2254"/>
-        <UsageCount Value="45"/>
+        <UsageCount Value="116"/>
         <Loaded Value="True"/>
-      </Unit42>
-      <Unit43>
-        <Filename Value="..\..\..\1.4.4\fpc\2.6.4\source\packages\fcl-image\src\fpcanvas.pp"/>
-        <UnitName Value="FPCanvas"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="203"/>
-        <CursorPos X="3" Y="232"/>
-        <UsageCount Value="3"/>
-      </Unit43>
-      <Unit44>
-        <Filename Value="..\..\..\1.4.4\fpc\2.6.4\source\rtl\inc\objpas.inc"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="487"/>
-        <CursorPos X="18" Y="509"/>
-        <UsageCount Value="3"/>
-      </Unit44>
-      <Unit45>
-        <Filename Value="..\..\..\1.4.4\fpc\2.6.4\source\rtl\objpas\classes\lists.inc"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="75"/>
-        <CursorPos X="5" Y="97"/>
-        <UsageCount Value="6"/>
-      </Unit45>
-      <Unit46>
-        <Filename Value="..\..\..\Components\Evosi\Common\Src\uevsxmlread.pas"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="3254"/>
-        <CursorPos X="25" Y="3288"/>
-        <UsageCount Value="10"/>
-      </Unit46>
-      <Unit47>
-        <Filename Value="..\..\..\Components\Evosi\Common\Src\uevstypes.pas"/>
-        <UnitName Value="uEvsTypes"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="13"/>
-        <UsageCount Value="10"/>
-      </Unit47>
-      <Unit48>
-        <Filename Value="..\..\..\1.8.2\fpc\3.0.4\source\rtl\win\wininc\struct.inc"/>
-        <EditorIndex Value="1"/>
-        <TopLine Value="459"/>
-        <CursorPos X="15" Y="488"/>
-        <UsageCount Value="10"/>
-        <Loaded Value="True"/>
-      </Unit48>
+      </Unit36>
     </Units>
-    <JumpHistory Count="29" HistoryIndex="28">
+    <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
         <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="90" Column="65" TopLine="40"/>
+        <Caret Line="553" Column="5" TopLine="517"/>
       </Position1>
       <Position2>
         <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="121" Column="63" TopLine="68"/>
+        <Caret Line="1548" TopLine="1497"/>
       </Position2>
       <Position3>
         <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="185" Column="18" TopLine="135"/>
+        <Caret Line="554" Column="5" TopLine="525"/>
       </Position3>
       <Position4>
         <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="186" Column="41" TopLine="136"/>
+        <Caret Line="1550" Column="15" TopLine="1522"/>
       </Position4>
       <Position5>
         <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="553" Column="5" TopLine="517"/>
+        <Caret Line="519" Column="29" TopLine="490"/>
       </Position5>
       <Position6>
         <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="1548" TopLine="1497"/>
+        <Caret Line="11421" Column="41" TopLine="11371"/>
       </Position6>
       <Position7>
         <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="554" Column="5" TopLine="525"/>
+        <Caret Line="519" Column="29" TopLine="483"/>
       </Position7>
       <Position8>
         <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="1550" Column="15" TopLine="1522"/>
+        <Caret Line="1005" Column="25" TopLine="951"/>
       </Position8>
       <Position9>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="519" Column="29" TopLine="490"/>
+        <Filename Value="UfrmSimpleGraphTest.pas"/>
+        <Caret Line="698" Column="13" TopLine="459"/>
       </Position9>
       <Position10>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="11421" Column="41" TopLine="11371"/>
+        <Filename Value="..\..\..\1.4.4\lcl\controls.pp"/>
+        <Caret Line="2254" Column="14" TopLine="2226"/>
       </Position10>
       <Position11>
         <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="519" Column="29" TopLine="483"/>
+        <Caret Line="8450" Column="23" TopLine="8421"/>
       </Position11>
       <Position12>
         <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="1005" Column="25" TopLine="951"/>
+        <Caret Line="10258" Column="19" TopLine="10216"/>
       </Position12>
       <Position13>
-        <Filename Value="UfrmSimpleGraphTest.pas"/>
-        <Caret Line="698" Column="13" TopLine="459"/>
+        <Filename Value="..\usimplegraph.pas"/>
+        <Caret Line="10257" Column="16" TopLine="10217"/>
       </Position13>
       <Position14>
-        <Filename Value="..\..\..\1.4.4\lcl\controls.pp"/>
-        <Caret Line="2254" Column="14" TopLine="2226"/>
+        <Filename Value="..\usimplegraph.pas"/>
+        <Caret Line="10268" Column="33" TopLine="10225"/>
       </Position14>
       <Position15>
         <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="8450" Column="23" TopLine="8421"/>
+        <Caret Line="10387" TopLine="10350"/>
       </Position15>
       <Position16>
         <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="10258" Column="19" TopLine="10216"/>
+        <Caret Line="11717" Column="57" TopLine="11687"/>
       </Position16>
       <Position17>
         <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="10257" Column="16" TopLine="10217"/>
+        <Caret Line="11713" Column="48" TopLine="11701"/>
       </Position17>
       <Position18>
         <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="10268" Column="33" TopLine="10225"/>
+        <Caret Line="11717" Column="60" TopLine="11688"/>
       </Position18>
       <Position19>
         <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="10387" TopLine="10350"/>
+        <Caret Line="11721" Column="25" TopLine="11688"/>
       </Position19>
       <Position20>
         <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="11717" Column="57" TopLine="11687"/>
+        <Caret Line="405" Column="33" TopLine="337"/>
       </Position20>
       <Position21>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="11713" Column="48" TopLine="11701"/>
+        <Filename Value="UfrmSimpleGraphTest.pas"/>
+        <Caret Line="698" Column="13" TopLine="459"/>
       </Position21>
       <Position22>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="11717" Column="60" TopLine="11688"/>
+        <Filename Value="UfrmSimpleGraphTest.pas"/>
+        <Caret Line="11" Column="3"/>
       </Position22>
       <Position23>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="11721" Column="25" TopLine="11688"/>
+        <Filename Value="UfrmSimpleGraphTest.pas"/>
+        <Caret Line="695" Column="27" TopLine="668"/>
       </Position23>
       <Position24>
-        <Filename Value="..\usimplegraph.pas"/>
-        <Caret Line="405" Column="33" TopLine="337"/>
+        <Filename Value="UfrmSimpleGraphTest.pas"/>
+        <Caret Line="694" TopLine="668"/>
       </Position24>
       <Position25>
-        <Filename Value="uevsidchecks.pas"/>
-        <Caret Line="27" Column="26"/>
+        <Filename Value="UfrmSimpleGraphTest.pas"/>
+        <Caret Line="690" Column="14" TopLine="657"/>
       </Position25>
       <Position26>
         <Filename Value="UfrmSimpleGraphTest.pas"/>
-        <Caret Line="698" Column="13" TopLine="459"/>
+        <Caret Line="681" Column="15" TopLine="657"/>
       </Position26>
       <Position27>
         <Filename Value="UfrmSimpleGraphTest.pas"/>
-        <Caret Line="11" Column="3"/>
+        <Caret Line="38" Column="24"/>
       </Position27>
       <Position28>
         <Filename Value="UfrmSimpleGraphTest.pas"/>
-        <Caret Line="695" Column="27" TopLine="668"/>
+        <Caret Line="743" TopLine="706"/>
       </Position28>
       <Position29>
         <Filename Value="UfrmSimpleGraphTest.pas"/>
-        <Caret Line="694" TopLine="668"/>
+        <Caret Line="742" Column="11" TopLine="708"/>
       </Position29>
+      <Position30>
+        <Filename Value="UfrmSimpleGraphTest.pas"/>
+        <Caret Line="734" Column="27" TopLine="695"/>
+      </Position30>
     </JumpHistory>
   </ProjectOptions>
   <CompilerOptions>

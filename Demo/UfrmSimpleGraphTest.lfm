@@ -1,7 +1,7 @@
 object EvsMain: TEvsMain
-  Left = 548
+  Left = 599
   Height = 410
-  Top = 317
+  Top = 263
   Width = 719
   Caption = 'EvsMain'
   ClientHeight = 410

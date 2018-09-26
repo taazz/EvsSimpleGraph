@@ -168,7 +168,7 @@ type
     procedure actEditZoomOutUpdate    (Sender :TObject);
     procedure MenuItem1Click          (Sender :TObject);
     procedure MenuItem2Click          (Sender :TObject);
-    procedure FormMouseMove    (Sender :TObject; Shift :TShiftState; X, Y : Integer);
+    procedure FormMouseMove    (Sender :TObject; Shift :TShiftState; X, Y :Integer);
     procedure DoMouseWheelDown (Sender :TObject; Shift :TShiftState; MousePos :TPoint; var Handled :Boolean);
     procedure DoMouseWheelUp   (Sender :TObject; Shift :TShiftState; MousePos :TPoint; var Handled :Boolean);
     procedure actEditDeleteSelectedExecute(Sender :TObject);
@@ -179,9 +179,9 @@ type
     FFileName : String;
   public
     { public declarations }
-    constructor Create(aOwner:TComponent);override;
-    procedure goDblClick(Graph: usimplegraph.TEvsSimpleGraph; GraphObject: TEvsGraphObject);
-    procedure sgDblClick(Sender:TObject);
+    constructor Create   (aOwner:TComponent);override;
+    procedure goDblClick (Graph: usimplegraph.TEvsSimpleGraph; GraphObject: TEvsGraphObject);
+    procedure sgDblClick (Sender:TObject);
     procedure sgMouseMove(Sender :TObject; Shift :TShiftState; X, Y :Integer);
     //procedure goDblClick2(Graph: TSimpleGraph; GraphObject: TGraphObject);
   end;
@@ -191,6 +191,19 @@ var
 
 implementation
 uses {windows, freetype, IniFiles,} uFrmDebug, ufrmnodeproperties, UFrmlinkprop;
+function ExceptionToErrorCode(const aException:Exception):Int64;
+type
+  Int16 = SmallInt;
+  TInt64Record = packed record
+    case byte of
+      0 :(Value :Int64);
+      1 :(I     :array[0..1] of Int32);
+      2 :(W     :array[0..3] of Int16);
+    end;
+  end;
+begin
+
+end;
 
 {$R *.lfm}
 const
@@ -728,6 +741,37 @@ begin
   StaticText2.Caption := 'Links : ' +IntToStr(Test.ObjectsCount(TEvsGraphLink));
   StaticText3.Caption := 'Nodes : ' +IntToStr(Test.ObjectsCount(TEvsGraphNode));
 end;
+
+function PrimeCheck(aNum: Integer): Boolean;
+var
+  i: integer = 0;
+begin
+  Result:= true;
+  if aNum > 2 then
+    for i:= 2 to aNum - 1 do
+      if (aNum mod i) = 0 then exit(false)
+  else if (aNum <= 1) then result := False;
+end;
+procedure test;
+var
+  a: array of integer =nil;
+begin
+  SetLength (a,100);
+end;
+
+//function PrimeCheck(aNum: Integer): Boolean;
+//var
+//  i: integer = 0;
+//begin
+//  Result:= False;
+//  if num > 2 then
+//  begin
+//    for i:= 2 to num - 1 do
+//      if (num mod i) = 0 then exit; //returns false.
+//    Result := True;  // the exit above did not execute this is a prime.
+//  end else if (num = 2) then // well 2 is prime every else bellow 2 its not.
+//    Result := True;
+//end;
 
 initialization
   {$IFDEF GDIPLUS}
