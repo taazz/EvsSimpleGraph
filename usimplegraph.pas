@@ -5318,15 +5318,19 @@ begin
   Result.SetSize((vRect.Right - vRect.Left) ,(vRect.Bottom - vRect.Top) );
   Result.Canvas.FillRect(0, 0, Result.Width, Result.Height);
   vCnv := ControlCanvasClass.Create;
-  vCnv.Assign(Result.Canvas);
-  if vCnv is TEvsCustomCanvas then begin
-    TEvsCustomCanvas(vCnv).OffsetX := -vRect.Left; // FHorzScrollBar.Position -2;
-    TEvsCustomCanvas(vCnv).OffsetY := -vRect.Top;  //FVertScrollBar.Position -2;
-  end else if vCnv is TEvsGraphCanvas then begin
-    TEvsGraphCanvas(vCnv).OffsetX := -vRect.Left;  // FHorzScrollBar.Position -2;
-    TEvsGraphCanvas(vCnv).OffsetY := -vRect.Top;   //FVertScrollBar.Position -2;
+  try
+    vCnv.Assign(Result.Canvas);
+    if vCnv is TEvsCustomCanvas then begin
+      TEvsCustomCanvas(vCnv).OffsetX := -vRect.Left; // FHorzScrollBar.Position -2;
+      TEvsCustomCanvas(vCnv).OffsetY := -vRect.Top;  //FVertScrollBar.Position -2;
+    end else if vCnv is TEvsGraphCanvas then begin
+      TEvsGraphCanvas(vCnv).OffsetX := -vRect.Left;  // FHorzScrollBar.Position -2;
+      TEvsGraphCanvas(vCnv).OffsetY := -vRect.Top;   //FVertScrollBar.Position -2;
+    end;
+    DrawObjects(vCnv, aObjectList);
+  finally
+    vCnv.Free;
   end;
-  DrawObjects(vCnv, aObjectList);
 end;
 
 procedure TEvsSimpleGraph.PerformDragBy(adX, adY: integer);
